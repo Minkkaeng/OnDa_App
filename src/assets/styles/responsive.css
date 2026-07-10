@@ -1,0 +1,114 @@
+/* Tablet (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .web-header {
+    padding: 0 20px;
+  }
+  .header-left {
+    gap: 24px;
+  }
+  .header-nav {
+    gap: 16px;
+  }
+  .content-center {
+    padding: 0 16px;
+  }
+  .cal-wrapper {
+    flex-direction: column;
+  }
+  .care-layout {
+    flex-direction: column;
+  }
+}
+
+/* Mobile (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Hide unnecessary elements */
+  .premium-btn,
+  .header-name,
+  .editor-btn-gray,
+  .cal-ad-zone,
+  .ad-zone-top,
+  .web-footer {
+    display: none !important;
+  }
+  
+  .mobile-nav-footer {
+    display: block !important;
+    margin-top: auto;
+    padding-top: 32px;
+    font-size: 0.8rem;
+    color: var(--muted-gray);
+    line-height: 1.6;
+  }
+
+  /* Header adjustments for Tab Bar */
+  .web-header {
+    padding-top: 8px !important;
+  }
+  .header-top-row {
+    padding: 0 16px !important;
+  }
+  .header-tab-bar {
+    padding: 0 12px !important;
+  }
+  .tab-item {
+    font-size: 0.95rem;
+    padding: 10px 12px;
+  }
+  
+  /* Layouts */
+  .care-layout,
+  .cal-wrapper {
+    flex-direction: column;
+  }
+
+  .cal-tabs {
+    width: auto;
+  }
+  .cal-tab-btn {
+    flex: none;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+  }
+  
+  /* Settings */
+  .set-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .set-btn {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  /* Panels */
+  .content-center {
+    margin: 20px auto;
+  }
+  .panel, .cal-panel, .cal-editor-panel, .care-col {
+    padding: 20px;
+  }
+  
+  .editor-top {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}
+
+/* Small Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .cal-header-row, .cal-grid {
+    gap: 2px;
+  }
+  .cal-day {
+    padding: 8px 4px;
+    font-size: 0.9rem;
+  }
+  .editor-title {
+    font-size: 1.4rem;
+  }
+  .cal-month-title {
+    font-size: 1.5rem;
+  }
+}

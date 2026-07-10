@@ -1,0 +1,214 @@
+.premium-btn {
+  background-color: var(--mint-green); color: var(--white); border: none; padding: 8px 16px;
+  border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+  white-space: nowrap;
+}
+
+.ad-zone-top {
+  background-color: var(--mint-green-light); border: 1px solid rgba(20, 195, 163, 0.2);
+  border-radius: 12px; padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+}
+.ad-badge { 
+  background-color: var(--mint-green); color: var(--white); font-size: 0.7rem; font-weight: 700; 
+  padding: 4px 8px; border-radius: 4px; white-space: nowrap; display: inline-block;
+}
+
+.task-list { display: flex; flex-direction: column; gap: 12px; }
+.task-card {
+  background-color: var(--white); border: 1px solid var(--steel-gray); border-radius: 12px; padding: 20px 24px;
+  display: flex; justify-content: space-between; align-items: center; border-left: 6px solid var(--mint-green);
+  gap: 16px;
+}
+.task-card.pending { border-left: 6px solid var(--error-red); background-color: var(--error-red-light); border-color: rgba(255, 77, 77, 0.2); }
+.task-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--deep-navy); margin-bottom: 4px; }
+.task-info p { font-size: 0.9rem; color: #64748b; margin: 0; }
+.task-status { white-space: nowrap; font-size: 0.95rem; }
+.task-status.completed { color: var(--mint-green); font-weight: bold; }
+.task-status.pending { color: var(--error-red); font-weight: bold; }
+
+.btn-submit { 
+  width: 100%; padding: 16px; background: var(--mint-green); color: var(--white); 
+  border: none; border-radius: 8px; font-weight: 700; cursor: pointer; 
+  margin-top: 16px; font-size: 1rem; 
+}
+
+/* Modal UI */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: rgba(0,0,0,0.6); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-overlay.hidden { display: none; }
+.modal-content {
+  background: var(--white); border-radius: 12px; width: 90%; max-width: 500px;
+  padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.modal-close-btn { background: none; border: none; cursor: pointer; color: var(--muted-gray); padding: 4px; }
+.crop-container { width: 100%; height: 300px; background: #eee; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.crop-container img { max-width: 100%; max-height: 100%; display: block; }
+
+/* Pet List Scroll */
+.pet-list-scroll {
+  display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 24px;
+  scrollbar-width: none;
+}
+.pet-list-scroll::-webkit-scrollbar { display: none; }
+.pet-tab, .home-pet-tab {
+  width: 64px; height: 64px; border-radius: 50%; border: 3px solid transparent;
+  flex-shrink: 0; cursor: pointer; object-fit: cover; opacity: 0.5; transition: all 0.2s ease;
+}
+.pet-tab.active, .home-pet-tab.active {
+  border-color: var(--mint-green); opacity: 1; transform: scale(1.05); box-shadow: 0 4px 12px rgba(20, 195, 163, 0.3);
+}
+.pet-tab-add {
+  width: 64px; height: 64px; border-radius: 50%; border: 2px dashed var(--mint-green);
+  flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  background-color: var(--ice-white); color: var(--mint-green); font-size: 24px; transition: all 0.2s ease;
+}
+.pet-tab-add.active { border-style: solid; background-color: var(--mint-green); color: var(--white); transform: scale(1.05); }
+
+/* Global Profile Card */
+.global-profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--white);
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.global-profile-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.global-profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--mint-green);
+  flex-shrink: 0;
+}
+
+.global-profile-info h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--deep-navy);
+  margin-bottom: 8px;
+}
+
+.global-profile-meta {
+  font-size: 0.95rem;
+  color: #666;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.global-profile-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.global-profile-switch-btn {
+  background: var(--ice-white);
+  border: 1px solid #eee;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--deep-navy);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+.global-profile-switch-btn:hover {
+  background: #f0f0f0;
+}
+
+.global-profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 24px;
+  background: var(--white);
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  min-width: 200px;
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.global-profile-dropdown.open {
+  display: flex;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f5f5f5;
+}
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+.dropdown-item:hover {
+  background: var(--ice-white);
+}
+.dropdown-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.dropdown-name {
+  font-weight: 700;
+  color: var(--deep-navy);
+  font-size: 0.95rem;
+}
+.dropdown-add-btn {
+  color: var(--mint-green);
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* Profile Edit Page 2-column Layout */
+.profile-panel {
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .profile-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.profile-left, .profile-right {
+  display: flex;
+  flex-direction: column;
+}
