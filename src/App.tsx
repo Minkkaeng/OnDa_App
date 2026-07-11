@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { usePetStore } from './store/petStore';
 
@@ -13,13 +13,172 @@ import GlobalTour from './components/GlobalTour';
 import { useOnboarding } from './hooks/useOnboarding';
 import Profile from './pages/Profile';
 
+const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string }> = {
+  light: {
+    primary: '#14C3A3',
+    background: '#F0F3F5',
+    paper: '#FFFFFF',
+    text: '#121B2A',
+    muted: '#a0abbc'
+  },
+  dark: {
+    primary: '#14C3A3',
+    background: '#121B2A',
+    paper: '#1e293b',
+    text: '#F0F3F5',
+    muted: '#94a3b8'
+  }
+};
+
+const CustomDialog: React.FC = () => {
+  const { customDialog, closeDialog } = usePetStore();
+  if (!customDialog.isOpen) return null;
+
+  const handleConfirm = () => {
+    closeDialog();
+    if (customDialog.onConfirm) customDialog.onConfirm();
+  };
+
+  const handleCancel = () => {
+    closeDialog();
+    if (customDialog.onCancel) customDialog.onCancel();
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      backgroundColor: 'rgba(18, 27, 42, 0.6)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 999999,
+      animation: 'fadeIn 0.2s ease-out'
+    }}>
+      <div style={{
+        backgroundColor: 'var(--white)',
+        borderRadius: '16px',
+        padding: '24px',
+        width: '90%',
+        maxWidth: '360px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+        textAlign: 'center',
+        border: '1px solid var(--steel-gray)',
+        animation: 'scaleUp 0.2s ease-out'
+      }}>
+        <h3 style={{
+          margin: '0 0 12px 0',
+          color: 'var(--deep-navy)',
+          fontSize: '1.2rem',
+          fontWeight: 700
+        }}>{customDialog.title}</h3>
+        <p style={{
+          margin: '0 0 24px 0',
+          color: 'var(--deep-navy)',
+          fontSize: '0.95rem',
+          lineHeight: 1.5,
+          whiteSpace: 'pre-wrap'
+        }}>{customDialog.message}</p>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          {customDialog.type === 'confirm' && (
+            <button
+              onClick={handleCancel}
+              className="btn-submit"
+              style={{
+                flex: 1,
+                backgroundColor: 'var(--muted-gray)',
+                borderColor: 'var(--muted-gray)',
+                color: 'white',
+                padding: '10px 16px',
+                borderRadius: '30px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                marginTop: 0
+              }}
+            >
+              취소
+            </button>
+          )}
+          <button
+            onClick={handleConfirm}
+            className="btn-submit"
+            style={{
+              flex: 1,
+              backgroundColor: 'var(--mint-green)',
+              borderColor: 'var(--mint-green)',
+              color: 'white',
+              padding: '10px 16px',
+              borderRadius: '30px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              marginTop: 0
+            }}
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AppContent: React.FC = () => {
-  const { loading, loadAllData, isGlobalTourActive, setGlobalTourActive } = usePetStore();
+  const { 
+    loading, 
+    loadAllData, 
+    isGlobalTourActive, 
+    setGlobalTourActive,
+    pets,
+    activePetId,
+    setActivePetId,
+    showAlert,
+    showConfirm,
+    activeThemeId,
+    customThemes
+  } = usePetStore();
+
   const [showSplash, setShowSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
+  const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
+  const headerDropdownRef = useRef<HTMLDivElement>(null);
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { isGlobalTourSeen, isLoading: onboardingLoading } = useOnboarding();
+
+  const activePet = pets.find(p => p.id === activePetId) || pets[0];
+
+  // Apply Theme Colors
+  useEffect(() => {
+    let colors = THEME_PRESETS[activeThemeId];
+    if (!colors) {
+      const custom = customThemes.find(t => t.id === activeThemeId);
+      if (custom) {
+        colors = custom.colors;
+      }
+    }
+
+    if (colors) {
+      const root = document.documentElement;
+      root.style.setProperty('--mint-green', colors.primary);
+      root.style.setProperty('--ice-white', colors.background);
+      root.style.setProperty('--white', colors.paper);
+      root.style.setProperty('--deep-navy', colors.text);
+      root.style.setProperty('--muted-gray', colors.muted);
+      root.style.setProperty('--mint-green-light', colors.primary + '1a');
+    }
+  }, [activeThemeId, customThemes]);
+
+  // Click outside for header dropdown
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (headerDropdownRef.current && !headerDropdownRef.current.contains(e.target as Node)) {
+        setHeaderDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   // Swipe navigation state
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -27,12 +186,12 @@ const AppContent: React.FC = () => {
   const routes = ['/dashboard', '/care', '/calendar', '/diary', '/settings'];
 
   const handleDevReset = async () => {
-    if (confirm('모든 데이터(LocalStorage, IndexedDB)를 초기화하시겠습니까?')) {
+    showConfirm('모든 데이터(LocalStorage, IndexedDB)를 초기화하시겠습니까?', '개발용 데이터 초기화', async () => {
       localStorage.clear();
       const { db } = await import('./db');
       await db.delete();
       window.location.reload();
-    }
+    });
   };
 
   // Load local database data on mount
@@ -57,22 +216,25 @@ const AppContent: React.FC = () => {
       // Add a tiny delay so the fade-out completes smoothly before the tour pops up
       const tourTimer = setTimeout(() => {
         setGlobalTourActive(true);
-      }, 100);
+      }, 50);
       return () => clearTimeout(tourTimer);
     }
   }, [loading, onboardingLoading, isGlobalTourSeen, setGlobalTourActive, showSplash]);
 
   // Splash screen transition
   useEffect(() => {
-    const timer1 = setTimeout(() => setSplashFade(true), 1200);
-    const timer2 = setTimeout(() => setShowSplash(false), 1700);
-    return () => { clearTimeout(timer1); clearTimeout(timer2); };
-  }, []);
+    if (!loading && !onboardingLoading) {
+      // Start fade out immediately once data is loaded
+      setSplashFade(true);
+      const timer = setTimeout(() => setShowSplash(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, onboardingLoading]);
 
   const isObPage = location.pathname === '/onboarding';
 
   const handlePremiumClick = () => {
-    alert("현재 프리미엄 멤버십 오픈 준비 중입니다.");
+    showAlert("현재 프리미엄 멤버십 오픈 준비 중입니다.");
   };
 
   // Swipe handlers
@@ -136,7 +298,7 @@ const AppContent: React.FC = () => {
           style={{ 
             backgroundColor: '#F0F3F5',
             opacity: splashFade ? 0 : 1, 
-            transition: 'opacity 0.5s ease',
+            transition: 'opacity 0.3s ease',
             pointerEvents: splashFade ? 'none' : 'auto'
           }}
         >
@@ -156,6 +318,7 @@ const AppContent: React.FC = () => {
       )}
 
       {isGlobalTourActive && <GlobalTour />}
+      <CustomDialog />
 
       <div className="web-layout">
         {/* 1. Global Web Header */}
@@ -173,7 +336,67 @@ const AppContent: React.FC = () => {
                   <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
                 </svg>
               </Link>
-              <button className="premium-btn" onClick={handlePremiumClick} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>PREMIUM</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button className="premium-btn" onClick={handlePremiumClick} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>PREMIUM</button>
+                
+                {/* Google Style Profile Dropdown Button */}
+                {location.pathname !== '/dashboard' && activePet && (
+                  <div className="header-profile-menu-container" ref={headerDropdownRef}>
+                    <img 
+                      src={activePet.image} 
+                      alt="Profile Menu" 
+                      onClick={() => setHeaderDropdownOpen(!headerDropdownOpen)} 
+                      className="header-profile-avatar-btn"
+                    />
+                    {headerDropdownOpen && (
+                      <div className="header-profile-dropdown-menu">
+                        <div className="google-profile-header">
+                          <img src={activePet.image} className="google-profile-large-avatar" alt="Avatar" />
+                          <h4 className="google-profile-name">{activePet.name}</h4>
+                          <p className="google-profile-email">🐾 {activePet.breed} | ⚖️ {activePet.weight}kg</p>
+                          <button 
+                            className="google-profile-edit-btn"
+                            onClick={() => {
+                              setHeaderDropdownOpen(false);
+                              navigate(`/profile?id=${activePet.id}`);
+                            }}
+                          >
+                            프로필 수정
+                          </button>
+                        </div>
+                        
+                        <div className="google-profile-divider"></div>
+                        
+                        <div className="google-profile-pet-list">
+                          <p className="google-profile-list-title">다른 반려동물 프로필</p>
+                          {pets.filter(p => p.id !== activePet.id).map(pet => (
+                            <div 
+                              key={pet.id} 
+                              className="google-pet-item" 
+                              onClick={() => {
+                                setActivePetId(pet.id);
+                                setHeaderDropdownOpen(false);
+                              }}
+                            >
+                              <img src={pet.image} className="google-pet-item-avatar" alt={pet.name} />
+                              <span className="google-pet-item-name">{pet.name}</span>
+                            </div>
+                          ))}
+                          <div 
+                            className="google-pet-add-btn" 
+                            onClick={() => {
+                              setHeaderDropdownOpen(false);
+                              navigate('/profile?add=true');
+                            }}
+                          >
+                            + 새 프로필 추가
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             
             <nav className="header-tab-bar" style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '0 20px', scrollbarWidth: 'none' }}>

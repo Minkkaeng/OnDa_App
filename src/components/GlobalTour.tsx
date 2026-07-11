@@ -4,13 +4,13 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { usePetStore } from '../store/petStore';
 
 const TOUR_STEPS = [
-  { path: '/onboarding', selector: '.avatar-upload', text: '가장 먼저, 예쁜 아이의 사진을 탭하여 프로필 이미지를 등록해 주세요.' },
-  { path: '/onboarding', selector: '.onboarding-form', text: '그 다음 이름, 생일, 몸무게 등 기본 정보를 입력해 프로필 생성을 마무리합니다.' },
-  { path: '/dashboard', selector: '#home-guide-step3', text: '오늘의 산책 기록 위젯을 통해 산책 시간을 실시간으로 측정하고 편하게 저장할 수 있습니다.' },
-  { path: '/dashboard', selector: '#home-guide-step2', text: '이어서 대시보드 하단에서는 아이의 오늘 하루 케어 일정을 한눈에 확인하고 체크할 수 있습니다.' },
+  { path: '/onboarding', selector: '.avatar-upload', text: '예쁜 내 아이의 사진을 탭하여 프로필 이미지를 등록해 주세요.' },
+  { path: '/onboarding', selector: '.onboarding-form', text: '이름, 생일, 몸무게 등 기본 정보를 입력해 프로필을 만들어주세요.' },
+  { path: '/dashboard', selector: '#home-guide-step3', text: '오늘의 산책 기록 위젯을 통해 산책 시간을 실시간으로 측정하고 편하게 저장하세요.' },
+  { path: '/dashboard', selector: '#home-guide-step2', text: '대시보드 하단에서 오늘 하루 케어 일정을 한눈에 확인하고 체크할 수 있습니다.' },
   { path: '/care', selector: '#care-guide-step1', text: '케어 탭에서는 프로필에서 설정한 투약 정보, 알러지, 산책 스케줄을 실시간 타임라인으로 확인할 수 있습니다.' },
-  { path: '/diary', selector: '#diary-guide-step1', text: '우측 하단 버튼을 눌러 아이와의 소중한 추억을 사진과 함께 기록해 보세요.' },
-  { path: '/diary', selector: '.cal-modal-content', text: '이곳에서 사진을 첨부하고 일기 날짜, 제목, 내용을 기입하여 소중한 하루를 기록할 수 있습니다.' }
+  { path: '/diary', selector: '#diary-guide-step1', text: '우측 하단 버튼을 눌러 소중한 추억을 사진과 함께 기록해 보세요.' },
+  { path: '/diary', selector: '.cal-modal-content', text: '사진을 첨부하고 일기 날짜, 제목, 내용을 기입하여 소중한 하루를 기록할 수 있습니다.' }
 ];
 
 const GlobalTour: React.FC = () => {
@@ -207,7 +207,7 @@ const GlobalTour: React.FC = () => {
       {/* Fixed Bottom Controls */}
       <div style={{
         position: 'absolute',
-        bottom: 0, left: 0, right: 0,
+        bottom: '40px', left: 0, right: 0,
         padding: '24px 20px',
         paddingBottom: 'env(safe-area-inset-bottom, 24px)',
         display: 'flex',

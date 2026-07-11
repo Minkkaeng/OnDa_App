@@ -1,6 +1,53 @@
 import { create } from 'zustand';
 import { db, seedDatabase, type Pet, type CalendarEvent } from '../db';
 
+export interface CustomDialog {
+  isOpen: boolean;
+  type: 'alert' | 'confirm';
+  title: string;
+  message: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+}
+
+export interface CustomTheme {
+  id: string;
+  name: string;
+  colors: {
+    primary: string;
+    background: string;
+    paper: string;
+    text: string;
+    muted: string;
+  };
+}
+
+export interface CustomReminder {
+  id: string;
+  title: string;
+  time: string;
+  petId: string;
+  enabled: boolean;
+}
+
+export interface BackupSnapshot {
+  id: string;
+  name: string;
+  createdAt: string;
+  pets: Pet[];
+  calendarEvents: CalendarEvent[];
+}
+
+export interface Inquiry {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  createdAt: string;
+  status: '답변대기' | '답변완료';
+  reply?: string;
+}
+
 interface PetState {
   pets: Pet[];
   activePetId: string | null;
@@ -19,6 +66,39 @@ interface PetState {
   setGlobalTourActive: (active: boolean) => void;
   globalTourStep: number;
   setGlobalTourStep: (step: number) => void;
+
+  // Custom Dialog
+  customDialog: CustomDialog;
+  showAlert: (message: string, title?: string, onConfirm?: () => void) => void;
+  showConfirm: (message: string, title?: string, onConfirm?: () => void, onCancel?: () => void) => void;
+  closeDialog: () => void;
+
+  // Themes
+  activeThemeId: string;
+  customThemes: CustomTheme[];
+  setThemeId: (id: string) => void;
+  addCustomTheme: (theme: Omit<CustomTheme, 'id'>) => void;
+  updateCustomTheme: (theme: CustomTheme) => void;
+  deleteCustomTheme: (id: string) => void;
+
+  // Reminders
+  customReminders: CustomReminder[];
+  addCustomReminder: (reminder: Omit<CustomReminder, 'id' | 'enabled'>) => void;
+  updateCustomReminder: (reminder: CustomReminder) => void;
+  deleteCustomReminder: (id: string) => void;
+
+  // Snapshots
+  backupSnapshots: BackupSnapshot[];
+  addBackupSnapshot: (name: string) => Promise<void>;
+  updateBackupSnapshot: (id: string, name: string) => void;
+  deleteBackupSnapshot: (id: string) => void;
+  restoreBackupSnapshot: (id: string) => Promise<void>;
+
+  // Inquiries
+  inquiries: Inquiry[];
+  addInquiry: (title: string, category: string, content: string) => void;
+  updateInquiry: (inquiry: Inquiry) => void;
+  deleteInquiry: (id: string) => void;
 }
 
 const mockPet: Pet = {
@@ -55,6 +135,11 @@ const mockEvents: CalendarEvent[] = [
   }
 ];
 
+const loadFromLS = <T>(key: string, defaultValue: T): T => {
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : defaultValue;
+};
+
 export const usePetStore = create<PetState>((set, get) => ({
   pets: [],
   activePetId: null,
@@ -62,6 +147,166 @@ export const usePetStore = create<PetState>((set, get) => ({
   loading: true,
   isGlobalTourActive: false,
   globalTourStep: 0,
+
+  // Custom Dialog State
+  customDialog: {
+    isOpen: false,
+    type: 'alert',
+    title: '알림',
+    message: '',
+    onConfirm: undefined,
+    onCancel: undefined
+  },
+  showAlert: (message, title = '알림', onConfirm = undefined) => {
+    set({
+      customDialog: {
+        isOpen: true,
+        type: 'alert',
+        title,
+        message,
+        onConfirm,
+        onCancel: undefined
+      }
+    });
+  },
+  showConfirm: (message, title = '확인', onConfirm = undefined, onCancel = undefined) => {
+    set({
+      customDialog: {
+        isOpen: true,
+        type: 'confirm',
+        title,
+        message,
+        onConfirm,
+        onCancel
+      }
+    });
+  },
+  closeDialog: () => {
+    set(state => ({
+      customDialog: { ...state.customDialog, isOpen: false }
+    }));
+  },
+
+  // Themes
+  activeThemeId: loadFromLS('activeThemeId', 'light'),
+  customThemes: loadFromLS('customThemes', []),
+  setThemeId: (id) => {
+    localStorage.setItem('activeThemeId', id);
+    set({ activeThemeId: id });
+  },
+  addCustomTheme: (themeData) => {
+    const newId = 'theme-' + Date.now();
+    const newTheme = { ...themeData, id: newId };
+    const updated = [...get().customThemes, newTheme];
+    localStorage.setItem('customThemes', JSON.stringify(updated));
+    set({ customThemes: updated });
+  },
+  updateCustomTheme: (theme) => {
+    const updated = get().customThemes.map(t => t.id === theme.id ? theme : t);
+    localStorage.setItem('customThemes', JSON.stringify(updated));
+    set({ customThemes: updated });
+  },
+  deleteCustomTheme: (id) => {
+    const updated = get().customThemes.filter(t => t.id !== id);
+    localStorage.setItem('customThemes', JSON.stringify(updated));
+    set({ customThemes: updated });
+    if (get().activeThemeId === id) {
+      get().setThemeId('light');
+    }
+  },
+
+  // Reminders
+  customReminders: loadFromLS('customReminders', []),
+  addCustomReminder: (reminderData) => {
+    const newId = 'rem-' + Date.now();
+    const newReminder = { ...reminderData, id: newId, enabled: true };
+    const updated = [...get().customReminders, newReminder];
+    localStorage.setItem('customReminders', JSON.stringify(updated));
+    set({ customReminders: updated });
+  },
+  updateCustomReminder: (reminder) => {
+    const updated = get().customReminders.map(r => r.id === reminder.id ? reminder : r);
+    localStorage.setItem('customReminders', JSON.stringify(updated));
+    set({ customReminders: updated });
+  },
+  deleteCustomReminder: (id) => {
+    const updated = get().customReminders.filter(r => r.id !== id);
+    localStorage.setItem('customReminders', JSON.stringify(updated));
+    set({ customReminders: updated });
+  },
+
+  // Snapshots
+  backupSnapshots: loadFromLS('backupSnapshots', []),
+  addBackupSnapshot: async (name) => {
+    const newId = 'snap-' + Date.now();
+    const pets = await db.pets.toArray();
+    const calendarEvents = await db.calendarEvents.toArray();
+    const newSnapshot = {
+      id: newId,
+      name,
+      createdAt: new Date().toISOString(),
+      pets,
+      calendarEvents
+    };
+    const updated = [...get().backupSnapshots, newSnapshot];
+    localStorage.setItem('backupSnapshots', JSON.stringify(updated));
+    set({ backupSnapshots: updated });
+  },
+  updateBackupSnapshot: (id, name) => {
+    const updated = get().backupSnapshots.map(s => s.id === id ? { ...s, name } : s);
+    localStorage.setItem('backupSnapshots', JSON.stringify(updated));
+    set({ backupSnapshots: updated });
+  },
+  deleteBackupSnapshot: (id) => {
+    const updated = get().backupSnapshots.filter(s => s.id !== id);
+    localStorage.setItem('backupSnapshots', JSON.stringify(updated));
+    set({ backupSnapshots: updated });
+  },
+  restoreBackupSnapshot: async (id) => {
+    const snapshot = get().backupSnapshots.find(s => s.id === id);
+    if (!snapshot) return;
+    await db.pets.clear();
+    await db.calendarEvents.clear();
+    if (snapshot.pets.length > 0) {
+      await db.pets.bulkAdd(snapshot.pets);
+    }
+    if (snapshot.calendarEvents.length > 0) {
+      await db.calendarEvents.bulkAdd(snapshot.calendarEvents);
+    }
+    if (snapshot.pets.length > 0) {
+      localStorage.setItem('activePetId', snapshot.pets[0].id);
+    } else {
+      localStorage.removeItem('activePetId');
+    }
+    await get().loadAllData();
+  },
+
+  // Inquiries
+  inquiries: loadFromLS('inquiries', []),
+  addInquiry: (title, category, content) => {
+    const newId = 'inq-' + Date.now();
+    const newInquiry = {
+      id: newId,
+      title,
+      category,
+      content,
+      createdAt: new Date().toISOString(),
+      status: '답변대기' as const
+    };
+    const updated = [...get().inquiries, newInquiry];
+    localStorage.setItem('inquiries', JSON.stringify(updated));
+    set({ inquiries: updated });
+  },
+  updateInquiry: (inquiry) => {
+    const updated = get().inquiries.map(i => i.id === inquiry.id ? inquiry : i);
+    localStorage.setItem('inquiries', JSON.stringify(updated));
+    set({ inquiries: updated });
+  },
+  deleteInquiry: (id) => {
+    const updated = get().inquiries.filter(i => i.id !== id);
+    localStorage.setItem('inquiries', JSON.stringify(updated));
+    set({ inquiries: updated });
+  },
 
   setGlobalTourActive: (active: boolean) => {
     if (active) {

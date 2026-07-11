@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { usePetStore } from '../store/petStore';
 import { useOnboarding } from '../hooks/useOnboarding';
-import { ProfileCard } from '../components/ProfileCard';
 
 const Diary: React.FC = () => {
-  const { pets, activePetId, events, addCalendarEvent, deleteCalendarEvent, isGlobalTourActive, globalTourStep } = usePetStore();
+  const { pets, activePetId, events, addCalendarEvent, deleteCalendarEvent, isGlobalTourActive, globalTourStep, showAlert, showConfirm } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
   const { isDiaryLimitSeen, completeGuide, isLoading } = useOnboarding();
 
@@ -51,11 +50,11 @@ const Diary: React.FC = () => {
   const handleSaveDiary = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      alert('제목을 입력해주세요.');
+      showAlert('제목을 입력해주세요.');
       return;
     }
     if (!date) {
-      alert('날짜를 지정해주세요.');
+      showAlert('날짜를 지정해주세요.');
       return;
     }
 
@@ -69,7 +68,7 @@ const Diary: React.FC = () => {
         imageUrl: imageUrl || undefined
       });
 
-      alert('기록일기가 저장되었습니다!');
+      showAlert('기록일기가 저장되었습니다!');
       
       // Reset
       setTitle('');
@@ -78,13 +77,12 @@ const Diary: React.FC = () => {
       setShowFormModal(false);
     } catch (err) {
       console.error(err);
-      alert('저장 중 오류가 발생했습니다.');
+      showAlert('저장 중 오류가 발생했습니다.');
     }
   };
 
   return (
     <div className="diary-wrapper" style={{ paddingBottom: '80px' }}>
-      <ProfileCard />
       
       <div className="diary-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 0' }}>
         <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--deep-navy)', margin: 0 }}>기록일기</h2>
@@ -294,9 +292,9 @@ const Diary: React.FC = () => {
                     {!isGlobalTourActive && (
                       <button
                         onClick={() => {
-                          if (confirm('이 일기를 삭제하시겠습니까?')) {
+                          showConfirm('이 일기를 삭제하시겠습니까?', '일기 삭제', () => {
                             deleteCalendarEvent(ev.id);
-                          }
+                          });
                         }}
                         style={{
                           background: 'none',

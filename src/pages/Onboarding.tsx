@@ -8,7 +8,7 @@ const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const addPet = usePetStore(state => state.addPet);
+  const { addPet, showAlert } = usePetStore();
   
   const [name, setName] = useState('');
   const [breed, setBreed] = useState('');
@@ -70,12 +70,12 @@ const Onboarding: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        alert(`이미지 크기가 ${MAX_IMAGE_SIZE_MB}MB를 초과합니다. 자동으로 압축을 진행합니다.`);
+        showAlert(`이미지 크기가 ${MAX_IMAGE_SIZE_MB}MB를 초과합니다. 자동으로 압축을 진행합니다.`);
         try {
           const compressed = await compressImage(file);
           setImage(compressed);
         } catch (error) {
-          alert('이미지 압축에 실패했습니다. 다른 이미지를 선택해주세요.');
+          showAlert('이미지 압축에 실패했습니다. 다른 이미지를 선택해주세요.');
         }
       } else {
         const reader = new FileReader();
@@ -154,7 +154,7 @@ const Onboarding: React.FC = () => {
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      alert('등록 중 오류가 발생했습니다.');
+      showAlert('등록 중 오류가 발생했습니다.');
     }
   };
 

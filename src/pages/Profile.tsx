@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ProfileCard } from '../components/ProfileCard';
 import { usePetStore } from '../store/petStore';
 import defaultLogo from '../assets/logo.png';
 
 const Profile: React.FC = () => {
   const location = useLocation();
-  const { pets, activePetId, addPet, updatePet } = usePetStore();
+  const { pets, activePetId, addPet, updatePet, showAlert } = usePetStore();
 
   const [selectedPetId, setSelectedPetId] = useState<string | null>(activePetId);
 
@@ -23,13 +22,18 @@ const Profile: React.FC = () => {
   const [walkGoal, setWalkGoal] = useState('');
   const [image, setImage] = useState(defaultLogo);
 
-  // Check query params to force new pet add mode
+  // Check query params to force new pet add mode or select specific pet
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('add') === 'true') {
       setSelectedPetId(null);
     } else {
-      setSelectedPetId(activePetId);
+      const idParam = params.get('id');
+      if (idParam) {
+        setSelectedPetId(idParam);
+      } else {
+        setSelectedPetId(activePetId);
+      }
     }
   }, [location.search, activePetId]);
 
@@ -82,7 +86,7 @@ const Profile: React.FC = () => {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('이름을 입력해주세요.');
+      showAlert('이름을 입력해주세요.');
       return;
     }
 
@@ -107,22 +111,21 @@ const Profile: React.FC = () => {
           ...petData,
           id: selectedPetId
         });
-        alert('프로필이 성공적으로 수정되었습니다.');
+        showAlert('프로필이 성공적으로 수정되었습니다.');
       } else {
         // Create new pet
         const newPet = await addPet(petData);
         setSelectedPetId(newPet.id);
-        alert('새로운 반려동물 프로필이 생성되었습니다!');
+        showAlert('새로운 반려동물 프로필이 생성되었습니다!');
       }
     } catch (err) {
       console.error(err);
-      alert('저장 중 오류가 발생했습니다.');
+      showAlert('저장 중 오류가 발생했습니다.');
     }
   };
 
   return (
     <>
-      <ProfileCard />
       <div className="profile-cards-wrapper" style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
         <h2 className="section-title" style={{ marginBottom: '24px' }}>프로필 설정</h2>
         

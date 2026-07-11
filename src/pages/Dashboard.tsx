@@ -4,7 +4,7 @@ import { usePetStore } from '../store/petStore';
 import { useOnboarding } from '../hooks/useOnboarding';
 
 const Dashboard: React.FC = () => {
-  const { addCalendarEvent, pets, activePetId, isGlobalTourActive } = usePetStore();
+  const { addCalendarEvent, pets, activePetId, isGlobalTourActive, showAlert } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
   const { isCoachMarkSeen, completeGuide, isLoading } = useOnboarding();
 
@@ -97,7 +97,7 @@ const Dashboard: React.FC = () => {
       content: `총 산책 시간: ${formattedWalkTime} / 목표 시간: ${targetTime}`
     });
 
-    alert('산책 기록이 캘린더에 성공적으로 저장되었습니다!');
+    showAlert('산책 기록이 캘린더에 성공적으로 저장되었습니다!');
     
     // Reset state
     setWalkState('idle');

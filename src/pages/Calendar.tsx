@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { ProfileCard } from '../components/ProfileCard';
 import { usePetStore, type CalendarEvent } from '../store/petStore';
 import { type EventType } from '../db';
 
 const Calendar: React.FC = () => {
-  const { pets, activePetId, events, addCalendarEvent } = usePetStore();
+  const { pets, activePetId, events, addCalendarEvent, showAlert } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -25,7 +24,6 @@ const Calendar: React.FC = () => {
   if (!activePet) {
     return (
       <>
-        <ProfileCard />
         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted-gray)' }}>
           반려동물을 먼저 등록해주세요.
         </div>
@@ -138,7 +136,7 @@ const Calendar: React.FC = () => {
   const handleAddEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle.trim()) {
-      alert('제목을 입력해주세요.');
+      showAlert('제목을 입력해주세요.');
       return;
     }
 
@@ -151,13 +149,13 @@ const Calendar: React.FC = () => {
         content: newEventContent
       });
 
-      alert('기록이 추가되었습니다!');
+      showAlert('기록이 추가되었습니다!');
       setShowAddModal(false);
       setNewEventTitle('');
       setNewEventContent('');
     } catch (err) {
       console.error(err);
-      alert('저장 중 오류가 발생했습니다.');
+      showAlert('저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -181,7 +179,6 @@ const Calendar: React.FC = () => {
 
   return (
     <>
-      <ProfileCard />
 
       {activeTab === 'calendar' ? (
         <div id="view-calendar" className="cal-wrapper" style={{ marginTop: '24px' }}>

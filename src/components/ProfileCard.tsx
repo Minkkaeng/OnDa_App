@@ -75,10 +75,20 @@ export const ProfileCard: React.FC = () => {
           </div>
         ))}
         <div 
+          className="dropdown-item dropdown-edit-btn" 
+          onClick={() => {
+            setDropdownOpen(false);
+            navigate(`/profile?id=${activePet.id}`);
+          }}
+          style={{ justifyContent: 'center', color: 'var(--deep-navy)', fontWeight: 'bold', borderTop: '1px solid var(--steel-gray)' }}
+        >
+          ⚙️ 프로필 수정
+        </div>
+        <div 
           className="dropdown-item dropdown-add-btn" 
           onClick={() => {
             setDropdownOpen(false);
-            navigate('/profile'); // Redirects to pet management / add pet form
+            navigate('/profile?add=true');
           }}
         >
           + 새 프로필 추가

@@ -1,5 +1,4 @@
 import React from 'react';
-import { ProfileCard } from '../components/ProfileCard';
 import { usePetStore } from '../store/petStore';
 
 const Care: React.FC = () => {
@@ -63,7 +62,6 @@ const Care: React.FC = () => {
 
   return (
     <>
-      <ProfileCard />
       <div className="care-layout" style={{ justifyContent: 'center', marginTop: '24px' }}>
         <div 
           id="care-guide-step1" 
