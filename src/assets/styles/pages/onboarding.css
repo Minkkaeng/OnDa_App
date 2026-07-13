@@ -1,33 +1,42 @@
 /* src/styles/pages/onboarding.css */
 .onboarding-container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 40px 20px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   animation: fadeIn 0.5s ease-out;
+  background-color: var(--white);
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
 }
 
 .onboarding-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .onboarding-header h1 {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   color: var(--deep-navy);
   margin-bottom: 8px;
+  font-weight: 800;
 }
 
 .onboarding-header p {
-  color: #666;
-  font-size: 0.95rem;
+  color: var(--muted-gray);
+  font-size: 0.9rem;
+  word-break: keep-all;
 }
 
 .avatar-upload {
   display: flex;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .avatar-preview {
@@ -58,25 +67,28 @@
 }
 
 .onboarding-form .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .onboarding-form .form-label {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--deep-navy);
-  margin-bottom: 8px;
-  font-size: 0.95rem;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
 }
 
 .onboarding-form .form-input {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
+  height: 46px;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid var(--steel-gray);
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
+  background-color: var(--white);
+  color: var(--deep-navy);
 }
 
 .onboarding-form .form-input:focus {
@@ -85,20 +97,23 @@
 }
 
 .onboarding-footer {
-  margin-top: 40px;
+  margin-top: 24px;
 }
 
 .btn-submit {
   width: 100%;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 14px;
+  border-radius: 10px;
   background-color: var(--mint-green);
   color: white;
   border: none;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-submit:hover {

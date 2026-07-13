@@ -1,7 +1,8 @@
 .diary-wrapper {
-  max-width: 800px;
+  max-width: 480px;
   margin: 0 auto;
-  padding: 24px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .diary-header {
@@ -14,15 +15,16 @@
 .diary-feed {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 20px;
 }
 
 .diary-card {
   background: var(--white);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid var(--steel-gray);
+  border-top: 6px solid var(--mint-green);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(18, 27, 42, 0.04);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 

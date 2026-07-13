@@ -35,12 +35,15 @@
 
 .form-input {
     width: 100%;
-    padding: 12px;
+    height: 46px;
+    padding: 12px 14px;
     border: 1px solid var(--steel-gray);
-    border-radius: 6px;
+    border-radius: 10px;
     font-family: var(--font-main);
     font-size: 0.95rem;
     color: var(--deep-navy);
+    box-sizing: border-box;
+    background-color: var(--white);
 }
 
 .toggle-group {

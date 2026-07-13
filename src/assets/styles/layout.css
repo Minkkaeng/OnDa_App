@@ -122,3 +122,14 @@ body {
   line-height: 1.8;
 }
 .web-footer b { color: #64748b; }
+
+.content-onboarding {
+  flex-grow: 1;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white);
+}

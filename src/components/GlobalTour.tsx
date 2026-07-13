@@ -4,24 +4,56 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { usePetStore } from '../store/petStore';
 
 const TOUR_STEPS = [
-  { path: '/onboarding', selector: '.avatar-upload', text: '예쁜 내 아이의 사진을 탭하여 프로필 이미지를 등록해 주세요.' },
-  { path: '/onboarding', selector: '.onboarding-form', text: '이름, 생일, 몸무게 등 기본 정보를 입력해 프로필을 만들어주세요.' },
-  { path: '/dashboard', selector: '#home-guide-step3', text: '오늘의 산책 기록 위젯을 통해 산책 시간을 실시간으로 측정하고 편하게 저장하세요.' },
-  { path: '/dashboard', selector: '#home-guide-step2', text: '대시보드 하단에서 오늘 하루 케어 일정을 한눈에 확인하고 체크할 수 있습니다.' },
-  { path: '/care', selector: '#care-guide-step1', text: '케어 탭에서는 프로필에서 설정한 투약 정보, 알러지, 산책 스케줄을 실시간 타임라인으로 확인할 수 있습니다.' },
-  { path: '/diary', selector: '#diary-guide-step1', text: '우측 하단 버튼을 눌러 소중한 추억을 사진과 함께 기록해 보세요.' },
-  { path: '/diary', selector: '.cal-modal-content', text: '사진을 첨부하고 일기 날짜, 제목, 내용을 기입하여 소중한 하루를 기록할 수 있습니다.' }
+  { path: '/onboarding', selector: '.avatar-upload', text: '📷 프로필 생성\n사진과 기본 정보, 맞춤 케어 정보를 입력하세요.' },
+  { path: '/dashboard', selector: '#home-guide-step3', text: '🏃 스마트 대시보드\n원터치 산책 기록과 케어 체크리스트를 한눈에 관리해요.' },
+  { path: '/care', selector: '#care-guide-step1', text: '🗓️ 실시간 케어 스케줄러\n투약과 산책 일정을 연동해 데일리 루틴을 자동 생성합니다.' },
+  { path: '/calendar', selector: '#view-calendar', text: '📅 통합 캘린더 뷰\n산책, 다이어리, 접종 일정을 날짜별로 모아보세요.' },
+  { path: '/diary', selector: '#diary-guide-step1', text: '📝 소중한 일상 다이어리\n사진과 글로 매일의 추억을 예쁘게 기록해 보세요.' }
 ];
 
 const GlobalTour: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { completeGuide } = useOnboarding();
-  const { setGlobalTourActive, setGlobalTourStep } = usePetStore();
+  const { setGlobalTourActive, setGlobalTourStep, showSplash } = usePetStore();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [tourOpacity, setTourOpacity] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (!showSplash) {
+      const animationFrame = requestAnimationFrame(() => {
+        setTourOpacity(1);
+      });
+      return () => cancelAnimationFrame(animationFrame);
+    } else {
+      setTourOpacity(0);
+    }
+  }, [showSplash]);
+
+  // Spotlight Effect Calculation
+  useEffect(() => {
+    const updateRect = () => {
+      if (!isVisible) return;
+      const step = TOUR_STEPS[currentStep];
+      if (step && step.selector) {
+        const el = document.querySelector(step.selector);
+        if (el) {
+          setTargetRect(el.getBoundingClientRect());
+        } else {
+          setTargetRect(null);
+        }
+      }
+    };
+    const timer = setTimeout(updateRect, 150); // wait for dom to render
+    window.addEventListener('resize', updateRect);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateRect);
+    };
+  }, [currentStep, isVisible, location.pathname]);
 
   // Sync step with global store so subcomponents can react
   useEffect(() => {
@@ -50,34 +82,12 @@ const GlobalTour: React.FC = () => {
     }
   }, [currentStep, isVisible, navigate, location.pathname]);
 
-  // Track target element
-  useEffect(() => {
-    if (!isVisible) return;
 
-    let timeoutId: number;
-    const updateRect = () => {
-      const selector = TOUR_STEPS[currentStep].selector;
-      const el = document.querySelector(selector);
-      if (el) {
-        setTargetRect(el.getBoundingClientRect());
-      } else {
-        // Fallback or wait
-        setTargetRect(null);
-        timeoutId = window.setTimeout(updateRect, 300);
-      }
-    };
 
-    updateRect();
-    // Poll a few times to ensure rendering
-    timeoutId = window.setTimeout(updateRect, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [currentStep, isVisible, location.pathname]);
-
-  const handleFinish = () => {
+  const handleFinish = async () => {
     setIsVisible(false);
     setGlobalTourActive(false);
-    completeGuide('isGlobalTourSeen');
+    await completeGuide('isGlobalTourSeen');
     navigate('/onboarding', { replace: true });
   };
 
@@ -97,171 +107,140 @@ const GlobalTour: React.FC = () => {
 
   if (!isVisible) return null;
 
-  // Use the middle of the screen to decide tooltip placement (maximizes available vertical space)
-  const isBottom = targetRect && (targetRect.top + targetRect.height / 2 > window.innerHeight / 2);
+  // Calculate tooltip bounding box (Clamped within mobile frame)
+  const maxTooltipWidth = 340;
 
-  const boxTop = targetRect ? targetRect.top - 4 : 0;
-  const boxLeft = targetRect ? targetRect.left - 4 : 0;
-  const boxWidth = targetRect ? targetRect.width + 8 : 0;
-  const boxHeight = targetRect ? targetRect.height + 8 : 0;
+  const showTooltip = isVisible;
 
-  // Line anchor at the target bounding box (bottom-center or top-center)
-  const startX = boxLeft + (boxWidth / 2);
-  const startY = isBottom ? boxTop : boxTop + boxHeight;
-
-  // Calculate tooltip bounding box so the line always connects nicely
-  const maxTooltipWidth = 400;
-  const tooltipWidth = Math.min(window.innerWidth - 48, maxTooltipWidth);
-  const renderLeft = (window.innerWidth - tooltipWidth) / 2;
-  const renderRight = renderLeft + tooltipWidth;
-
-  // Line anchor at the tooltip (clamp X so it doesn't detach from the box)
-  const endX = Math.max(renderLeft + 24, Math.min(renderRight - 24, startX));
-  const endY = isBottom ? boxTop - 32 : boxTop + boxHeight + 32;
-
-  // Tooltip position
+  // Tooltip position (Constrained to the bottom area of the mobile frame)
   const tooltipStyle: React.CSSProperties = {
-    position: 'fixed',
+    position: 'absolute',
     left: '50%',
     transform: 'translateX(-50%)',
-    width: '100%',
+    width: 'calc(100% - 32px)',
     maxWidth: `${maxTooltipWidth}px`,
-    ...(isBottom ? { bottom: window.innerHeight - endY } : { top: endY })
+    bottom: '90px', // Anchor tooltip card 90px from the bottom
+    zIndex: 10,
+    opacity: showTooltip ? 1 : 0,
+    pointerEvents: showTooltip ? 'auto' : 'none',
+    transition: 'opacity 0.25s ease-in-out, transform 0.25s ease-in-out'
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'auto', overflow: 'hidden' }}>
-      {!targetRect && (
-        <div
-          style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(18, 27, 42, 0.85)',
-            transition: 'background-color 0.4s ease'
-          }}
-        />
-      )}
+    <div style={{ 
+      position: 'absolute', inset: 0, zIndex: 9999, pointerEvents: 'auto', overflow: 'hidden',
+      opacity: tourOpacity,
+      transition: 'opacity 0.5s ease-out'
+    }}>
+      {/* Spotlight overlay */}
+      <div
+        style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: targetRect 
+            ? `radial-gradient(circle at ${targetRect.left + targetRect.width / 2}px ${targetRect.top + targetRect.height / 2}px, transparent ${Math.max(targetRect.width, targetRect.height) / 2 + 10}px, rgba(18, 27, 42, 0.6) ${Math.max(targetRect.width, targetRect.height) / 2 + 25}px)`
+            : 'rgba(18, 27, 42, 0.6)',
+          transition: 'background 0.4s ease',
+          pointerEvents: 'none',
+          zIndex: 0
+        }}
+      />
+      {/* Direct Text Description with integrated controls */}
+      <div style={{
+        ...tooltipStyle,
+        padding: '0'
+      }}>
+        <div style={{
+          backgroundColor: '#FFF',
+          color: '#121B2A',
+          padding: '20px',
+          borderRadius: '16px',
+          boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
+          fontSize: '0.95rem',
+          lineHeight: '1.5',
+          fontWeight: 500,
+          wordBreak: 'keep-all',
+          border: '1px solid rgba(20, 195, 163, 0.15)',
+          pointerEvents: 'auto'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', color: '#334155' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'pre-line' }}>
+              {TOUR_STEPS[currentStep] ? TOUR_STEPS[currentStep].text : ''}
+            </span>
+          </div>
 
-      {targetRect && (
-        <>
-          {/* Completely transparent hole with dashed border */}
-          <div style={{
-            position: 'absolute',
-            top: boxTop,
-            left: boxLeft,
-            width: boxWidth,
-            height: boxHeight,
-            backgroundColor: 'transparent',
-            boxShadow: '0 0 0 9999px rgba(26, 33, 46, 0.12)',
-            border: '1.5px dashed #14C3A3',
-            borderRadius: '8px',
-            zIndex: 1,
-            pointerEvents: 'none',
-            transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
-          }} />
+          {/* Action Buttons Row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+            {/* Step indicator dots */}
+            <div style={{ display: 'flex', gap: '5px' }}>
+              {TOUR_STEPS.map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: idx === currentStep ? '#14C3A3' : '#E2E8F0',
+                    transition: 'background-color 0.2s'
+                  }}
+                />
+              ))}
+            </div>
 
-          {/* SVG Connecting Line */}
-          <svg style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            zIndex: 2, pointerEvents: 'none'
-          }}>
-            <path
-              d={`M ${startX} ${startY} Q ${startX} ${(startY + endY) / 2}, ${endX} ${endY}`}
-              fill="none"
-              stroke="#14C3A3"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-              style={{ transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)' }}
-            />
-            <circle cx={startX} cy={startY} r="4" fill="#14C3A3" style={{ transition: 'all 0.4s ease' }} />
-            <circle cx={endX} cy={endY} r="4" fill="#14C3A3" style={{ transition: 'all 0.4s ease' }} />
-          </svg>
-
-          {/* Direct Text Description */}
-          <div style={{
-            position: 'absolute',
-            ...tooltipStyle,
-            padding: '0 24px', // To keep it within screen bounds while matching width 100%
-            zIndex: 3,
-            pointerEvents: 'none',
-            transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'
-          }}>
-            <div style={{
-              backgroundColor: '#FFF',
-              color: '#14C3A3',
-              padding: '16px 20px',
-              borderRadius: '12px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-              fontSize: '1rem',
-              lineHeight: '1.5',
-              fontWeight: 700,
-              wordBreak: 'keep-all',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span>{TOUR_STEPS[currentStep].text}</span>
-              </div>
+            {/* Prev / Next & Skip Buttons */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {currentStep > 0 && (
+                <button
+                  onClick={handlePrev}
+                  style={{ 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    border: '1px solid #CBD5E1', 
+                    backgroundColor: 'transparent', 
+                    color: '#64748B', 
+                    fontWeight: 600, 
+                    fontSize: '0.8rem',
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s' 
+                  }}
+                >
+                  이전
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                style={{ 
+                  padding: '6px 18px', 
+                  borderRadius: '20px', 
+                  border: 'none', 
+                  backgroundColor: '#14C3A3', 
+                  color: '#FFF', 
+                  fontWeight: 700, 
+                  fontSize: '0.8rem',
+                  cursor: 'pointer', 
+                  boxShadow: '0 2px 6px rgba(20, 195, 163, 0.25)', 
+                  transition: 'all 0.2s' 
+                }}
+              >
+                {currentStep === TOUR_STEPS.length - 1 ? '시작하기' : '다음'}
+              </button>
+              <button
+                onClick={handleFinish}
+                style={{ 
+                  marginLeft: '8px',
+                  background: 'none', 
+                  border: 'none', 
+                  color: '#94A3B8', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 500, 
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                Skip
+              </button>
             </div>
           </div>
-        </>
-      )}
-
-      {/* Fixed Bottom Controls */}
-      <div style={{
-        position: 'absolute',
-        bottom: '40px', left: 0, right: 0,
-        padding: '24px 20px',
-        paddingBottom: 'env(safe-area-inset-bottom, 24px)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 4,
-      }}>
-        {/* Step Indicators */}
-        <div style={{
-          position: 'absolute',
-          top: '-20px',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '8px',
-        }}>
-          {TOUR_STEPS.map((_, idx) => (
-            <div
-              key={idx}
-              style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                backgroundColor: idx === currentStep ? '#14C3A3' : 'rgba(255,255,255,0.3)',
-                transition: 'background-color 0.3s ease'
-              }}
-            />
-          ))}
         </div>
-
-        {/* Center: Prev / Next */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {currentStep > 0 && (
-            <button
-              onClick={handlePrev}
-              style={{ padding: '10px 24px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.4)', backgroundColor: 'transparent', color: '#FFF', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-            >
-              이전
-            </button>
-          )}
-          <button
-            onClick={handleNext}
-            style={{ padding: '10px 32px', borderRadius: '30px', border: 'none', backgroundColor: '#14C3A3', color: '#121B2A', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 12px rgba(20, 195, 163, 0.3)', transition: 'all 0.2s' }}
-          >
-            {currentStep === TOUR_STEPS.length - 1 ? '시작하기' : '다음'}
-          </button>
-        </div>
-
-        {/* Right: Skip */}
-        <button
-          onClick={handleFinish}
-          style={{ position: 'absolute', right: '20px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}
-        >
-          Skip
-        </button>
       </div>
     </div>
   );

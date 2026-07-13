@@ -55,14 +55,14 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ steps, onFinish }) => {
         {targetRect ? (
           <div style={{
             position: 'absolute',
-            top: targetRect.top - 4,
-            left: targetRect.left - 4,
-            width: targetRect.width + 8,
-            height: targetRect.height + 8,
+            top: targetRect.top - 12,
+            left: targetRect.left - 12,
+            width: targetRect.width + 24,
+            height: targetRect.height + 24,
             backgroundColor: 'transparent',
             boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
             borderRadius: '12px',
-            transition: 'all 0.3s ease',
+            transition: 'none',
             pointerEvents: 'none',
             zIndex: 10000
           }} />
@@ -77,14 +77,14 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ steps, onFinish }) => {
       
       {targetRect && (
         <div style={{
-          position: 'absolute',
+          position: 'fixed',
           top: targetRect.bottom > window.innerHeight - 150 
-               ? targetRect.top - 120 
-               : targetRect.bottom + 16,
+               ? targetRect.top - 140 
+               : targetRect.bottom + 24,
           left: '50%',
           transform: 'translateX(-50%)',
           backgroundColor: '#FFF',
-          padding: '16px',
+          padding: '20px',
           borderRadius: '12px',
           width: '90%',
           maxWidth: '320px',

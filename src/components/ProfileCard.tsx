@@ -4,7 +4,7 @@ import { usePetStore } from '../store/petStore';
 
 export const ProfileCard: React.FC = () => {
   const navigate = useNavigate();
-  const { pets, activePetId, setActivePetId } = usePetStore();
+  const { pets, activePetId, setActivePetId, events } = usePetStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -36,8 +36,32 @@ export const ProfileCard: React.FC = () => {
     );
   }
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const overdueEvents = events.filter(e => e.petId === activePet.id && e.type === 'hospital' && e.date < todayStr);
+  const overdueCount = overdueEvents.length;
+
   return (
-    <div className="global-profile-card" ref={dropdownRef}>
+    <div className="global-profile-card" ref={dropdownRef} style={{ position: 'relative' }}>
+      {overdueCount > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '-10px',
+          left: '10px',
+          backgroundColor: '#FF4D4D',
+          color: 'white',
+          padding: '4px 8px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: 800,
+          boxShadow: '0 2px 8px rgba(255,77,77,0.4)',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
+        }}>
+          ⚠️ <span style={{ letterSpacing: '-0.5px' }}>케어 지연 {overdueCount}건</span>
+        </div>
+      )}
       <div className="global-profile-content">
         <img src={activePet.image} alt="프로필 사진" className="global-profile-avatar" />
         <div className="global-profile-info">

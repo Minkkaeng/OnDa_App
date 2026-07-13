@@ -58,6 +58,7 @@ interface PetState {
   addPet: (pet: Omit<Pet, 'id'>) => Promise<Pet>;
   updatePet: (pet: Pet) => Promise<void>;
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<CalendarEvent>;
+  updateCalendarEvent: (event: CalendarEvent) => Promise<void>;
   deleteCalendarEvent: (id: string) => Promise<void>;
   setPets: (pets: Pet[]) => void;
   setEvents: (events: CalendarEvent[]) => void;
@@ -66,6 +67,8 @@ interface PetState {
   setGlobalTourActive: (active: boolean) => void;
   globalTourStep: number;
   setGlobalTourStep: (step: number) => void;
+  showSplash: boolean;
+  setShowSplash: (show: boolean) => void;
 
   // Custom Dialog
   customDialog: CustomDialog;
@@ -99,6 +102,14 @@ interface PetState {
   addInquiry: (title: string, category: string, content: string) => void;
   updateInquiry: (inquiry: Inquiry) => void;
   deleteInquiry: (id: string) => void;
+
+  // Walk Tracker (Global)
+  walkState: 'idle' | 'running' | 'paused';
+  walkElapsedSec: number;
+  walkTargetMin: number;
+  setWalkState: (state: 'idle' | 'running' | 'paused') => void;
+  setWalkElapsedSec: (sec: number | ((prev: number) => number)) => void;
+  setWalkTargetMin: (min: number) => void;
 }
 
 const mockPet: Pet = {
@@ -137,7 +148,12 @@ const mockEvents: CalendarEvent[] = [
 
 const loadFromLS = <T>(key: string, defaultValue: T): T => {
   const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : defaultValue;
+  if (!data) return defaultValue;
+  try {
+    return JSON.parse(data) as T;
+  } catch (e) {
+    return data as unknown as T;
+  }
 };
 
 export const usePetStore = create<PetState>((set, get) => ({
@@ -147,6 +163,8 @@ export const usePetStore = create<PetState>((set, get) => ({
   loading: true,
   isGlobalTourActive: false,
   globalTourStep: 0,
+  showSplash: true,
+  setShowSplash: (show) => set({ showSplash: show }),
 
   // Custom Dialog State
   customDialog: {
@@ -308,6 +326,15 @@ export const usePetStore = create<PetState>((set, get) => ({
     set({ inquiries: updated });
   },
 
+  // Walk Tracker
+  walkState: 'idle',
+  walkElapsedSec: 0,
+  walkTargetMin: 30,
+  setWalkState: (state) => set({ walkState: state }),
+  setWalkElapsedSec: (sec) => set((state) => ({ walkElapsedSec: typeof sec === 'function' ? sec(state.walkElapsedSec) : sec })),
+  incrementWalkSec: () => set((state) => ({ walkElapsedSec: state.walkElapsedSec + 1 })),
+  setWalkTargetMin: (min) => set({ walkTargetMin: min }),
+
   setGlobalTourActive: (active: boolean) => {
     if (active) {
       set({ 
@@ -389,6 +416,12 @@ export const usePetStore = create<PetState>((set, get) => ({
     const events = await db.calendarEvents.toArray();
     set({ events });
     return newEvent;
+  },
+
+  updateCalendarEvent: async (event) => {
+    await db.calendarEvents.put(event);
+    const events = await db.calendarEvents.toArray();
+    set({ events });
   },
 
   deleteCalendarEvent: async (id) => {

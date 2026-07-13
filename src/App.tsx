@@ -10,6 +10,7 @@ import Calendar from './pages/Calendar';
 import Diary from './pages/Diary';
 import Settings from './pages/Settings';
 import GlobalTour from './components/GlobalTour';
+import GlobalWalkBar from './components/common/GlobalWalkBar';
 import { useOnboarding } from './hooks/useOnboarding';
 import Profile from './pages/Profile';
 
@@ -134,17 +135,17 @@ const AppContent: React.FC = () => {
     showAlert,
     showConfirm,
     activeThemeId,
-    customThemes
+    customThemes,
+    showSplash,
+    setShowSplash
   } = usePetStore();
-
-  const [showSplash, setShowSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
   const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
   const headerDropdownRef = useRef<HTMLDivElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
-  const { isGlobalTourSeen, isLoading: onboardingLoading } = useOnboarding();
+  const { isLoading: onboardingLoading, isGlobalTourSeen } = useOnboarding();
 
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
@@ -180,11 +181,6 @@ const AppContent: React.FC = () => {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
-  // Swipe navigation state
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [touchEndX, setTouchEndX] = useState<number | null>(null);
-  const routes = ['/dashboard', '/care', '/calendar', '/diary', '/settings'];
-
   const handleDevReset = async () => {
     showConfirm('모든 데이터(LocalStorage, IndexedDB)를 초기화하시겠습니까?', '개발용 데이터 초기화', async () => {
       localStorage.clear();
@@ -210,26 +206,30 @@ const AppContent: React.FC = () => {
     }
   }, [loading, location.pathname, navigate, isGlobalTourActive]);
 
-  // Start Global Tour (Wait for splash screen to finish)
+  // Start Global Tour (Disabled automatic sequence start - replaced by local page guides)
   useEffect(() => {
-    if (!loading && !onboardingLoading && isGlobalTourSeen === false && !showSplash) {
-      // Add a tiny delay so the fade-out completes smoothly before the tour pops up
-      const tourTimer = setTimeout(() => {
-        setGlobalTourActive(true);
-      }, 50);
-      return () => clearTimeout(tourTimer);
-    }
-  }, [loading, onboardingLoading, isGlobalTourSeen, setGlobalTourActive, showSplash]);
+    // Global Tour auto-start disabled to allow page-specific guides instead.
+  }, []);
 
   // Splash screen transition
   useEffect(() => {
     if (!loading && !onboardingLoading) {
-      // Start fade out immediately once data is loaded
-      setSplashFade(true);
-      const timer = setTimeout(() => setShowSplash(false), 300);
-      return () => clearTimeout(timer);
+      // 최소 3.5초(3500ms) 동안 스플래시 화면을 유지한 후 페이드아웃 시작
+      const minDurationTimer = setTimeout(() => {
+        // 페이드아웃 시작할 때(3.5초 직후) 가이드 투어 활성화를 미리 수행하여 레이아웃 렌더링을 마침
+        if (!isGlobalTourSeen && !isGlobalTourActive) {
+          setGlobalTourActive(true);
+        }
+        setSplashFade(true);
+        const fadeTimer = setTimeout(() => {
+          setShowSplash(false);
+        }, 300);
+        return () => clearTimeout(fadeTimer);
+      }, 3500); // 스플래시 대기 시간을 3.5초로 설정
+
+      return () => clearTimeout(minDurationTimer);
     }
-  }, [loading, onboardingLoading]);
+  }, [loading, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive]);
 
   const isObPage = location.pathname === '/onboarding';
 
@@ -237,89 +237,10 @@ const AppContent: React.FC = () => {
     showAlert("현재 프리미엄 멤버십 오픈 준비 중입니다.");
   };
 
-  // Swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.targetTouches[0].clientX);
-  };
-  
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEndX(e.targetTouches[0].clientX);
-  };
-  
-  const handleTouchEnd = () => {
-    if (touchStartX === null || touchEndX === null) return;
-    const distance = touchStartX - touchEndX;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-    
-    if (isLeftSwipe || isRightSwipe) {
-      const currentIndex = routes.indexOf(location.pathname);
-      if (currentIndex !== -1) {
-        if (isLeftSwipe && currentIndex < routes.length - 1) {
-          navigate(routes[currentIndex + 1]);
-        }
-        if (isRightSwipe && currentIndex > 0) {
-          navigate(routes[currentIndex - 1]);
-        }
-      }
-    }
-    setTouchStartX(null);
-    setTouchEndX(null);
-  };
 
-  return (
-    <>
-      <button 
-        onClick={handleDevReset}
-        style={{
-          position: 'fixed',
-          bottom: '16px',
-          left: '16px',
-          zIndex: 99999,
-          background: '#FF4444',
-          color: 'white',
-          border: 'none',
-          padding: '8px 12px',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-          opacity: 0.8
-        }}
-      >
-        Dev Reset
-      </button>
 
-      {/* 0. Intro Splash Screen */}
-      {showSplash && (
-        <div 
-          id="intro-splash" 
-          className="intro-splash" 
-          style={{ 
-            backgroundColor: '#F0F3F5',
-            opacity: splashFade ? 0 : 1, 
-            transition: 'opacity 0.3s ease',
-            pointerEvents: splashFade ? 'none' : 'auto'
-          }}
-        >
-          <div className="splash-content">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '80px', marginBottom: '24px' }}>
-              <circle cx="60" cy="55" r="30" fill="none" stroke="#14C3A3" strokeWidth="16"/>
-              <path d="M 115 85 V 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 115 55 C 115 35, 155 35, 155 55 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 185 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 185 25 C 235 25, 235 85, 185 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 255 85 L 275 25 L 295 85" fill="none" stroke="#121B2A" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
-            </svg>
-            <h2 style={{ color: 'var(--deep-navy)', margin: 0, fontSize: '1.5rem' }}>OnDa Pet Care</h2>
-          </div>
-        </div>
-      )}
-
-      {isGlobalTourActive && <GlobalTour />}
-      <CustomDialog />
-
+  const renderAppLayout = () => {
+    return (
       <div className="web-layout">
         {/* 1. Global Web Header */}
         {!isObPage && (
@@ -398,24 +319,30 @@ const AppContent: React.FC = () => {
                 )}
               </div>
             </div>
-            
-            <nav className="header-tab-bar" style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '0 20px', scrollbarWidth: 'none' }}>
-              <NavLink to="/dashboard" className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}>대시보드</NavLink>
-              <NavLink to="/care" className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}>케어</NavLink>
-              <NavLink to="/calendar" className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}>캘린더</NavLink>
-              <NavLink to="/diary" className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}>기록일기</NavLink>
-              <NavLink to="/settings" className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}>설정</NavLink>
+
+            {/* Nav Links (상단 메뉴 부활) */}
+            <nav className="web-header-nav" style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
+              <NavLink to="/dashboard" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
+                대시보드
+              </NavLink>
+              <NavLink to="/care" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
+                케어
+              </NavLink>
+              <NavLink to="/calendar" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
+                캘린더
+              </NavLink>
+              <NavLink to="/diary" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
+                기록일기
+              </NavLink>
+              <NavLink to="/settings" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
+                설정
+              </NavLink>
             </nav>
           </header>
         )}
 
         {/* 2. Center Content Area (Router View) */}
-        <main 
-          className="content-center"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <main className={isObPage ? "content-onboarding" : "content-center"}>
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
               <p style={{ color: 'var(--deep-navy)', fontWeight: 'bold' }}>로컬 데이터를 불러오는 중...</p>
@@ -434,16 +361,92 @@ const AppContent: React.FC = () => {
           )}
         </main>
 
+        <GlobalWalkBar />
+
         {/* 3. Global Bottom Footer */}
         {!isObPage && (
-          <footer className="web-footer">
-            <p>
-              프로필 수정 및 관리 | 고객센터 및 1:1 문의 채널 | 공지사항 및 업데이트 정보 | 자주 묻는 질문(FAQ) | 서비스 이용약관 | <b>개인정보처리방침</b><br/>
-              © OnDa Pet Care App. All Rights Reserved. Designed for Desktop & Mobile Environments.
-            </p>
-          </footer>
+          <>
+            <footer className="web-footer" style={{ paddingBottom: '80px' }}>
+              <p>
+                프로필 수정 및 관리 | 고객센터 및 1:1 문의 채널 | 공지사항 및 업데이트 정보 | 자주 묻는 질문(FAQ) | 서비스 이용약관 | <b>개인정보처리방침</b><br/>
+                © OnDa Pet Care App. All Rights Reserved. Designed for Desktop & Mobile Environments.
+              </p>
+            </footer>
+
+          </>
         )}
       </div>
+    );
+  };
+
+  return (
+    <>
+      <button 
+        onClick={handleDevReset}
+        style={{
+          position: 'fixed',
+          bottom: '85px',
+          left: '16px',
+          zIndex: 99999,
+          background: '#FF4444',
+          color: 'white',
+          border: 'none',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+          opacity: 0.8
+        }}
+      >
+        Dev Reset
+      </button>
+
+      {/* 0. Intro Splash Screen */}
+      {showSplash && (
+        <div 
+          id="intro-splash" 
+          className="intro-splash" 
+          style={{ 
+            backgroundColor: '#F0F3F5',
+            opacity: splashFade ? 0 : 1, 
+            transition: 'opacity 0.3s ease',
+            pointerEvents: splashFade ? 'none' : 'auto'
+          }}
+        >
+          <div className="splash-content">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '80px', marginBottom: '24px' }}>
+              <circle cx="60" cy="55" r="30" fill="none" stroke="#14C3A3" strokeWidth="16"/>
+              <path d="M 115 85 V 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 115 55 C 115 35, 155 35, 155 55 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 185 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 185 25 C 235 25, 235 85, 185 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 255 85 L 275 25 L 295 85" fill="none" stroke="#121B2A" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
+            </svg>
+            <h2 style={{ color: 'var(--deep-navy)', margin: 0, fontSize: '1.5rem' }}>OnDa Pet Care</h2>
+          </div>
+        </div>
+      )}
+
+
+
+      <CustomDialog />
+
+      {isGlobalTourActive ? (
+        <div className="tour-phone-wrapper">
+          <div className="phone-device-frame">
+            <div className="phone-screen-content">
+              {renderAppLayout()}
+              <GlobalTour />
+            </div>
+            <div className="phone-notch"></div>
+            <div className="phone-home-indicator"></div>
+          </div>
+        </div>
+      ) : (
+        renderAppLayout()
+      )}
     </>
   );
 };

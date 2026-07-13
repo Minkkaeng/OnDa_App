@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePetStore, type CalendarEvent } from '../store/petStore';
 import { type EventType } from '../db';
 
@@ -21,18 +21,95 @@ const Calendar: React.FC = () => {
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventContent, setNewEventContent] = useState('');
 
+  // Month & Year Nav Modal State
+  const [showMonthNavModal, setShowMonthNavModal] = useState(false);
+  const [navYear, setNavYear] = useState(new Date().getFullYear());
+  const [navMonth, setNavMonth] = useState(new Date().getMonth());
+
+  // List View Filter State
+  const [searchYear, setSearchYear] = useState<string>('');
+  const [searchMonth, setSearchMonth] = useState<string>('');
+
+  // Local Page Guide disabled for unified global tour
+
+  // calGuideSteps disabled for unified global tour
+
+  // Sync Year/Month picker value with current calendar month
+  useEffect(() => {
+    setNavYear(currentMonth.getFullYear());
+    setNavMonth(currentMonth.getMonth());
+  }, [currentMonth, showMonthNavModal]);
+
   if (!activePet) {
     return (
-      <>
-        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted-gray)' }}>
-          반려동물을 먼저 등록해주세요.
-        </div>
-      </>
+      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted-gray)' }}>
+        반려동물을 먼저 등록해주세요.
+      </div>
     );
   }
 
-  // Filter events for the active pet
-  const petEvents = events.filter(e => e.petId === activePet.id);
+  // Filter events for the active pet (Real Events)
+  const realPetEvents = events.filter(e => e.petId === activePet.id);
+
+  // Generate virtual events from Care tab vaccination & parasite logs
+  const getVirtualEvents = (): CalendarEvent[] => {
+    const vEvents: CalendarEvent[] = [];
+    if (!activePet) return [];
+
+    const savedVac = localStorage.getItem(`onda_pet_vaccines_${activePet.id}`);
+    if (savedVac) {
+      try {
+        const vaccines = JSON.parse(savedVac);
+        const categories = [
+          { id: 'dhppi', label: '종합백신 (DHPPi)', type: 'annual' },
+          { id: 'corona', label: '코로나 장염 백신', type: 'annual' },
+          { id: 'rabies', label: '광견병 예방 백신', type: 'annual' },
+          { id: 'parasite', label: '내/외부 기생충 케어', type: 'monthly' }
+        ];
+
+        categories.forEach(vac => {
+          const dateStr = vaccines[vac.id];
+          if (dateStr) {
+            // 1. Completed Vaccination Event
+            vEvents.push({
+              id: `v-vac-done-${vac.id}-${dateStr}`,
+              petId: activePet.id,
+              date: dateStr,
+              type: 'schedule',
+              title: `💉 [완료] ${vac.label}`,
+              content: `케어 탭에서 기록된 예방의학 접종 완료 기록입니다. (${dateStr} 접종)`
+            });
+
+            // 2. Calculated Next Recommendation Date Event
+            const last = new Date(dateStr);
+            const next = new Date(last);
+            if (vac.type === 'annual') {
+              next.setFullYear(last.getFullYear() + 1);
+            } else {
+              next.setDate(last.getDate() + 30);
+            }
+            const nextStr = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+            
+            vEvents.push({
+              id: `v-vac-next-${vac.id}-${nextStr}`,
+              petId: activePet.id,
+              date: nextStr,
+              type: 'hospital',
+              title: `📅 [예정] ${vac.label} 접종일`,
+              content: `이전 접종일(${dateStr}) 기준 다음 권장 예방의학 스케줄 일자입니다.`
+            });
+          }
+        });
+      } catch (e) {
+        console.error('Failed to parse vaccine records:', e);
+      }
+    }
+
+    return vEvents;
+  };
+
+  const virtualEvents = getVirtualEvents();
+  const petEvents = [...realPetEvents, ...virtualEvents];
 
   // Format Helper
   const formatDateStr = (year: number, month: number, day: number) => {
@@ -54,6 +131,19 @@ const Calendar: React.FC = () => {
   const handleNextMonth = () => {
     setCurrentMonth(new Date(year, month + 1, 1));
   };
+
+  const handleGoToToday = () => {
+    const today = new Date();
+    setCurrentMonth(today);
+    setSelectedDateStr(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+  };
+
+  const handleMonthNavSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentMonth(new Date(navYear, navMonth, 1));
+    setShowMonthNavModal(false);
+  };
+
 
   const daysGrid: Array<{
     dayNum: number;
@@ -121,7 +211,6 @@ const Calendar: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Set default event type (diary for past/today, hospital for future)
     if (selectedDateObj > today) {
       setNewEventType('hospital');
     } else {
@@ -167,6 +256,15 @@ const Calendar: React.FC = () => {
   }, {} as Record<string, CalendarEvent[]>);
 
   const sortedDates = Object.keys(groupedEvents).sort((a, b) => b.localeCompare(a));
+  
+  // Filter dates based on Search Year and Month
+  const filteredDates = sortedDates.filter(dateStr => {
+    const [yr, mo] = dateStr.split('-');
+    if (searchYear && yr !== searchYear) return false;
+    if (searchMonth && mo !== searchMonth) return false;
+    return true;
+  });
+
   const selectedDateEvents = petEvents.filter(e => e.date === selectedDateStr);
   const selectedDateObj = new Date(selectedDateStr);
   const formattedSelectedDate = `${selectedDateObj.getMonth() + 1}월 ${selectedDateObj.getDate()}일`;
@@ -179,33 +277,60 @@ const Calendar: React.FC = () => {
 
   return (
     <>
+      {/* Calendar Guide overlay disabled for global tour */}
+
+      <div style={{ paddingBottom: '16px' }}>
+        {/* Main Header with fixed top right tabs */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '8px 0 16px 0' }}>
+        <div className="cal-tabs">
+          <button className={`cal-tab-btn ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>달력</button>
+          <button className={`cal-tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>목록</button>
+        </div>
+      </div>
 
       {activeTab === 'calendar' ? (
-        <div id="view-calendar" className="cal-wrapper" style={{ marginTop: '24px' }}>
+        <div id="view-calendar" className="cal-wrapper" style={{ marginTop: '8px' }}>
           <div className="cal-panel">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <div className="cal-top-badge" style={{ marginBottom: 0 }}>일정 및 일상 기록 캘린더</div>
-              <div className="cal-tabs">
-                <button className={`cal-tab-btn ${(activeTab as string) === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>달력</button>
-                <button className={`cal-tab-btn ${(activeTab as string) === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>목록</button>
-              </div>
-            </div>
             
+            {/* Header row with navigation & Today button */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <button 
-                onClick={handlePrevMonth} 
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--deep-navy)' }}
-              >
-                ◀
-              </button>
-              <div className="cal-month-title">
-                {year}.{String(month + 1).padStart(2, '0')}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button 
+                  onClick={handlePrevMonth} 
+                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--deep-navy)', padding: '4px' }}
+                >
+                  ◀
+                </button>
+                <div 
+                  className="cal-month-title" 
+                  onClick={() => setShowMonthNavModal(true)} 
+                  style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}
+                >
+                  {year}.{String(month + 1).padStart(2, '0')}
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>▼</span>
+                </div>
+                <button 
+                  onClick={handleNextMonth} 
+                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--deep-navy)', padding: '4px' }}
+                >
+                  ▶
+                </button>
               </div>
               <button 
-                onClick={handleNextMonth} 
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--deep-navy)' }}
+                onClick={handleGoToToday} 
+                style={{
+                  backgroundColor: 'var(--white)',
+                  border: '1px solid var(--steel-gray)',
+                  borderRadius: '20px',
+                  padding: '5px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  color: 'var(--deep-navy)',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
               >
-                ▶
+                오늘
               </button>
             </div>
 
@@ -219,7 +344,7 @@ const Calendar: React.FC = () => {
               <div style={{ color: '#3b82f6' }}>토</div>
             </div>
 
-            <div className="cal-grid">
+            <div className="cal-grid" style={{ touchAction: 'pan-y', position: 'relative' }}>
               {daysGrid.map((gridItem, idx) => {
                 const isSun = gridItem.isSun;
                 const isSat = gridItem.isSat;
@@ -239,55 +364,134 @@ const Calendar: React.FC = () => {
                     key={idx}
                     className={dayClass}
                     onClick={() => handleDayClick(gridItem.dateStr)}
-                    style={{ opacity: gridItem.type !== 'curr' ? 0.4 : 1 }}
+                    style={{ opacity: gridItem.type !== 'curr' ? 0.4 : 1, position: 'relative' }}
                   >
-                    {gridItem.dayNum}
-                    {hasEvents && <div className="cal-day-dot"></div>}
+                    <span style={{ fontWeight: isActive ? '800' : '500' }}>{gridItem.dayNum}</span>
+                    {hasEvents && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        display: 'flex',
+                        gap: '2px',
+                        justifyContent: 'center',
+                        width: '100%'
+                      }}>
+                        {dayEvents.slice(0, 3).map((ev, eIdx) => {
+                          let dotColor = 'var(--mint-green)';
+                          if (ev.type === 'hospital') dotColor = 'var(--error-red)';
+                          if (ev.type === 'schedule') dotColor = '#3b82f6';
+                          return (
+                            <span 
+                              key={eIdx} 
+                              style={{ 
+                                width: '4px', 
+                                height: '4px', 
+                                backgroundColor: isActive ? 'var(--white)' : dotColor, 
+                                borderRadius: '50%',
+                                display: 'inline-block'
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
-            <div className="cal-ad-zone">
+            <div className="cal-ad-zone" style={{ marginTop: '20px', padding: '12px' }}>
               <span className="ad-badge">AD ZONE</span>
-              <div className="cal-ad-text">우리 아이를 위한 안심 가습기전<br/><span style={{ fontSize: '0.85rem', color: '#666' }}>최대 35% 단독 할인 혜택</span></div>
+              <div className="cal-ad-text" style={{ fontSize: '0.85rem' }}>우리 아이를 위한 안심 가습기전<br/><span style={{ fontSize: '0.75rem', color: '#666' }}>최대 35% 단독 할인 혜택</span></div>
             </div>
           </div>
         </div>
       ) : (
-        <div id="view-list" style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div className="cal-tabs">
-              <button className={`cal-tab-btn ${(activeTab as string) === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>달력</button>
-              <button className={`cal-tab-btn ${(activeTab as string) === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>목록</button>
+        <div id="view-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+          
+          {/* List Search Filter Row */}
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center',
+            backgroundColor: 'var(--white)',
+            padding: '12px 14px',
+            borderRadius: '12px',
+            border: '1px solid var(--steel-gray)',
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ fontWeight: 800, color: 'var(--deep-navy)', fontSize: '0.85rem' }}>검색 필터</span>
+            <div style={{ display: 'flex', gap: '6px', flexGrow: 1 }}>
+              <select 
+                value={searchYear} 
+                onChange={(e) => setSearchYear(e.target.value)} 
+                className="form-input" 
+                style={{ padding: '6px 10px', borderRadius: '8px', flex: 1, minWidth: '90px', fontSize: '0.85rem' }}
+              >
+                <option value="">년도 전체</option>
+                <option value="2024">2024년</option>
+                <option value="2025">2025년</option>
+                <option value="2026">2026년</option>
+                <option value="2027">2027년</option>
+                <option value="2028">2028년</option>
+              </select>
+              <select 
+                value={searchMonth} 
+                onChange={(e) => setSearchMonth(e.target.value)} 
+                className="form-input" 
+                style={{ padding: '6px 10px', borderRadius: '8px', flex: 1, minWidth: '90px', fontSize: '0.85rem' }}
+              >
+                <option value="">월 전체</option>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const mVal = String(i + 1).padStart(2, '0');
+                  return <option key={mVal} value={mVal}>{i + 1}월</option>;
+                })}
+              </select>
             </div>
+            {(searchYear || searchMonth) && (
+              <button 
+                onClick={() => { setSearchYear(''); setSearchMonth(''); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--error-red)',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  padding: '4px'
+                }}
+              >
+                초기화
+              </button>
+            )}
           </div>
-          <div id="list-container">
-            {sortedDates.length === 0 ? (
-              <div className="panel" style={{ textAlign: 'center', color: 'var(--muted-gray)', padding: '40px 0' }}>
-                등록된 내역이 없습니다.
+
+          <div id="list-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {filteredDates.length === 0 ? (
+              <div className="panel" style={{ textAlign: 'center', color: 'var(--muted-gray)', padding: '30px 0', fontSize: '0.9rem' }}>
+                검색된 내역이 없습니다.
               </div>
             ) : (
-              sortedDates.map(dateStr => {
+              filteredDates.map(dateStr => {
                 const dObj = new Date(dateStr);
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                 const titleStr = `${dObj.getMonth() + 1}월 ${dObj.getDate()}일 ${dayNames[dObj.getDay()]}요일`;
                 
                 return (
-                  <div key={dateStr} className="panel" style={{ marginBottom: '24px' }}>
-                    <h3 style={{ marginBottom: '20px', fontSize: '1.25rem' }}>{titleStr}</h3>
+                  <div key={dateStr} className="panel" style={{ padding: '16px', marginBottom: 0 }}>
+                    <h3 style={{ marginBottom: '12px', fontSize: '1.05rem', fontWeight: 800 }}>{titleStr}</h3>
                     <div className="task-list">
                       {groupedEvents[dateStr].map(ev => {
                         const typeText = ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정');
                         const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : 'var(--mint-green)';
                         
                         return (
-                          <div key={ev.id} className="task-card">
+                          <div key={ev.id} className="task-card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div className="task-info">
-                              <h3 style={{ marginBottom: '8px' }}>{ev.title}</h3>
-                              <p style={{ whiteSpace: 'pre-wrap' }}>{ev.content}</p>
+                              <h3 style={{ marginBottom: '4px', fontSize: '0.95rem', fontWeight: 700 }}>{ev.title}</h3>
+                              <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{ev.content}</p>
                             </div>
-                            <div className="task-status" style={{ color: typeColor, fontWeight: 700 }}>{typeText}</div>
+                            <div className="task-status" style={{ color: typeColor, fontWeight: 700, fontSize: '0.85rem' }}>{typeText}</div>
                           </div>
                         );
                       })}
@@ -305,33 +509,33 @@ const Calendar: React.FC = () => {
         <div 
           id="date-details-modal" 
           className="modal-overlay" 
-          style={{ display: 'flex', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}
+          style={{ display: 'flex', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100000, alignItems: 'center', justifyContent: 'center' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowDetailsModal(false);
           }}
         >
-          <div className="cal-modal-content" style={{ position: 'relative' }}>
+          <div className="cal-modal-content" style={{ position: 'relative', padding: '24px', width: '90%', maxWidth: '340px' }}>
             <button 
               onClick={() => setShowDetailsModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--muted-gray)' }}
             >
               &times;
             </button>
-            <div id="date-details-content" style={{ minHeight: '200px', paddingBottom: '40px' }}>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '24px' }}>{formattedSelectedDate} 기록</h3>
+            <div id="date-details-content" style={{ minHeight: '160px', paddingBottom: '20px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>{formattedSelectedDate} 기록</h3>
               {selectedDateEvents.length > 0 ? (
                 selectedDateEvents.map(ev => {
                   const typeText = ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정');
                   return (
-                    <div key={ev.id} style={{ background: 'var(--ice-white)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--muted-gray)', fontWeight: 700, marginBottom: '4px' }}>[{typeText}]</div>
-                      <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: 'var(--deep-navy)' }}>{ev.title}</h3>
-                      <p style={{ fontSize: '0.95rem', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{ev.content}</p>
+                    <div key={ev.id} style={{ background: 'var(--ice-white)', padding: '12px', borderRadius: '8px', marginBottom: '10px' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 700, marginBottom: '2px' }}>[{typeText}]</div>
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '4px', color: 'var(--deep-navy)', margin: 0, fontWeight: 700 }}>{ev.title}</h3>
+                      <p style={{ fontSize: '0.85rem', lineHeight: 1.4, whiteSpace: 'pre-wrap', margin: 0, color: '#444' }}>{ev.content}</p>
                     </div>
                   );
                 })
               ) : (
-                <div style={{ textAlign: 'center', color: 'var(--muted-gray)', padding: '40px 0' }}>등록된 내역이 없습니다.</div>
+                <div style={{ textAlign: 'center', color: 'var(--muted-gray)', padding: '30px 0', fontSize: '0.9rem' }}>등록된 내역이 없습니다.</div>
               )}
             </div>
             <button 
@@ -340,6 +544,7 @@ const Calendar: React.FC = () => {
                 setShowDetailsModal(false);
                 handleAddEventOpen();
               }}
+              style={{ width: '48px', height: '48px', fontSize: '1.5rem', right: '16px', bottom: '16px' }}
             >
               +
             </button>
@@ -352,28 +557,28 @@ const Calendar: React.FC = () => {
         <div 
           id="add-event-modal" 
           className="modal-overlay" 
-          style={{ display: 'flex', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, alignItems: 'center', justifyContent: 'center' }}
+          style={{ display: 'flex', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 110000, alignItems: 'center', justifyContent: 'center' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowAddModal(false);
           }}
         >
-          <div className="cal-modal-content" style={{ position: 'relative' }}>
+          <div className="cal-modal-content" style={{ position: 'relative', padding: '24px', width: '90%', maxWidth: '340px' }}>
             <button 
               onClick={() => setShowAddModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--muted-gray)' }}
             >
               &times;
             </button>
             <form onSubmit={handleAddEventSubmit}>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '24px' }}>{formattedSelectedDate} 새로운 기록 추가</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>{formattedSelectedDate} 새로운 기록 추가</h3>
               
-              <div className="form-group">
-                <label className="form-label">기록 유형</label>
+              <div className="form-group" style={{ marginBottom: '10px' }}>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 700 }}>기록 유형</label>
                 <select 
                   value={newEventType} 
                   onChange={(e) => setNewEventType(e.target.value as EventType)}
                   className="form-input" 
-                  style={{ padding: '10px' }}
+                  style={{ padding: '8px 10px', fontSize: '0.9rem' }}
                 >
                   {!isFutureDate && <option value="diary">일상 기록 (일기)</option>}
                   <option value="hospital">병원 예약 / 방문</option>
@@ -381,35 +586,99 @@ const Calendar: React.FC = () => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">제목</label>
+              <div className="form-group" style={{ marginBottom: '10px' }}>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 700 }}>제목</label>
                 <input 
                   type="text" 
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
                   className="form-input" 
                   placeholder="예: 심장사상충 예방접종" 
+                  style={{ padding: '8px 10px', fontSize: '0.9rem' }}
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">상세 내용</label>
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 700 }}>상세 내용</label>
                 <textarea 
                   value={newEventContent}
                   onChange={(e) => setNewEventContent(e.target.value)}
                   className="cal-editor-textarea" 
-                  style={{ minHeight: '120px' }} 
+                  style={{ minHeight: '80px', fontSize: '0.9rem', border: '1px solid var(--steel-gray)', padding: '8px', borderRadius: '8px' }} 
                   placeholder="상세 내용을 입력해주세요..."
                   required
                 ></textarea>
               </div>
               
-              <button type="submit" className="editor-submit-btn">기록 저장하기</button>
+              <button type="submit" className="editor-submit-btn" style={{ padding: '12px', fontSize: '0.95rem', marginTop: '10px', borderRadius: '8px' }}>기록 저장하기</button>
             </form>
           </div>
         </div>
       )}
+
+      {/* Year & Month Selection Navigation Modal */}
+      {showMonthNavModal && (
+        <div 
+          className="modal-overlay" 
+          style={{ display: 'flex', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 120000, alignItems: 'center', justifyContent: 'center' }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowMonthNavModal(false);
+          }}
+        >
+          <div className="modal-content" style={{ background: 'white', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', gap: '16px' }}>
+            <h4 style={{ margin: 0, color: 'var(--deep-navy)', fontSize: '1rem', fontWeight: 800 }}>날짜로 이동</h4>
+            
+            <form onSubmit={handleMonthNavSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                {/* Year Selection */}
+                <select 
+                  value={navYear} 
+                  onChange={(e) => setNavYear(parseInt(e.target.value))}
+                  className="form-input" 
+                  style={{ padding: '8px', flex: 1, fontSize: '0.95rem', fontWeight: 'bold' }}
+                >
+                  {Array.from({ length: 11 }, (_, i) => {
+                    const yVal = new Date().getFullYear() - 5 + i;
+                    return <option key={yVal} value={yVal}>{yVal}년</option>;
+                  })}
+                </select>
+
+                {/* Month Selection */}
+                <select 
+                  value={navMonth} 
+                  onChange={(e) => setNavMonth(parseInt(e.target.value))}
+                  className="form-input" 
+                  style={{ padding: '8px', flex: 1, fontSize: '0.95rem', fontWeight: 'bold' }}
+                >
+                  {Array.from({ length: 12 }, (_, i) => {
+                    return <option key={i} value={i}>{i + 1}월</option>;
+                  })}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowMonthNavModal(false)} 
+                  className="btn-submit" 
+                  style={{ flex: 1, backgroundColor: 'var(--muted-gray)', borderColor: 'var(--muted-gray)', marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-submit" 
+                  style={{ flex: 1, marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
+                >
+                  이동
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      </div>
     </>
   );
 };

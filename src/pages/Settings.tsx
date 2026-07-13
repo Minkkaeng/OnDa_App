@@ -29,8 +29,9 @@ const Settings: React.FC = () => {
     deleteInquiry
   } = usePetStore();
 
-  const [activeTab, setActiveTab] = useState<'theme' | 'notification' | 'system' | 'support'>('theme');
+  const [expandedMenu, setExpandedMenu] = useState<'theme' | 'notification' | 'system' | 'support' | null>('theme');
   const [isPushActive, setIsPushActive] = useState(true);
+  const [lastBackupDate, setLastBackupDate] = useState(localStorage.getItem('last_backup_date') || '');
 
   // Forms Visibility States
   const [showThemeForm, setShowThemeForm] = useState(false);
@@ -68,8 +69,7 @@ const Settings: React.FC = () => {
   const faqList = [
     { q: 'OnDa Pet Care는 어떤 서비스인가요?', a: '반려견의 건강, 산책, 투약 일정 등을 캘린더와 대시보드를 통해 손쉽게 관리하고 기록할 수 있는 하이브리드 반려견 전용 다이어리 서비스입니다.' },
     { q: '데이터 백업은 어떻게 하나요?', a: '설정 > 시스템 설정 메뉴에서 "백업 파일 내보내기"를 통해 모든 데이터를 JSON 파일로 다운로드하여 영구 보관할 수 있습니다.' },
-    { q: '모바일에서도 실시간으로 사용할 수 있나요?', a: '네! 본 앱은 모바일 환경에 최적화되어 있으며 모바일 브라우저나 설치형 APK를 통해 이용하실 수 있습니다.' },
-    { q: '다크 모드와 커스텀 테마 적용은 어떻게 하나요?', a: '설정 > 테마 설정 메뉴에서 다크 모드 선택 또는 직접 원하시는 디자인 컬러를 조합하여 커스텀 테마를 생성 및 등록하실 수 있습니다.' }
+    { q: '모바일에서도 실시간으로 사용할 수 있나요?', a: '네! 본 앱은 모바일 환경에 최적화되어 있으며 모바일 브라우저나 설치형 APK를 통해 이용하실 수 있습니다.' }
   ];
 
   // Theme Actions
@@ -182,11 +182,7 @@ const Settings: React.FC = () => {
     setEditingSnapshotId(null);
   };
 
-  const handleEditSnapshotClick = (snap: BackupSnapshot) => {
-    setEditingSnapshotId(snap.id);
-    setSnapshotName(snap.name);
-    setShowSnapshotForm(true);
-  };
+
 
   const handleRestoreSnapshotClick = (snap: BackupSnapshot) => {
     showConfirm(
@@ -250,10 +246,14 @@ const Settings: React.FC = () => {
       const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backupData, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `onda_backup_${new Date().toISOString().split('T')[0]}.json`);
+      const currentDate = new Date().toISOString();
+      downloadAnchor.setAttribute('download', `onda_backup_${currentDate.split('T')[0]}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
+
+      localStorage.setItem('last_backup_date', currentDate);
+      setLastBackupDate(currentDate);
 
       showAlert('데이터 백업 파일(JSON) 내보내기가 완료되었습니다.');
     } catch (err) {
@@ -318,13 +318,21 @@ const Settings: React.FC = () => {
 
   const handleDeleteAll = () => {
     showConfirm(
-      '경고: 모든 반려동물 프로필, 케어 기록, 일기가 영구적으로 삭제됩니다. 백업하지 않은 데이터는 복구할 수 없습니다. 정말 모든 데이터를 삭제하시겠습니까?',
-      '전체 데이터 삭제',
-      async () => {
-        await db.pets.clear();
-        await db.calendarEvents.clear();
-        localStorage.clear();
-        window.location.reload();
+      '경고: 모든 반려동물 프로필, 케어 기록, 일기가 영구적으로 삭제됩니다. 백업하지 않은 데이터는 복구할 수 없습니다. 계속하시겠습니까?',
+      '전체 데이터 삭제 (1/2)',
+      () => {
+        setTimeout(() => {
+          showConfirm(
+            '정말 모든 데이터를 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+            '마지막 경고 (2/2)',
+            async () => {
+              await db.pets.clear();
+              await db.calendarEvents.clear();
+              localStorage.clear();
+              window.location.reload();
+            }
+          );
+        }, 100);
       }
     );
   };
@@ -334,73 +342,82 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <>
-      <div id="settings-guide-step1" className="set-warning">
-        ⚠ 주의: 브라우저 캐시 청소 및 로컬 저장소 비우기 수행 시 기존 데이터가 완전 소멸될 수 있습니다.
+    <div style={{ paddingBottom: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+      {/* 1. Premium AD Promotional Board Banner */}
+      <div 
+        style={{
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, #14C3A3 0%, #121B2A 100%)',
+          padding: '20px 24px',
+          color: '#FFFFFF',
+          boxShadow: '0 8px 24px rgba(20, 195, 163, 0.15)',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <div style={{ flex: 1, zIndex: 1 }}>
+          <span style={{ 
+            fontSize: '0.65rem', 
+            background: 'rgba(255,255,255,0.2)', 
+            padding: '3px 8px', 
+            borderRadius: '20px', 
+            fontWeight: 'bold',
+            letterSpacing: '0.5px'
+          }}>
+            PARTNER AD
+          </span>
+          <h4 style={{ margin: '8px 0 4px 0', fontSize: '0.95rem', fontWeight: 800 }}>🐾 유기농 수제 케어 푸드 [마이도기] 출시!</h4>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
+            가입 보호자님 대상 전상품 15% 런칭 감사 쿠폰 지급 중. 우리 아이 건강을 위한 자연식 간식을 만나보세요.
+          </p>
+        </div>
+        <div style={{ fontSize: '2.2rem', opacity: 0.85, zIndex: 1, marginLeft: '12px' }}>🦴</div>
+        
+        {/* Subtle background glow circle */}
+        <div style={{
+          position: 'absolute',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: 'rgba(20, 195, 163, 0.3)',
+          top: '-40px',
+          right: '-40px',
+          filter: 'blur(30px)'
+        }} />
       </div>
 
-      <div className="settings-layout">
-        {/* Left Submenu Navigation */}
-        <div className="settings-tabs-col">
-          <button 
-            className={`settings-tab-btn ${activeTab === 'theme' ? 'active' : ''}`}
-            onClick={() => setActiveTab('theme')}
+      {/* 2. Unified Accordion Menu List (Mobile Optimized) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        
+        {/* MENU 1: Theme Settings Accordion */}
+        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'theme' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+          <div 
+            onClick={() => setExpandedMenu(expandedMenu === 'theme' ? null : 'theme')}
+            style={{ 
+              padding: '16px 20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              fontWeight: 800,
+              backgroundColor: expandedMenu === 'theme' ? 'var(--mint-green-light)' : 'transparent',
+              color: 'var(--deep-navy)',
+              fontSize: '1rem'
+            }}
           >
-            🎨 테마 설정
-          </button>
-          <button 
-            className={`settings-tab-btn ${activeTab === 'notification' ? 'active' : ''}`}
-            onClick={() => setActiveTab('notification')}
-          >
-            🔔 알림 설정
-          </button>
-          <button 
-            className={`settings-tab-btn ${activeTab === 'system' ? 'active' : ''}`}
-            onClick={() => setActiveTab('system')}
-          >
-            ⚙️ 시스템 설정
-          </button>
-          <button 
-            className={`settings-tab-btn ${activeTab === 'support' ? 'active' : ''}`}
-            onClick={() => setActiveTab('support')}
-          >
-            💬 고객지원 문의
-          </button>
-        </div>
-
-        {/* Right Submenu Details */}
-        <div className="settings-content-col">
-          
-          {/* TAB 1: Theme Settings */}
-          {activeTab === 'theme' && (
-            <div className="settings-sub-panel">
-              <h3>🎨 어플리케이션 테마 설정</h3>
-              <div style={{ marginBottom: '24px' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '12px' }}>기본 시스템 테마</p>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button 
-                    onClick={() => setThemeId('light')}
-                    className="set-btn" 
-                    style={{ flex: 1, backgroundColor: activeThemeId === 'light' ? 'var(--mint-green)' : '#FFF', color: activeThemeId === 'light' ? '#FFF' : 'var(--deep-navy)', border: '1px solid var(--steel-gray)' }}
-                  >
-                    라이트 모드 (Default Light)
-                  </button>
-                  <button 
-                    onClick={() => setThemeId('dark')}
-                    className="set-btn"
-                    style={{ flex: 1, backgroundColor: activeThemeId === 'dark' ? 'var(--mint-green)' : '#FFF', color: activeThemeId === 'dark' ? '#FFF' : 'var(--deep-navy)', border: '1px solid var(--steel-gray)' }}
-                  >
-                    다크 모드 (Default Dark)
-                  </button>
-                </div>
-              </div>
-
-              <div className="google-profile-divider" style={{ margin: '24px 0' }}></div>
-
+            <span>🎨 어플리케이션 커스텀 테마 설정</span>
+            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'theme' ? '▼' : '▶'}</span>
+          </div>
+          {expandedMenu === 'theme' && (
+            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
               {/* Custom Themes List */}
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: '0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <p style={{ fontWeight: 'bold', margin: 0 }}>커스텀 테마 목록 ({customThemes.length})</p>
+                  <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>나의 테마 목록 ({customThemes.length})</p>
                   {!showThemeForm && (
                     <button 
                       onClick={() => {
@@ -414,7 +431,7 @@ const Settings: React.FC = () => {
                         setShowThemeForm(true);
                       }}
                       className="premium-btn"
-                      style={{ padding: '6px 12px' }}
+                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                     >
                       + 테마 추가
                     </button>
@@ -422,11 +439,11 @@ const Settings: React.FC = () => {
                 </div>
 
                 {customThemes.length === 0 && !showThemeForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.9rem', textAlign: 'center', padding: '16px 0' }}>등록된 커스텀 테마가 없습니다.</p>
+                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 커스텀 테마가 없습니다.</p>
                 )}
 
                 {/* Custom Theme Cards */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {customThemes.map(t => (
                     <div 
                       key={t.id} 
@@ -434,7 +451,7 @@ const Settings: React.FC = () => {
                         display: 'flex', 
                         justifyContent: 'space-between', 
                         alignItems: 'center', 
-                        padding: '12px 16px', 
+                        padding: '10px 14px', 
                         borderRadius: '8px', 
                         border: activeThemeId === t.id ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
                         backgroundColor: 'var(--white)'
@@ -442,31 +459,31 @@ const Settings: React.FC = () => {
                     >
                       <div 
                         onClick={() => setThemeId(t.id)} 
-                        style={{ cursor: 'pointer', flexGrow: 1, display: 'flex', alignItems: 'center', gap: '12px' }}
+                        style={{ cursor: 'pointer', flexGrow: 1, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}
                       >
                         <span style={{ fontWeight: 'bold' }}>{t.name}</span>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: t.colors.primary, border: '1px solid #ddd' }} />
-                          <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: t.colors.background, border: '1px solid #ddd' }} />
-                          <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: t.colors.paper, border: '1px solid #ddd' }} />
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.primary, border: '1px solid #ddd' }} />
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.background, border: '1px solid #ddd' }} />
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.paper, border: '1px solid #ddd' }} />
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleEditThemeClick(t)} className="set-btn secondary" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>수정</button>
-                        <button onClick={() => deleteCustomTheme(t.id)} className="set-btn" style={{ padding: '4px 10px', fontSize: '0.8rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button onClick={() => handleEditThemeClick(t)} className="set-btn secondary" style={{ padding: '3px 8px', fontSize: '0.75rem' }}>수정</button>
+                        <button onClick={() => deleteCustomTheme(t.id)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Theme Edit Form Modal-like inline panel */}
+                {/* Theme Edit Form */}
                 {showThemeForm && (
-                  <form onSubmit={handleSaveTheme} className="panel" style={{ border: '2px solid var(--mint-green)', padding: '20px', marginTop: '16px' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '16px' }}>
-                      {editingThemeId ? '테마 정보 수정' : '새 커스텀 테마 정보 입력'}
+                  <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--ice-white)' }}>
+                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>
+                      {editingThemeId ? '테마 정보 수정' : '새 커스텀 테마 등록'}
                     </h4>
-                    <div className="form-group" style={{ marginBottom: '12px' }}>
-                      <label className="form-label">테마 이름</label>
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>테마 이름</label>
                       <input 
                         type="text" 
                         className="form-input" 
@@ -476,69 +493,83 @@ const Settings: React.FC = () => {
                         required 
                       />
                     </div>
-                    <div className="color-picker-row">
-                      <div className="color-input-wrapper">
-                        <label>대표 강조색 (Primary)</label>
-                        <input type="color" className="color-picker-input" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+                    <div className="color-picker-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.75rem' }}>
+                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label>강조색 (Primary)</label>
+                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
                       </div>
-                      <div className="color-input-wrapper">
-                        <label>배경 색상 (Background)</label>
-                        <input type="color" className="color-picker-input" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
+                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label>배경색 (Background)</label>
+                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
                       </div>
-                      <div className="color-input-wrapper">
-                        <label>박스/카드 색상 (Paper)</label>
-                        <input type="color" className="color-picker-input" value={paperColor} onChange={(e) => setPaperColor(e.target.value)} />
+                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label>카드색 (Paper)</label>
+                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={paperColor} onChange={(e) => setPaperColor(e.target.value)} />
                       </div>
-                      <div className="color-input-wrapper">
-                        <label>기본 텍스트 색상</label>
-                        <input type="color" className="color-picker-input" value={textColor} onChange={(e) => setTextColor(e.target.value)} />
-                      </div>
-                      <div className="color-input-wrapper">
-                        <label>설명/보조 텍스트</label>
-                        <input type="color" className="color-picker-input" value={mutedColor} onChange={(e) => setMutedColor(e.target.value)} />
+                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label>글자색 (Text)</label>
+                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={textColor} onChange={(e) => setTextColor(e.target.value)} />
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0 }}>취소</button>
-                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0 }}>저장 및 적용</button>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '16px' }}>
+                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                     </div>
                   </form>
                 )}
               </div>
             </div>
           )}
+        </div>
 
-          {/* TAB 2: Notification Settings */}
-          {activeTab === 'notification' && (
-            <div className="settings-sub-panel">
-              <h3>🔔 알림 및 알람 리마인더 설정</h3>
-              <div className="set-item" style={{ padding: '0 0 16px 0', marginBottom: '24px' }}>
-                <div className="set-info">
-                  <h4>로컬 실시간 푸시 알림</h4>
-                  <p>예약된 케어 투약 시간 및 스케줄 알림 브라우저 토글</p>
+        {/* MENU 2: Notification Settings Accordion */}
+        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'notification' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+          <div 
+            onClick={() => setExpandedMenu(expandedMenu === 'notification' ? null : 'notification')}
+            style={{ 
+              padding: '16px 20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              fontWeight: 800,
+              backgroundColor: expandedMenu === 'notification' ? 'var(--mint-green-light)' : 'transparent',
+              color: 'var(--deep-navy)',
+              fontSize: '1rem'
+            }}
+          >
+            <span>🔔 알림 및 알람 리마인더 설정</span>
+            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'notification' ? '▼' : '▶'}</span>
+          </div>
+          {expandedMenu === 'notification' && (
+            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
+              <div className="set-item" style={{ padding: '0 0 12px 0', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="set-info" style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: 'var(--deep-navy)' }}>로컬 실시간 푸시 알림</h4>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--muted-gray)' }}>투약 시간 및 케어 스케줄 알림 브라우저 활성화</p>
                 </div>
                 <div 
                   onClick={() => setIsPushActive(!isPushActive)}
                   style={{ 
-                    width: '48px', height: '24px', 
+                    width: '44px', height: '22px', 
                     background: isPushActive ? 'var(--mint-green)' : 'var(--steel-gray)', 
-                    borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' 
+                    borderRadius: '11px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' 
                   }}
                 >
                   <div style={{ 
-                    width: '20px', height: '20px', background: 'white', borderRadius: '50%', 
+                    width: '18px', height: '18px', background: 'white', borderRadius: '50%', 
                     position: 'absolute', left: '2px', top: '2px', 
-                    transform: isPushActive ? 'translateX(24px)' : 'translateX(0px)', transition: 'transform 0.3s' 
+                    transform: isPushActive ? 'translateX(22px)' : 'translateX(0px)', transition: 'transform 0.3s' 
                   }} />
                 </div>
               </div>
 
-              <div className="google-profile-divider" style={{ margin: '24px 0' }}></div>
+              <div className="google-profile-divider" style={{ margin: '16px 0' }}></div>
 
-              {/* Custom Reminders List */}
+              {/* Custom Reminders */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <p style={{ fontWeight: 'bold', margin: 0 }}>투약/케어 알람 목록 ({customReminders.length})</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>알람 목록 ({customReminders.length})</p>
                   {!showReminderForm && (
                     <button 
                       onClick={() => {
@@ -549,7 +580,7 @@ const Settings: React.FC = () => {
                         setShowReminderForm(true);
                       }}
                       className="premium-btn"
-                      style={{ padding: '6px 12px' }}
+                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                     >
                       + 알람 추가
                     </button>
@@ -557,10 +588,10 @@ const Settings: React.FC = () => {
                 </div>
 
                 {customReminders.length === 0 && !showReminderForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.9rem', textAlign: 'center', padding: '16px 0' }}>등록된 고유 리마인더 알림이 없습니다.</p>
+                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 고유 알람이 없습니다.</p>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {customReminders.map(rem => {
                     const pet = pets.find(p => p.id === rem.petId);
                     return (
@@ -570,227 +601,262 @@ const Settings: React.FC = () => {
                           display: 'flex', 
                           justifyContent: 'space-between', 
                           alignItems: 'center', 
-                          padding: '12px 16px', 
+                          padding: '10px 12px', 
                           borderRadius: '8px', 
                           border: '1px solid var(--steel-gray)',
-                          backgroundColor: rem.enabled ? 'var(--white)' : 'var(--ice-white)'
+                          backgroundColor: rem.enabled ? 'var(--white)' : 'var(--ice-white)',
+                          fontSize: '0.85rem'
                         }}
                       >
                         <div style={{ opacity: rem.enabled ? 1 : 0.6 }}>
-                          <span style={{ fontSize: '0.8rem', background: 'var(--mint-green-light)', color: 'var(--mint-green)', padding: '2px 6px', borderRadius: '4px', marginRight: '8px', fontWeight: 'bold' }}>
+                          <span style={{ fontSize: '0.75rem', background: 'var(--mint-green-light)', color: 'var(--mint-green)', padding: '2px 4px', borderRadius: '4px', marginRight: '6px', fontWeight: 'bold' }}>
                             {pet?.name || '공통'}
                           </span>
-                          <span style={{ fontWeight: 'bold', marginRight: '10px' }}>{rem.time}</span>
+                          <span style={{ fontWeight: 'bold', marginRight: '8px' }}>{rem.time}</span>
                           <span>{rem.title}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <input 
                             type="checkbox" 
                             checked={rem.enabled} 
                             onChange={() => updateCustomReminder({ ...rem, enabled: !rem.enabled })}
-                            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                            style={{ width: '15px', height: '15px', cursor: 'pointer' }}
                           />
-                          <button onClick={() => handleEditReminderClick(rem)} className="set-btn secondary" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>수정</button>
-                          <button onClick={() => deleteCustomReminder(rem.id)} className="set-btn" style={{ padding: '4px 10px', fontSize: '0.8rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
+                          <button onClick={() => handleEditReminderClick(rem)} className="set-btn secondary" style={{ padding: '3px 8px', fontSize: '0.75rem' }}>수정</button>
+                          <button onClick={() => deleteCustomReminder(rem.id)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
                         </div>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Add/Edit Reminder Inline Form */}
                 {showReminderForm && (
-                  <form onSubmit={handleSaveReminder} className="panel" style={{ border: '2px solid var(--mint-green)', padding: '20px', marginTop: '16px' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '16px' }}>
+                  <form onSubmit={handleSaveReminder} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--ice-white)' }}>
+                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>
                       {editingReminderId ? '알람 일정 수정' : '새 알람 예약 등록'}
                     </h4>
-                    <div className="form-group" style={{ marginBottom: '12px' }}>
-                      <label className="form-label">대상 반려견</label>
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>대상 반려견</label>
                       <select 
                         className="form-input" 
                         value={reminderPetId} 
                         onChange={(e) => setReminderPetId(e.target.value)}
-                        style={{ cursor: 'pointer' }}
                       >
                         {pets.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
                     </div>
-                    <div className="form-group" style={{ marginBottom: '12px' }}>
-                      <label className="form-label">알람 내용</label>
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>알람 내용</label>
                       <input 
                         type="text" 
                         className="form-input" 
                         value={reminderTitle} 
                         onChange={(e) => setReminderTitle(e.target.value)} 
-                        placeholder="예) 종합 비타민 복용일" 
+                        placeholder="예) 기생충 약 급여일" 
                         required 
                       />
                     </div>
-                    <div className="form-group" style={{ marginBottom: '20px' }}>
-                      <label className="form-label">알림 시각</label>
-                      <input 
-                        type="time" 
-                        className="form-input" 
-                        value={reminderTime} 
-                        onChange={(e) => setReminderTime(e.target.value)} 
-                        required 
-                      />
+                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>알림 시각</label>
+                      <input type="time" className="form-input" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} required />
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => setShowReminderForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0 }}>취소</button>
-                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0 }}>예약 알람 저장</button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button type="button" onClick={() => setShowReminderForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                     </div>
                   </form>
                 )}
               </div>
             </div>
           )}
+        </div>
 
-          {/* TAB 3: System Settings */}
-          {activeTab === 'system' && (
-            <div className="settings-sub-panel">
-              <h3>⚙️ 시스템 데이터 백업 및 관리</h3>
-              <div className="set-list" style={{ marginBottom: '24px' }}>
-                <div className="set-item">
-                  <div className="set-info">
-                    <h4>백업 파일 내보내기</h4>
-                    <p>현재까지 기록된 모든 데이터를 JSON 파일로 다운로드합니다.</p>
+        {/* MENU 3: System Settings Accordion */}
+        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'system' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+          <div 
+            onClick={() => setExpandedMenu(expandedMenu === 'system' ? null : 'system')}
+            style={{ 
+              padding: '16px 20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              fontWeight: 800,
+              backgroundColor: expandedMenu === 'system' ? 'var(--mint-green-light)' : 'transparent',
+              color: 'var(--deep-navy)',
+              fontSize: '1rem'
+            }}
+          >
+            <span>⚙️ 시스템 데이터 백업 및 관리</span>
+            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'system' ? '▼' : '▶'}</span>
+          </div>
+          {expandedMenu === 'system' && (
+            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--steel-gray)' }}>
+                  <div style={{ flex: 1, paddingRight: '12px' }}>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--deep-navy)' }}>백업 파일 내보내기</h4>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted-gray)' }}>모든 기록 데이터를 JSON 파일로 보관합니다.</p>
+                    {lastBackupDate && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', color: 'var(--mint-green)', fontWeight: 'bold' }}>
+                        최근 백업일: {new Date(lastBackupDate).toLocaleDateString()} {new Date(lastBackupDate).toLocaleTimeString()}
+                      </p>
+                    )}
                   </div>
-                  <button onClick={handleExport} className="set-btn">Export / 내보내기</button>
+                  <button onClick={handleExport} className="set-btn" style={{ fontSize: '0.75rem', padding: '6px 12px' }}>내보내기</button>
                 </div>
                 
-                <div className="set-item">
-                  <div className="set-info">
-                    <h4>데이터 복원 가져오기</h4>
-                    <p>이전에 백업 완료한 JSON 파일을 로드하여 동기화합니다.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--steel-gray)' }}>
+                  <div style={{ flex: 1, paddingRight: '12px' }}>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--deep-navy)' }}>데이터 복원 가져오기</h4>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted-gray)' }}>백업 JSON 파일을 업로드하여 복원합니다.</p>
                   </div>
-                  <button onClick={handleImport} className="set-btn secondary">Import / 가져오기</button>
+                  <button onClick={handleImport} className="set-btn secondary" style={{ fontSize: '0.75rem', padding: '6px 12px' }}>가져오기</button>
                 </div>
 
-                <div className="set-item">
-                  <div className="set-info">
-                    <h4 style={{ color: 'var(--error-red)' }}>데이터 완전 초기화</h4>
-                    <p>기기에 로컬로 저장된 모든 기록 및 프로필 설정을 영구 삭제합니다.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ flex: 1, paddingRight: '12px' }}>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--error-red)' }}>데이터 완전 초기화</h4>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted-gray)' }}>기기의 모든 데이터와 설정을 영구 소멸합니다.</p>
                   </div>
-                  <button onClick={handleDeleteAll} className="set-btn" style={{ backgroundColor: 'var(--error-red)', color: '#FFF' }}>Delete All / 삭제</button>
+                  <button onClick={handleDeleteAll} className="set-btn" style={{ fontSize: '0.75rem', padding: '6px 12px', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제하기</button>
                 </div>
-              </div>
 
-              <div className="google-profile-divider" style={{ margin: '24px 0' }}></div>
+                <div className="google-profile-divider" style={{ margin: '16px 0' }}></div>
 
-              {/* Local Backup Snapshots */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <p style={{ fontWeight: 'bold', margin: 0 }}>로컬 저장소 백업 스냅샷 ({backupSnapshots.length})</p>
-                  {!showSnapshotForm && (
-                    <button 
-                      onClick={() => {
-                        setEditingSnapshotId(null);
-                        setSnapshotName(`로컬백업_${new Date().toLocaleDateString()}`);
-                        setShowSnapshotForm(true);
-                      }}
-                      className="premium-btn"
-                      style={{ padding: '6px 12px' }}
-                    >
-                      + 스냅샷 만들기
-                    </button>
+                {/* Local Backup Snapshots */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>로컬 스냅샷 백업 ({backupSnapshots.length})</p>
+                    {!showSnapshotForm && (
+                      <button 
+                        onClick={() => {
+                          setEditingSnapshotId(null);
+                          setSnapshotName(`로컬백업_${new Date().toLocaleDateString()}`);
+                          setShowSnapshotForm(true);
+                        }}
+                        className="premium-btn"
+                        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                      >
+                        + 스냅샷 생성
+                      </button>
+                    )}
+                  </div>
+
+                  {backupSnapshots.length === 0 && !showSnapshotForm && (
+                    <p style={{ color: 'var(--muted-gray)', fontSize: '0.8rem', textAlign: 'center', padding: '12px 0' }}>저장된 스냅샷이 없습니다.</p>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                    {backupSnapshots.map(snap => (
+                      <div 
+                        key={snap.id} 
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          padding: '10px 12px', 
+                          borderRadius: '8px', 
+                          border: '1px solid var(--steel-gray)',
+                          backgroundColor: 'var(--white)',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        <div style={{ flex: 1, paddingRight: '8px' }}>
+                          <span style={{ fontWeight: 'bold', display: 'block', fontSize: '0.85rem' }}>{snap.name}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--muted-gray)' }}>
+                            {new Date(snap.createdAt).toLocaleDateString()} | 프로필 {snap.pets.length}개
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => handleRestoreSnapshotClick(snap)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--mint-green)', color: '#FFF' }}>복원</button>
+                          <button onClick={() => deleteBackupSnapshot(snap.id)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {showSnapshotForm && (
+                    <form onSubmit={handleSaveSnapshot} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--ice-white)' }}>
+                      <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>
+                        {editingSnapshotId ? '스냅샷 수정' : '현재 백업 스냅샷 저장'}
+                      </h4>
+                      <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>스냅샷 이름</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          value={snapshotName} 
+                          onChange={(e) => setSnapshotName(e.target.value)} 
+                          placeholder="예) 마일스톤 백업" 
+                          required 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button type="button" onClick={() => setShowSnapshotForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                        <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
+                      </div>
+                    </form>
                   )}
                 </div>
-
-                {backupSnapshots.length === 0 && !showSnapshotForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.9rem', textAlign: 'center', padding: '16px 0' }}>저장된 로컬 스냅샷이 없습니다.</p>
-                )}
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {backupSnapshots.map(snap => (
-                    <div 
-                      key={snap.id} 
-                      style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        padding: '12px 16px', 
-                        borderRadius: '8px', 
-                        border: '1px solid var(--steel-gray)',
-                        backgroundColor: 'var(--white)'
-                      }}
-                    >
-                      <div>
-                        <span style={{ fontWeight: 'bold', display: 'block' }}>{snap.name}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>
-                          생성일: {new Date(snap.createdAt).toLocaleString()} | 반려견: {snap.pets.length}마리 | 기록: {snap.calendarEvents.length}개
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleRestoreSnapshotClick(snap)} className="set-btn" style={{ padding: '4px 10px', fontSize: '0.8rem', backgroundColor: 'var(--mint-green)', color: '#FFF' }}>복원</button>
-                        <button onClick={() => handleEditSnapshotClick(snap)} className="set-btn secondary" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>수정</button>
-                        <button onClick={() => deleteBackupSnapshot(snap.id)} className="set-btn" style={{ padding: '4px 10px', fontSize: '0.8rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {showSnapshotForm && (
-                  <form onSubmit={handleSaveSnapshot} className="panel" style={{ border: '2px solid var(--mint-green)', padding: '20px', marginTop: '16px' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '16px' }}>
-                      {editingSnapshotId ? '스냅샷 타이틀 수정' : '현재 시스템 상태 백업 저장'}
-                    </h4>
-                    <div className="form-group" style={{ marginBottom: '20px' }}>
-                      <label className="form-label">스냅샷 이름</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        value={snapshotName} 
-                        onChange={(e) => setSnapshotName(e.target.value)} 
-                        placeholder="예) 산책 패치 완료 스냅샷" 
-                        required 
-                      />
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => setShowSnapshotForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0 }}>취소</button>
-                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0 }}>백업 상태 저장</button>
-                    </div>
-                  </form>
-                )}
               </div>
             </div>
           )}
+        </div>
 
-          {/* TAB 4: Customer Support Inquiries */}
-          {activeTab === 'support' && (
-            <div className="settings-sub-panel">
-              <h3>💬 자주 묻는 질문 및 1:1 고객센터 문의</h3>
+        {/* MENU 4: Support Accordion */}
+        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'support' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+          <div 
+            onClick={() => setExpandedMenu(expandedMenu === 'support' ? null : 'support')}
+            style={{ 
+              padding: '16px 20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              fontWeight: 800,
+              backgroundColor: expandedMenu === 'support' ? 'var(--mint-green-light)' : 'transparent',
+              color: 'var(--deep-navy)',
+              fontSize: '1rem'
+            }}
+          >
+            <span>💬 자주 묻는 질문 및 1:1 고객센터</span>
+            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'support' ? '▼' : '▶'}</span>
+          </div>
+          {expandedMenu === 'support' && (
+            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
               
               {/* FAQ Section */}
-              <div style={{ marginBottom: '24px' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '12px' }}>자주 묻는 질문 (FAQ)</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem' }}>자주 묻는 질문 (FAQ)</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {faqList.map((faq, idx) => (
                     <details 
                       key={idx} 
                       style={{ 
-                        padding: '12px 16px', 
+                        padding: '10px 12px', 
                         borderRadius: '8px', 
                         border: '1px solid var(--steel-gray)', 
                         background: 'var(--white)',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        fontSize: '0.85rem'
                       }}
                     >
                       <summary style={{ fontWeight: 'bold', outline: 'none' }}>Q. {faq.q}</summary>
-                      <p style={{ marginTop: '10px', fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{faq.a}</p>
+                      <p style={{ marginTop: '8px', fontSize: '0.75rem', color: '#555', lineHeight: 1.4 }}>{faq.a}</p>
                     </details>
                   ))}
                 </div>
               </div>
 
-              <div className="google-profile-divider" style={{ margin: '24px 0' }}></div>
+              <div className="google-profile-divider" style={{ margin: '16px 0' }}></div>
 
-              {/* 1:1 Inquiries Section */}
+              {/* 1:1 Inquiries */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <p style={{ fontWeight: 'bold', margin: 0 }}>보호자님 1:1 문의 내역 ({inquiries.length})</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>1:1 문의 내역 ({inquiries.length})</p>
                   {!showInquiryForm && (
                     <button 
                       onClick={() => {
@@ -801,7 +867,7 @@ const Settings: React.FC = () => {
                         setShowInquiryForm(true);
                       }}
                       className="premium-btn"
-                      style={{ padding: '6px 12px' }}
+                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                     >
                       + 1:1 문의하기
                     </button>
@@ -809,85 +875,32 @@ const Settings: React.FC = () => {
                 </div>
 
                 {inquiries.length === 0 && !showInquiryForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.9rem', textAlign: 'center', padding: '16px 0' }}>접수된 문의 건이 없습니다.</p>
+                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>접수된 문의 건이 없습니다.</p>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
                   {inquiries.map(inq => (
-                    <div 
-                      key={inq.id} 
-                      style={{ 
-                        borderRadius: '8px', 
-                        border: '1px solid var(--steel-gray)',
-                        backgroundColor: 'var(--white)',
-                        overflow: 'hidden'
-                      }}
-                    >
+                    <div key={inq.id} style={{ borderRadius: '8px', border: '1px solid var(--steel-gray)', backgroundColor: 'var(--white)', overflow: 'hidden', fontSize: '0.85rem' }}>
                       <div 
                         onClick={() => setExpandedInquiryId(expandedInquiryId === inq.id ? null : inq.id)}
-                        style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center', 
-                          padding: '14px 16px', 
-                          cursor: 'pointer',
-                          backgroundColor: expandedInquiryId === inq.id ? 'var(--mint-green-light)' : 'transparent'
-                        }}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', cursor: 'pointer', backgroundColor: expandedInquiryId === inq.id ? 'var(--mint-green-light)' : 'transparent' }}
                       >
                         <div>
-                          <span style={{ fontSize: '0.75rem', background: '#e0e6ed', padding: '2px 6px', borderRadius: '4px', marginRight: '8px', fontWeight: 'bold' }}>
-                            {inq.category}
-                          </span>
+                          <span style={{ fontSize: '0.7rem', background: '#e0e6ed', padding: '2px 4px', borderRadius: '4px', marginRight: '6px', fontWeight: 'bold' }}>{inq.category}</span>
                           <span style={{ fontWeight: 'bold' }}>{inq.title}</span>
-                          <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--muted-gray)', marginTop: '4px' }}>
-                            접수일: {new Date(inq.createdAt).toLocaleDateString()}
-                          </span>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <span style={{ 
-                            fontSize: '0.8rem', 
-                            fontWeight: 'bold', 
-                            color: inq.status === '답변완료' ? 'var(--mint-green)' : 'var(--muted-gray)',
-                            marginRight: '8px'
-                          }}>
-                            {inq.status}
-                          </span>
-                          <button onClick={(e) => { e.stopPropagation(); handleEditInquiryClick(inq); }} className="set-btn secondary" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>수정</button>
-                          <button onClick={(e) => { e.stopPropagation(); deleteInquiry(inq.id); }} className="set-btn" style={{ padding: '4px 10px', fontSize: '0.8rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: inq.status === '답변완료' ? 'var(--mint-green)' : 'var(--muted-gray)' }}>{inq.status}</span>
+                          <button onClick={(e) => { e.stopPropagation(); handleEditInquiryClick(inq); }} className="set-btn secondary" style={{ padding: '3px 8px', fontSize: '0.75rem' }}>수정</button>
+                          <button onClick={(e) => { e.stopPropagation(); deleteInquiry(inq.id); }} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
                         </div>
                       </div>
 
                       {expandedInquiryId === inq.id && (
-                        <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)', backgroundColor: '#fcfcfc' }}>
-                          <p style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '0.85rem' }}>[문의 본문]</p>
-                          <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem', marginBottom: '16px' }}>{inq.content}</p>
-                          
-                          <div className="google-profile-divider" style={{ margin: '12px 0' }}></div>
-                          
-                          <p style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--mint-green)' }}>[고객센터 답변]</p>
-                          <p style={{ 
-                            whiteSpace: 'pre-wrap', 
-                            fontSize: '0.85rem', 
-                            color: '#444', 
-                            backgroundColor: 'var(--mint-green-light)', 
-                            padding: '12px', 
-                            borderRadius: '6px',
-                            borderLeft: '4px solid var(--mint-green)'
-                          }}>
-                            {getMockedReply(inq)}
-                          </p>
-                          
-                          <button 
-                            onClick={() => {
-                              const updatedInq = { ...inq, status: '답변완료' as const };
-                              updateInquiry(updatedInq);
-                              showAlert('답변 처리가 완료 상태로 활성화되었습니다.');
-                            }}
-                            className="set-btn"
-                            style={{ marginTop: '12px', width: '100%', fontSize: '0.8rem', padding: '8px' }}
-                          >
-                            답변 확인 및 해결 완료 처리
-                          </button>
+                        <div style={{ padding: '12px', borderTop: '1px solid var(--steel-gray)', backgroundColor: '#fcfcfc', fontSize: '0.8rem' }}>
+                          <p style={{ whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{inq.content}</p>
+                          <p style={{ fontWeight: 'bold', color: 'var(--mint-green)' }}>[답변]</p>
+                          <p style={{ whiteSpace: 'pre-wrap', backgroundColor: 'var(--mint-green-light)', padding: '8px', borderRadius: '4px' }}>{getMockedReply(inq)}</p>
                         </div>
                       )}
                     </div>
@@ -895,49 +908,28 @@ const Settings: React.FC = () => {
                 </div>
 
                 {showInquiryForm && (
-                  <form onSubmit={handleSaveInquiry} className="panel" style={{ border: '2px solid var(--mint-green)', padding: '20px', marginTop: '16px' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '16px' }}>
-                      {editingInquiryId ? '1:1 문의사항 수정' : '새로운 고객센터 문의 등록'}
-                    </h4>
-                    <div className="form-group" style={{ marginBottom: '12px' }}>
-                      <label className="form-label">문의 유형</label>
-                      <select 
-                        className="form-input" 
-                        value={inquiryCategory} 
-                        onChange={(e) => setInquiryCategory(e.target.value)}
-                        style={{ cursor: 'pointer' }}
-                      >
+                  <form onSubmit={handleSaveInquiry} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--ice-white)' }}>
+                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>{editingInquiryId ? '1:1 문의사항 수정' : '새로운 문의 등록'}</h4>
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>문의 유형</label>
+                      <select className="form-input" value={inquiryCategory} onChange={(e) => setInquiryCategory(e.target.value)}>
                         <option value="서비스 이용">서비스 이용</option>
                         <option value="데이터 백업/복원">데이터 백업/복원</option>
                         <option value="오류 제보">오류 제보</option>
                         <option value="제안 및 건의">제안 및 건의</option>
                       </select>
                     </div>
-                    <div className="form-group" style={{ marginBottom: '12px' }}>
-                      <label className="form-label">문의 제목</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        value={inquiryTitle} 
-                        onChange={(e) => setInquiryTitle(e.target.value)} 
-                        placeholder="예) 데이터 스냅샷이 복원되지 않습니다." 
-                        required 
-                      />
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>문의 제목</label>
+                      <input type="text" className="form-input" value={inquiryTitle} onChange={(e) => setInquiryTitle(e.target.value)} required />
                     </div>
-                    <div className="form-group" style={{ marginBottom: '20px' }}>
-                      <label className="form-label">상세 내용</label>
-                      <textarea 
-                        className="form-input" 
-                        value={inquiryContent} 
-                        onChange={(e) => setInquiryContent(e.target.value)} 
-                        style={{ minHeight: '120px', resize: 'none' }}
-                        placeholder="겪으신 불편이나 제안 사항을 상세히 기재해 주세요." 
-                        required 
-                      />
+                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>상세 내용</label>
+                      <textarea className="form-input" value={inquiryContent} onChange={(e) => setInquiryContent(e.target.value)} style={{ minHeight: '80px', resize: 'none' }} required />
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => setShowInquiryForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0 }}>취소</button>
-                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0 }}>문의 전송</button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button type="button" onClick={() => setShowInquiryForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>보내기</button>
                     </div>
                   </form>
                 )}
@@ -945,8 +937,9 @@ const Settings: React.FC = () => {
             </div>
           )}
         </div>
+
       </div>
-    </>
+    </div>
   );
 };
 

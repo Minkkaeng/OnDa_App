@@ -13,6 +13,10 @@ export interface Pet {
   notes?: string;
   walkTime?: string;
   walkGoal?: string;
+  medicationName?: string;
+  medicationTime?: string;
+  walkDepartTime?: string;
+  walkDuration?: string;
 }
 
 export type EventType = 'diary' | 'hospital' | 'schedule';

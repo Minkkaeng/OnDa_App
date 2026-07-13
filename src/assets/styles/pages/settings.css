@@ -1,6 +1,7 @@
 .set-warning {
-    background: var(--error-red);
-    color: white;
+    background: var(--blood-coral-light);
+    color: var(--blood-coral);
+    border: 1px solid var(--blood-coral-border);
     padding: 12px;
     text-align: center;
     font-weight: 700;
