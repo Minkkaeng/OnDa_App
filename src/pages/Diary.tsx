@@ -551,7 +551,7 @@ const Diary: React.FC = () => {
                     <img src={ev.imageUrl} className="diary-image" alt="Diary representation" style={{ width: '100%', objectFit: 'cover' }} />
                   </div>
                 )}
-                <div className="diary-content" style={{ padding: '20px' }}>
+                <div className="diary-content" style={{ padding: '16px' }}>
                   <div className="diary-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--deep-navy)', marginBottom: '10px' }}>{ev.title}</div>
                   <div className="diary-text" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#333', whiteSpace: 'pre-wrap' }}>{ev.content}</div>
                 </div>

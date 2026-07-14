@@ -41,8 +41,10 @@ html {
 body { 
   margin: 0; 
   background-color: var(--ice-white); 
-  min-height: 100vh;
-  font: 14px/1.5 var(--font-main);
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  font: 16px/1.5 var(--font-main);
   color: var(--deep-navy);
   -webkit-font-smoothing: antialiased;
   word-break: keep-all; 

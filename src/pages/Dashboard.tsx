@@ -212,7 +212,7 @@ const Dashboard: React.FC = () => {
             style={{ 
               background: 'var(--white)', 
               borderRadius: '16px', 
-              padding: '20px', 
+              padding: '16px', 
               width: '100%', 
               boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)',
               marginBottom: '16px'

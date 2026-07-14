@@ -15,9 +15,9 @@
 
 .task-list { display: flex; flex-direction: column; gap: 12px; }
 .task-card {
-  background-color: var(--white); border: 1px solid var(--steel-gray); border-radius: 12px; padding: 20px 24px;
+  background-color: var(--white); border: 1px solid var(--steel-gray); border-radius: 12px; padding: 16px;
   display: flex; justify-content: space-between; align-items: center;
-  gap: 16px;
+  gap: 12px;
   border-left: 6px solid var(--completed-green);
 }
 .task-card.pending { border-left: 6px solid var(--waiting-yellow); background-color: var(--waiting-yellow-light); border-color: var(--waiting-yellow-border); }
@@ -80,10 +80,10 @@
   align-items: center;
   justify-content: space-between;
   background-color: var(--white);
-  padding: 24px;
+  padding: 16px;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   position: relative;
 }
 
@@ -193,23 +193,15 @@
   font-weight: 700;
 }
 
-/* Profile Edit Page 2-column Layout */
+/* Profile Edit Page 1-column Layout (Mobile) */
 .profile-panel {
-  max-width: 1000px;
-  margin: 0 auto;
   width: 100%;
 }
 
 .profile-form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-}
-
-@media (min-width: 768px) {
-  .profile-form-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .profile-left, .profile-right {
@@ -361,13 +353,9 @@
 /* Settings Submenus Styles */
 .settings-layout {
   display: flex;
+  flex-direction: column;
   gap: 24px;
   width: 100%;
-}
-@media (max-width: 768px) {
-  .settings-layout {
-    flex-direction: column;
-  }
 }
 .settings-tabs-col {
   flex: 1;
@@ -401,7 +389,7 @@
 .settings-sub-panel {
   background-color: var(--white);
   border-radius: 16px;
-  padding: 24px;
+  padding: 16px;
   border: 1px solid var(--steel-gray);
   box-shadow: 0 4px 16px rgba(0,0,0,0.03);
 }

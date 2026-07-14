@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { usePetStore } from './store/petStore';
+import { Home, Heart, Calendar as CalendarIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 
 // Import Pages
 import Onboarding from './pages/Onboarding';
@@ -213,6 +214,7 @@ const AppContent: React.FC = () => {
 
   // Splash screen transition
   useEffect(() => {
+    if (!showSplash) return;
     if (!loading && !onboardingLoading) {
       // 최소 3.5초(3500ms) 동안 스플래시 화면을 유지한 후 페이드아웃 시작
       const minDurationTimer = setTimeout(() => {
@@ -229,7 +231,7 @@ const AppContent: React.FC = () => {
 
       return () => clearTimeout(minDurationTimer);
     }
-  }, [loading, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive]);
+  }, [loading, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive, showSplash]);
 
   const isObPage = location.pathname === '/onboarding';
 
@@ -241,103 +243,84 @@ const AppContent: React.FC = () => {
 
   const renderAppLayout = () => {
     return (
-      <div className="web-layout">
-        {/* 1. Global Web Header */}
+      <div className="web-layout" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+        {/* 1. App Top Bar */}
         {!isObPage && (
-          <header className="web-header" style={{ flexDirection: 'column', alignItems: 'stretch', padding: '12px 0 0 0', height: 'auto' }}>
-            <div className="header-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', marginBottom: '12px' }}>
-              <Link to="/" className="brand-logo-link" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '40px', marginRight: '8px' }}>
-                  <circle cx="60" cy="55" r="30" fill="none" stroke="#14C3A3" strokeWidth="16"/>
-                  <path d="M 115 85 V 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                  <path d="M 115 55 C 115 35, 155 35, 155 55 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                  <path d="M 185 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                  <path d="M 185 25 C 235 25, 235 85, 185 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                  <path d="M 255 85 L 275 25 L 295 85" fill="none" stroke="#121B2A" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
-                </svg>
-              </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button className="premium-btn" onClick={handlePremiumClick} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>PREMIUM</button>
-                
-                {/* Google Style Profile Dropdown Button */}
-                {location.pathname !== '/dashboard' && activePet && (
-                  <div className="header-profile-menu-container" ref={headerDropdownRef}>
-                    <img 
-                      src={activePet.image} 
-                      alt="Profile Menu" 
-                      onClick={() => setHeaderDropdownOpen(!headerDropdownOpen)} 
-                      className="header-profile-avatar-btn"
-                    />
-                    {headerDropdownOpen && (
-                      <div className="header-profile-dropdown-menu">
-                        <div className="google-profile-header">
-                          <img src={activePet.image} className="google-profile-large-avatar" alt="Avatar" />
-                          <h4 className="google-profile-name">{activePet.name}</h4>
-                          <p className="google-profile-email">🐾 {activePet.breed} | ⚖️ {activePet.weight}kg</p>
-                          <button 
-                            className="google-profile-edit-btn"
-                            onClick={() => {
-                              setHeaderDropdownOpen(false);
-                              navigate(`/profile?id=${activePet.id}`);
-                            }}
-                          >
-                            프로필 수정
-                          </button>
-                        </div>
-                        
-                        <div className="google-profile-divider"></div>
-                        
-                        <div className="google-profile-pet-list">
-                          <p className="google-profile-list-title">다른 반려동물 프로필</p>
-                          {pets.filter(p => p.id !== activePet.id).map(pet => (
-                            <div 
-                              key={pet.id} 
-                              className="google-pet-item" 
-                              onClick={() => {
-                                setActivePetId(pet.id);
-                                setHeaderDropdownOpen(false);
-                              }}
-                            >
-                              <img src={pet.image} className="google-pet-item-avatar" alt={pet.name} />
-                              <span className="google-pet-item-name">{pet.name}</span>
-                            </div>
-                          ))}
+          <header className="app-top-bar">
+            <Link to="/" className="brand-logo-link" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '34px' }}>
+                <circle cx="60" cy="55" r="30" fill="none" stroke="#14C3A3" strokeWidth="16"/>
+                <path d="M 115 85 V 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 115 55 C 115 35, 155 35, 155 55 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 185 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 185 25 C 235 25, 235 85, 185 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 255 85 L 275 25 L 295 85" fill="none" stroke="#121B2A" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
+              </svg>
+            </Link>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button className="premium-btn" onClick={handlePremiumClick} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>PREMIUM</button>
+              
+              {/* Profile Menu */}
+              {location.pathname !== '/dashboard' && activePet && (
+                <div className="header-profile-menu-container" ref={headerDropdownRef}>
+                  <img 
+                    src={activePet.image} 
+                    alt="Profile Menu" 
+                    onClick={() => setHeaderDropdownOpen(!headerDropdownOpen)} 
+                    className="header-profile-avatar-btn"
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                  {headerDropdownOpen && (
+                    <div className="header-profile-dropdown-menu">
+                      <div className="google-profile-header">
+                        <img src={activePet.image} className="google-profile-large-avatar" alt="Avatar" />
+                        <h4 className="google-profile-name">{activePet.name}</h4>
+                        <p className="google-profile-email">🐾 {activePet.breed} | ⚖️ {activePet.weight}kg</p>
+                        <button 
+                          className="google-profile-edit-btn"
+                          onClick={() => {
+                            setHeaderDropdownOpen(false);
+                            navigate(`/profile?id=${activePet.id}`);
+                          }}
+                        >
+                          프로필 수정
+                        </button>
+                      </div>
+                      
+                      <div className="google-profile-divider"></div>
+                      
+                      <div className="google-profile-pet-list">
+                        <p className="google-profile-list-title">다른 반려동물 프로필</p>
+                        {pets.filter(p => p.id !== activePet.id).map(pet => (
                           <div 
-                            className="google-pet-add-btn" 
+                            key={pet.id} 
+                            className="google-pet-item" 
                             onClick={() => {
+                              setActivePetId(pet.id);
                               setHeaderDropdownOpen(false);
-                              navigate('/profile?add=true');
                             }}
                           >
-                            + 새 프로필 추가
+                            <img src={pet.image} className="google-pet-item-avatar" alt={pet.name} />
+                            <span className="google-pet-item-name">{pet.name}</span>
                           </div>
+                        ))}
+                        <div 
+                          className="google-pet-add-btn" 
+                          onClick={() => {
+                            setHeaderDropdownOpen(false);
+                            navigate('/profile?add=true');
+                          }}
+                        >
+                          + 새 프로필 추가
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-
-            {/* Nav Links (상단 메뉴 부활) */}
-            <nav className="web-header-nav" style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
-              <NavLink to="/dashboard" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
-                대시보드
-              </NavLink>
-              <NavLink to="/care" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
-                케어
-              </NavLink>
-              <NavLink to="/calendar" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
-                캘린더
-              </NavLink>
-              <NavLink to="/diary" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
-                기록일기
-              </NavLink>
-              <NavLink to="/settings" className={({ isActive }) => `header-nav-item ${isActive ? 'active' : ''}`}>
-                설정
-              </NavLink>
-            </nav>
           </header>
         )}
 
@@ -363,17 +346,30 @@ const AppContent: React.FC = () => {
 
         <GlobalWalkBar />
 
-        {/* 3. Global Bottom Footer */}
+        {/* 3. App Bottom Navigation */}
         {!isObPage && (
-          <>
-            <footer className="web-footer" style={{ paddingBottom: '80px' }}>
-              <p>
-                프로필 수정 및 관리 | 고객센터 및 1:1 문의 채널 | 공지사항 및 업데이트 정보 | 자주 묻는 질문(FAQ) | 서비스 이용약관 | <b>개인정보처리방침</b><br/>
-                © OnDa Pet Care App. All Rights Reserved. Designed for Desktop & Mobile Environments.
-              </p>
-            </footer>
-
-          </>
+          <nav className="app-bottom-nav">
+            <NavLink to="/dashboard" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+              <Home size={24} />
+              <span>홈</span>
+            </NavLink>
+            <NavLink to="/care" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+              <Heart size={24} />
+              <span>케어</span>
+            </NavLink>
+            <NavLink to="/calendar" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+              <CalendarIcon size={24} />
+              <span>캘린더</span>
+            </NavLink>
+            <NavLink to="/diary" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+              <BookOpen size={24} />
+              <span>기록</span>
+            </NavLink>
+            <NavLink to="/settings" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+              <SettingsIcon size={24} />
+              <span>설정</span>
+            </NavLink>
+          </nav>
         )}
       </div>
     );
@@ -433,20 +429,8 @@ const AppContent: React.FC = () => {
 
       <CustomDialog />
 
-      {isGlobalTourActive ? (
-        <div className="tour-phone-wrapper">
-          <div className="phone-device-frame">
-            <div className="phone-screen-content">
-              {renderAppLayout()}
-              <GlobalTour />
-            </div>
-            <div className="phone-notch"></div>
-            <div className="phone-home-indicator"></div>
-          </div>
-        </div>
-      ) : (
-        renderAppLayout()
-      )}
+      {renderAppLayout()}
+      {isGlobalTourActive && <GlobalTour />}
     </>
   );
 };

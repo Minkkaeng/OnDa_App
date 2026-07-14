@@ -265,7 +265,7 @@ const Care: React.FC = () => {
           style={{ 
             background: 'var(--white)', 
             borderRadius: '16px', 
-            padding: '20px', 
+            padding: '16px', 
             width: '100%', 
             boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)',
             marginBottom: '0'
@@ -319,7 +319,7 @@ const Care: React.FC = () => {
           style={{ 
             background: 'var(--white)', 
             borderRadius: '16px', 
-            padding: '20px', 
+            padding: '16px', 
             width: '100%', 
             boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)',
             marginBottom: '0'
@@ -447,7 +447,7 @@ const Care: React.FC = () => {
           style={{ 
             background: 'var(--white)', 
             borderRadius: '16px', 
-            padding: '20px', 
+            padding: '16px', 
             width: '100%', 
             boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)',
             marginBottom: '0'
@@ -507,7 +507,7 @@ const Care: React.FC = () => {
           style={{ 
             background: 'var(--white)', 
             borderRadius: '16px', 
-            padding: '20px', 
+            padding: '16px', 
             width: '100%', 
             boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)',
             marginBottom: '0'
@@ -571,7 +571,7 @@ const Care: React.FC = () => {
           style={{ 
             background: 'var(--white)', 
             borderRadius: '16px', 
-            padding: '20px', 
+            padding: '16px', 
             width: '100%', 
             boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)'
           }}
@@ -795,7 +795,7 @@ const Care: React.FC = () => {
             if (e.target === e.currentTarget) setActivePicker(null);
           }}
         >
-          <div className="modal-content" style={{ background: 'white', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', gap: '16px' }}>
+          <div className="modal-content" style={{ background: 'white', padding: '16px', borderRadius: '12px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', gap: '16px' }}>
             <h4 style={{ margin: 0, color: 'var(--deep-navy)', fontSize: '1rem', fontWeight: 800 }}>
               {activePicker === 'medication' ? '투약 시간 설정' : activePicker === 'depart' ? '산책 출발 시간 설정' : '산책 목표 시간 설정'}
             </h4>

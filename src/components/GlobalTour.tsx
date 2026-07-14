@@ -15,45 +15,11 @@ const GlobalTour: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { completeGuide } = useOnboarding();
-  const { setGlobalTourActive, setGlobalTourStep, showSplash } = usePetStore();
+  const { setGlobalTourActive, setGlobalTourStep } = usePetStore();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const [tourOpacity, setTourOpacity] = useState(0);
-  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-
-  useEffect(() => {
-    if (!showSplash) {
-      const animationFrame = requestAnimationFrame(() => {
-        setTourOpacity(1);
-      });
-      return () => cancelAnimationFrame(animationFrame);
-    } else {
-      setTourOpacity(0);
-    }
-  }, [showSplash]);
-
-  // Spotlight Effect Calculation
-  useEffect(() => {
-    const updateRect = () => {
-      if (!isVisible) return;
-      const step = TOUR_STEPS[currentStep];
-      if (step && step.selector) {
-        const el = document.querySelector(step.selector);
-        if (el) {
-          setTargetRect(el.getBoundingClientRect());
-        } else {
-          setTargetRect(null);
-        }
-      }
-    };
-    const timer = setTimeout(updateRect, 150); // wait for dom to render
-    window.addEventListener('resize', updateRect);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateRect);
-    };
-  }, [currentStep, isVisible, location.pathname]);
+  // Spotlight Effect Calculation was removed
 
   // Sync step with global store so subcomponents can react
   useEffect(() => {
@@ -128,18 +94,13 @@ const GlobalTour: React.FC = () => {
 
   return (
     <div style={{ 
-      position: 'absolute', inset: 0, zIndex: 9999, pointerEvents: 'auto', overflow: 'hidden',
-      opacity: tourOpacity,
-      transition: 'opacity 0.5s ease-out'
+      position: 'absolute', inset: 0, zIndex: 9999, pointerEvents: 'auto', overflow: 'hidden'
     }}>
-      {/* Spotlight overlay */}
+      {/* Dim overlay without spotlight */}
       <div
         style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: targetRect 
-            ? `radial-gradient(circle at ${targetRect.left + targetRect.width / 2}px ${targetRect.top + targetRect.height / 2}px, transparent ${Math.max(targetRect.width, targetRect.height) / 2 + 10}px, rgba(18, 27, 42, 0.6) ${Math.max(targetRect.width, targetRect.height) / 2 + 25}px)`
-            : 'rgba(18, 27, 42, 0.6)',
-          transition: 'background 0.4s ease',
+          background: 'rgba(18, 27, 42, 0.6)',
           pointerEvents: 'none',
           zIndex: 0
         }}

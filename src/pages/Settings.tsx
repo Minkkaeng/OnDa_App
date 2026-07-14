@@ -413,7 +413,7 @@ const Settings: React.FC = () => {
             <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'theme' ? '▼' : '▶'}</span>
           </div>
           {expandedMenu === 'theme' && (
-            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
               {/* Custom Themes List */}
               <div style={{ marginBottom: '0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -542,7 +542,7 @@ const Settings: React.FC = () => {
             <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'notification' ? '▼' : '▶'}</span>
           </div>
           {expandedMenu === 'notification' && (
-            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
               <div className="set-item" style={{ padding: '0 0 12px 0', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="set-info" style={{ flex: 1 }}>
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: 'var(--deep-navy)' }}>로컬 실시간 푸시 알림</h4>
@@ -693,7 +693,7 @@ const Settings: React.FC = () => {
             <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'system' ? '▼' : '▶'}</span>
           </div>
           {expandedMenu === 'system' && (
-            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--steel-gray)' }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
@@ -826,7 +826,7 @@ const Settings: React.FC = () => {
             <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'support' ? '▼' : '▶'}</span>
           </div>
           {expandedMenu === 'support' && (
-            <div style={{ padding: '20px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
               
               {/* FAQ Section */}
               <div style={{ marginBottom: '20px' }}>

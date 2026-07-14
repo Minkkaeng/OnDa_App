@@ -43,15 +43,7 @@ const Onboarding: React.FC = () => {
   const [weightError, setWeightError] = useState('');
   const [isStep1Valid, setIsStep1Valid] = useState(false);
 
-  // Guide Overlay state
-  useEffect(() => {
-    if (!showSplash && !onboardingLoading && !isGlobalTourSeen && !isGlobalTourActive) {
-      setGlobalTourActive(true);
-    }
-  }, [showSplash, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive]);
-
-
-
+  // Guide Overlay state auto-trigger removed to prevent race conditions.
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
