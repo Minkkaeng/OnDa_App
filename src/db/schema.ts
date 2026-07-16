@@ -19,7 +19,7 @@ export interface Pet {
   walkDuration?: string;
 }
 
-export type EventType = 'diary' | 'hospital' | 'schedule';
+export type EventType = 'diary' | 'hospital' | 'schedule' | 'poop';
 
 export interface CalendarEvent {
   id: string;
@@ -29,6 +29,8 @@ export interface CalendarEvent {
   title: string;
   content: string;
   imageUrl?: string;
+  poopStatus?: 'good' | 'loose' | 'hard' | 'bloody';
+  aiAnalysisText?: string;
 }
 
 export interface AppSettings {

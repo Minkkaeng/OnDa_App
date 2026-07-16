@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { App as CapacitorApp } from '@capacitor/app';
 import { usePetStore } from './store/petStore';
 import { Home, Heart, Calendar as CalendarIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 
@@ -150,6 +151,28 @@ const AppContent: React.FC = () => {
 
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
+  // Handle Android Hardware Back Button
+  useEffect(() => {
+    let listener: any;
+    const handleBackButton = async () => {
+      // 대시보드(홈)이거나 온보딩/스플래시 화면일 때만 앱 종료
+      if (location.pathname === '/' || location.pathname === '/dashboard' || location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/splash')) {
+        CapacitorApp.exitApp();
+      } else {
+        // 그 외의 탭이나 하위 페이지에서는 이전 화면(탭)으로 돌아가기
+        navigate(-1);
+      }
+    };
+    
+    CapacitorApp.addListener('backButton', handleBackButton).then(l => {
+      listener = l;
+    });
+
+    return () => {
+      if (listener) listener.remove();
+    };
+  }, [location.pathname, navigate]);
+
   // Apply Theme Colors
   useEffect(() => {
     let colors = THEME_PRESETS[activeThemeId];
@@ -249,13 +272,13 @@ const AppContent: React.FC = () => {
           <header className="app-top-bar">
             <Link to="/" className="brand-logo-link" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '34px' }}>
-                <circle cx="60" cy="55" r="30" fill="none" stroke="#14C3A3" strokeWidth="16"/>
-                <path d="M 115 85 V 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 115 55 C 115 35, 155 35, 155 55 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 185 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 185 25 C 235 25, 235 85, 185 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 255 85 L 275 25 L 295 85" fill="none" stroke="#121B2A" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
+                <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M 168 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 128 85 V 45" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
+                <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
+                <circle cx="240" cy="65" r="20" fill="none" stroke="#0E9B82" strokeWidth="16"/>
+                <path d="M 260 45 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
               </svg>
             </Link>
             
@@ -411,16 +434,17 @@ const AppContent: React.FC = () => {
           }}
         >
           <div className="splash-content">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '80px', marginBottom: '24px' }}>
-              <circle cx="60" cy="55" r="30" fill="none" stroke="#14C3A3" strokeWidth="16"/>
-              <path d="M 115 85 V 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 115 55 C 115 35, 155 35, 155 55 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 185 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 185 25 C 235 25, 235 85, 185 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 255 85 L 275 25 L 295 85" fill="none" stroke="#121B2A" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M 275 68 C 275 68, 263 56, 263 48 A 8 8 0 0 1 275 44 A 8 8 0 0 1 287 48 C 287 56, 275 68, 275 68 Z" fill="#14C3A3"/>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '80px', marginBottom: '12px' }}>
+              <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M 168 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 128 85 V 45" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
+              <circle cx="240" cy="65" r="20" fill="none" stroke="#0E9B82" strokeWidth="16"/>
+              <path d="M 260 45 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
             </svg>
-            <h2 style={{ color: 'var(--deep-navy)', margin: 0, fontSize: '1.5rem' }}>OnDa Pet Care</h2>
+            <h2 style={{ color: 'var(--deep-navy)', margin: '0 0 6px 0', fontSize: '1.6rem', letterSpacing: '-0.5px', fontWeight: 800 }}>OnDa Pet Care</h2>
+            <p style={{ color: 'var(--muted-gray)', margin: 0, fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.2px' }}>우리아이 맞춤 케어</p>
           </div>
         </div>
       )}

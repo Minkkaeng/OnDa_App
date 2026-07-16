@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { usePetStore } from '../store/petStore';
-
+import PoopAnalyzer from '../components/care/PoopAnalyzer';
 
 const Care: React.FC = () => {
-  const { pets, activePetId, updatePet, showAlert } = usePetStore();
+  const { pets, activePetId, updatePet, showAlert, addCalendarEvent } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   // Editing state
   const [isEditing, setIsEditing] = useState(false);
+  const [showPoopAnalyzer, setShowPoopAnalyzer] = useState(false);
   const [medicationName, setMedicationName] = useState('');
   const [medicationTime, setMedicationTime] = useState('');
   const [allergies, setAllergies] = useState('');
@@ -169,11 +170,17 @@ const Care: React.FC = () => {
   // Sync state with active pet
   useEffect(() => {
     if (activePet) {
-      setMedicationName(activePet.medicationName || '');
+      // Profile.tsx에서 입력된 데이터를 기본값으로 폴백하여 연결
+      setMedicationName(activePet.medicationName || activePet.medications || '');
       setMedicationTime(activePet.medicationTime || '');
       setAllergies(activePet.allergies || '');
-      setWalkDepartTime(activePet.walkDepartTime || '');
-      setWalkDuration(activePet.walkDuration || '');
+      
+      const defaultWalkTime = activePet.walkDepartTime || activePet.walkTime || '';
+      // "오후 07:00 지정" -> "19:00" 등 시간 추출 로직이 없어도 일단 텍스트 그대로 들어감
+      setWalkDepartTime(defaultWalkTime.replace('나가는 시간: ', ''));
+      
+      const defaultWalkGoal = activePet.walkDuration || activePet.walkGoal || '';
+      setWalkDuration(defaultWalkGoal.replace('목표: ', ''));
     }
   }, [activePet, isEditing]);
 
@@ -352,6 +359,29 @@ const Care: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            
+            {/* [추후 릴리즈 예정] AI 배변 분석 기능
+            <button
+              onClick={() => setShowPoopAnalyzer(true)}
+              style={{
+                background: 'linear-gradient(135deg, #14C3A3, #0E9B82)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '16px',
+                fontSize: '1rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(20, 195, 163, 0.3)'
+              }}
+            >
+              <span style={{ fontSize: '1.2rem' }}>📸</span> AI 배변 사진 분석하기
+            </button>
+            */}
             
             {/* 세그먼트 컨트롤 렌더링 헬퍼 컴포넌트 */}
             {(() => {
@@ -893,6 +923,34 @@ const Care: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Poop Analyzer Modal */}
+      {showPoopAnalyzer && (
+        <PoopAnalyzer
+          onClose={() => setShowPoopAnalyzer(false)}
+          onSave={async (eventData) => {
+            try {
+              if (activePet) {
+                await addCalendarEvent({
+                  petId: activePet.id,
+                  date: eventData.date!,
+                  type: eventData.type!,
+                  title: eventData.title!,
+                  content: eventData.content!,
+                  imageUrl: eventData.imageUrl,
+                  poopStatus: eventData.poopStatus,
+                  aiAnalysisText: eventData.aiAnalysisText
+                });
+                showAlert('배변 기록이 다이어리 히스토리에 저장되었습니다!');
+                setShowPoopAnalyzer(false);
+              }
+            } catch (err) {
+              console.error(err);
+              showAlert('기록 저장에 실패했습니다.');
+            }
+          }}
+        />
       )}
       </div>
     </>

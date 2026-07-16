@@ -10,6 +10,18 @@ const Dashboard: React.FC = () => {
   } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
+  // 초기화면(프로필)에서 설정한 산책 목표 시간을 대시보드 산책 기록에 연동
+  React.useEffect(() => {
+    if (activePet) {
+      const goalStr = activePet.walkDuration || activePet.walkGoal || '';
+      const match = goalStr.match(/(\d+)/);
+      if (match) {
+        // 숫자만 추출해서 분 단위 목표 시간으로 설정 (예: "30분" -> 30)
+        setWalkTargetMin(parseInt(match[1], 10));
+      }
+    }
+  }, [activePet?.id]); // 반려견이 변경될 때만 1회 동기화
+
   // Local Page Guides disabled for unified global tour
 
   // Local Page Guides disabled for unified global tour

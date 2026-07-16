@@ -482,8 +482,8 @@ const Calendar: React.FC = () => {
                     <h3 style={{ marginBottom: '12px', fontSize: '1.05rem', fontWeight: 800 }}>{titleStr}</h3>
                     <div className="task-list">
                       {groupedEvents[dateStr].map(ev => {
-                        const typeText = ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정');
-                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : 'var(--mint-green)';
+                        const typeText = ev.type === 'poop' ? '배변' : (ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정'));
+                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : (ev.type === 'poop' ? '#8B5A2B' : 'var(--mint-green)');
                         
                         return (
                           <div key={ev.id} className="task-card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -525,7 +525,7 @@ const Calendar: React.FC = () => {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>{formattedSelectedDate} 기록</h3>
               {selectedDateEvents.length > 0 ? (
                 selectedDateEvents.map(ev => {
-                  const typeText = ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정');
+                  const typeText = ev.type === 'poop' ? '배변' : (ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정'));
                   return (
                     <div key={ev.id} style={{ background: 'var(--ice-white)', padding: '12px', borderRadius: '8px', marginBottom: '10px' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 700, marginBottom: '2px' }}>[{typeText}]</div>

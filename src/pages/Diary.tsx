@@ -39,7 +39,7 @@ const Diary: React.FC = () => {
 
   // Filter diary events
   const diaryEvents = events
-    .filter(e => e.petId === activePet?.id && (e.type === 'diary' || e.imageUrl))
+    .filter(e => e.petId === activePet?.id && (e.type === 'diary' || e.type === 'poop' || e.imageUrl))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -488,7 +488,9 @@ const Diary: React.FC = () => {
                 <div className="diary-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--steel-gray)' }}>
                   <div className="diary-date" style={{ fontWeight: 700, color: 'var(--deep-navy)' }}>{formattedDate}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--muted-gray)', fontWeight: 700 }}>일기 기록</div>
+                    <div style={{ fontSize: '0.85rem', color: ev.type === 'poop' ? '#8B5A2B' : 'var(--muted-gray)', fontWeight: 700, backgroundColor: ev.type === 'poop' ? '#F4E4D4' : 'transparent', padding: ev.type === 'poop' ? '4px 8px' : 0, borderRadius: '8px' }}>
+                      {ev.type === 'poop' ? '💩 AI 배변 분석' : '일기 기록'}
+                    </div>
                     
                     {/* Action buttons during normal non-tour mode */}
                     {!isGlobalTourActive && (

@@ -30,6 +30,7 @@ body {
 /* 2. Center Content Area */
 .content-center {
   flex: 1;
+  min-height: 0;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -105,11 +106,37 @@ body {
 
 .content-onboarding {
   flex-grow: 1;
+  min-height: 0;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   background-color: var(--white);
+}
+
+/* Splash Screen */
+.intro-splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: splashZoom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes splashZoom {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
