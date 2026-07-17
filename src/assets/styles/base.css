@@ -35,7 +35,7 @@ input, textarea, [contenteditable="true"] {
 
 html {
   scroll-behavior: smooth;
-  overflow-y: scroll;
+  height: 100%;
 }
 
 body { 
@@ -48,4 +48,10 @@ body {
   color: var(--deep-navy);
   -webkit-font-smoothing: antialiased;
   word-break: keep-all; 
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }

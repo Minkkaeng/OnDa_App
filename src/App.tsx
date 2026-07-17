@@ -151,15 +151,35 @@ const AppContent: React.FC = () => {
 
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
+  const isExitPromptShowingRef = useRef(false);
+
   // Handle Android Hardware Back Button
   useEffect(() => {
     let listener: any;
     const handleBackButton = async () => {
-      // 대시보드(홈)이거나 온보딩/스플래시 화면일 때만 앱 종료
-      if (location.pathname === '/' || location.pathname === '/dashboard' || location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/splash')) {
-        CapacitorApp.exitApp();
+      // 메인 탭(홈, 케어, 캘린더, 기록, 설정)이거나 온보딩/스플래시 화면일 때 앱 종료 확인 얼럿 띄우기
+      const mainPaths = ['/', '/dashboard', '/care', '/calendar', '/diary', '/settings'];
+      const isMainTab = mainPaths.includes(location.pathname) || location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/splash');
+      
+      if (isMainTab) {
+        if (isExitPromptShowingRef.current) {
+          // 얼럿이 띄워진 상태에서 뒤로가기를 한 번 더 누르면 즉시 종료
+          CapacitorApp.exitApp();
+        } else {
+          isExitPromptShowingRef.current = true;
+          showConfirm('앱을 종료하시겠습니까?', '앱 종료', 
+            () => {
+              // 확인 버튼 클릭 시
+              CapacitorApp.exitApp();
+            },
+            () => {
+              // 취소 버튼 클릭 시
+              isExitPromptShowingRef.current = false;
+            }
+          );
+        }
       } else {
-        // 그 외의 탭이나 하위 페이지에서는 이전 화면(탭)으로 돌아가기
+        // 그 외의 하위 페이지에서는 이전 화면으로 돌아가기
         navigate(-1);
       }
     };
@@ -171,7 +191,7 @@ const AppContent: React.FC = () => {
     return () => {
       if (listener) listener.remove();
     };
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, showConfirm]);
 
   // Apply Theme Colors
   useEffect(() => {
@@ -266,7 +286,7 @@ const AppContent: React.FC = () => {
 
   const renderAppLayout = () => {
     return (
-      <div className="web-layout" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+      <div className="web-layout" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', width: '100%', overflow: 'hidden' }}>
         {/* 1. App Top Bar */}
         {!isObPage && (
           <header className="app-top-bar">

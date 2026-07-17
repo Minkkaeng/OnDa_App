@@ -13,6 +13,7 @@ body {
   position: relative;
   background-color: var(--ice-white);
   box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 
 /* 1. App Top Bar */
@@ -37,7 +38,6 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-bottom: 70px; /* Space for bottom nav */
 }
 
 /* 3. App Bottom Nav */
@@ -47,16 +47,13 @@ body {
   align-items: center;
   background-color: var(--white);
   border-top: 1px solid var(--steel-gray);
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 500;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+  flex-shrink: 0;
 }
 
 .bottom-nav-item {

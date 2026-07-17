@@ -278,8 +278,8 @@ const Care: React.FC = () => {
             marginBottom: '0'
           }}
         >
-          <h2 className="care-title" style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-            연동 실시간 스케줄러
+          <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
+            🗓️ 연동 실시간 스케줄러
           </h2>
           
           <div className="task-list">
@@ -294,25 +294,31 @@ const Care: React.FC = () => {
             ) : (
               tasks.map(task => {
                 const isWarning = task.status === '주의 요망';
-                const statusClass = isWarning ? 'warning' : 'pending';
-                const statusColor = isWarning ? 'var(--blood-coral)' : 'var(--waiting-yellow)';
+                const statusColor = isWarning ? 'var(--error-red)' : 'var(--mint-green)';
+                const statusBg = isWarning ? 'var(--error-red-light)' : 'var(--mint-green-light)';
                 
                 return (
                   <div 
                     key={task.id} 
-                    className={`task-card ${statusClass}`}
-                    style={{ background: 'var(--white)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '10px', marginBottom: '10px' }}
                   >
-                    <div className="task-info">
-                      <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--deep-navy)', marginBottom: '4px', margin: 0 }}>{task.title}</h3>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--muted-gray)', margin: 0 }}>{task.desc}</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>{task.title}</span>
+                      <span style={{ fontSize: '0.8rem', color: '#555' }}>{task.desc}</span>
                     </div>
-                    <div 
-                      className={`task-status ${statusClass}`}
-                      style={{ border: `1px solid ${statusColor}`, color: statusColor, padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem' }}
+                    <span 
+                      style={{ 
+                        fontSize: '0.75rem', 
+                        fontWeight: 800, 
+                        color: statusColor,
+                        backgroundColor: statusBg,
+                        padding: '4px 10px', 
+                        borderRadius: '20px',
+                        whiteSpace: 'nowrap'
+                      }}
                     >
                       {task.status}
-                    </div>
+                    </span>
                   </div>
                 );
               })
