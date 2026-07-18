@@ -11,9 +11,9 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --blood-coral: #F15C47;
-  --blood-coral-light: #FFF0EE;
-  --blood-coral-border: rgba(241, 92, 71, 0.2);
+  --blood-coral: #FF4D4D;
+  --blood-coral-light: #FFF0F0;
+  --blood-coral-border: rgba(255, 77, 77, 0.2);
 
   --waiting-yellow: #E09A00;
   --waiting-yellow-light: #FFF8E5;
@@ -304,7 +304,7 @@ code {
 }
 
 .bottom-nav-item.active {
-  color: var(--mint-green);
+  color: var(--blood-coral);
   font-weight: 700;
 }
 

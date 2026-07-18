@@ -250,11 +250,6 @@ const AppContent: React.FC = () => {
     }
   }, [loading, location.pathname, navigate, isGlobalTourActive]);
 
-  // Start Global Tour (Disabled automatic sequence start - replaced by local page guides)
-  useEffect(() => {
-    // Global Tour auto-start disabled to allow page-specific guides instead.
-  }, []);
-
   // Splash screen transition
   useEffect(() => {
     if (!showSplash) return;
@@ -274,7 +269,7 @@ const AppContent: React.FC = () => {
 
       return () => clearTimeout(minDurationTimer);
     }
-  }, [loading, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive, showSplash]);
+  }, [loading, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive, showSplash, setShowSplash]);
 
   const isObPage = location.pathname === '/onboarding';
 

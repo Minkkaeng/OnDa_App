@@ -151,7 +151,7 @@ const loadFromLS = <T>(key: string, defaultValue: T): T => {
   if (!data) return defaultValue;
   try {
     return JSON.parse(data) as T;
-  } catch (e) {
+  } catch {
     return data as unknown as T;
   }
 };

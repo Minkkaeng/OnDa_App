@@ -258,36 +258,6 @@ const Profile: React.FC = () => {
                 />
               </div>
               
-              <div className="form-group">
-                <label className="form-label">투약 중인 약</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={medications} 
-                  onChange={(e) => setMedications(e.target.value)}
-                  placeholder="예: 심장사상충 예방약" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">산책 설정 (시간 및 목표)</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={walkTime} 
-                    onChange={(e) => setWalkTime(e.target.value)}
-                    placeholder="예: 오후 07:00 지정" 
-                  />
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={walkGoal} 
-                    onChange={(e) => setWalkGoal(e.target.value)}
-                    placeholder="예: 30분 정기 목표 설정" 
-                  />
-                </div>
-              </div>
 
               <div className="form-group" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 <label className="form-label">기타 특이사항</label>

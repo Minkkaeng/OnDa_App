@@ -3,7 +3,7 @@ import { usePetStore, type CalendarEvent } from '../store/petStore';
 import { type EventType } from '../db';
 
 const Calendar: React.FC = () => {
-  const { pets, activePetId, events, addCalendarEvent, showAlert } = usePetStore();
+  const { pets, activePetId, events, addCalendarEvent, showAlert, updatePet } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -15,6 +15,37 @@ const Calendar: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'calendar' | 'list'>('calendar');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Routine Form State
+  const [isEditingRoutine, setIsEditingRoutine] = useState(false);
+  const [routineMeds, setRoutineMeds] = useState('');
+  const [routineWalk, setRoutineWalk] = useState('');
+  const [routineWalkGoal, setRoutineWalkGoal] = useState('');
+
+  useEffect(() => {
+    if (activePet) {
+      setRoutineMeds(activePet.medications || '');
+      setRoutineWalk(activePet.walkTime || '');
+      setRoutineWalkGoal(activePet.walkGoal || '');
+    }
+  }, [activePet]);
+
+  const handleSaveRoutine = async () => {
+    if (activePet) {
+      try {
+        await updatePet({
+          ...activePet,
+          medications: routineMeds,
+          walkTime: routineWalk,
+          walkGoal: routineWalkGoal
+        });
+        showAlert('루틴 정보가 성공적으로 저장되었습니다.');
+        setIsEditingRoutine(false);
+      } catch {
+        showAlert('루틴 저장 중 오류가 발생했습니다.');
+      }
+    }
+  };
 
   // New Event Form State
   const [newEventType, setNewEventType] = useState<EventType>('diary');
@@ -56,7 +87,7 @@ const Calendar: React.FC = () => {
     const vEvents: CalendarEvent[] = [];
     if (!activePet) return [];
 
-    const savedVac = localStorage.getItem(`onda_pet_vaccines_${activePet.id}`);
+    const savedVac = localStorage.getItem(`onda_vaccines_${activePet.id}`);
     if (savedVac) {
       try {
         const vaccines = JSON.parse(savedVac);
@@ -280,6 +311,60 @@ const Calendar: React.FC = () => {
       {/* Calendar Guide overlay disabled for global tour */}
 
       <div style={{ paddingBottom: '16px' }}>
+        {/* Routine Scheduler Panel */}
+        <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
+              ⏰ 기본 루틴 설정
+            </h2>
+            <button 
+              onClick={() => {
+                if (isEditingRoutine) handleSaveRoutine();
+                else setIsEditingRoutine(true);
+              }} 
+              style={{ fontSize: '0.85rem', color: isEditingRoutine ? 'white' : 'var(--mint-green)', background: isEditingRoutine ? 'var(--mint-green)' : 'var(--mint-green-light)', border: 'none', borderRadius: '12px', padding: '6px 12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              {isEditingRoutine ? '저장하기' : '루틴 수정'}
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '8px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>💊 정기 투약</span>
+              {isEditingRoutine ? (
+                <input 
+                  type="text" value={routineMeds} onChange={(e) => setRoutineMeds(e.target.value)} 
+                  placeholder="예: 심장사상충 매월 1일" className="form-input" style={{ width: '160px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
+                />
+              ) : (
+                <span style={{ fontSize: '0.95rem', color: 'var(--deep-navy)', fontWeight: 800 }}>{activePet.medications || '미설정'}</span>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '8px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>👟 산책 목표량</span>
+              {isEditingRoutine ? (
+                <input 
+                  type="text" value={routineWalkGoal} onChange={(e) => setRoutineWalkGoal(e.target.value)} 
+                  placeholder="예: 30분 달성" className="form-input" style={{ width: '160px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
+                />
+              ) : (
+                <span style={{ fontSize: '0.95rem', color: 'var(--deep-navy)', fontWeight: 800 }}>{activePet.walkGoal || '미설정'}</span>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>⏰ 산책 예정 시간</span>
+              {isEditingRoutine ? (
+                <input 
+                  type="text" value={routineWalk} onChange={(e) => setRoutineWalk(e.target.value)} 
+                  placeholder="예: 오후 7:00" className="form-input" style={{ width: '160px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
+                />
+              ) : (
+                <span style={{ fontSize: '0.95rem', color: 'var(--deep-navy)', fontWeight: 800 }}>{activePet.walkTime || '미설정'}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Main Header with fixed top right tabs */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '8px 0 16px 0' }}>
         <div className="cal-tabs">
@@ -429,11 +514,10 @@ const Calendar: React.FC = () => {
                 style={{ padding: '6px 10px', borderRadius: '8px', flex: 1, minWidth: '90px', fontSize: '0.85rem' }}
               >
                 <option value="">년도 전체</option>
-                <option value="2024">2024년</option>
-                <option value="2025">2025년</option>
-                <option value="2026">2026년</option>
-                <option value="2027">2027년</option>
-                <option value="2028">2028년</option>
+                {Array.from({ length: 2028 - 2000 + 1 }, (_, i) => {
+                  const yVal = 2000 + i;
+                  return <option key={yVal} value={String(yVal)}>{yVal}년</option>;
+                })}
               </select>
               <select 
                 value={searchMonth} 
@@ -638,8 +722,8 @@ const Calendar: React.FC = () => {
                   className="form-input" 
                   style={{ padding: '8px', flex: 1, fontSize: '0.95rem', fontWeight: 'bold' }}
                 >
-                  {Array.from({ length: 11 }, (_, i) => {
-                    const yVal = new Date().getFullYear() - 5 + i;
+                  {Array.from({ length: 2028 - 2000 + 1 }, (_, i) => {
+                    const yVal = 2000 + i;
                     return <option key={yVal} value={yVal}>{yVal}년</option>;
                   })}
                 </select>

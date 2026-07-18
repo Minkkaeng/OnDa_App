@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePetStore } from '../store/petStore';
-import { useOnboarding } from '../hooks/useOnboarding';
+
 import defaultLogo from '../assets/logo.png';
 import ImageCropper from '../components/common/ImageCropper';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const { addPet, showAlert, showSplash, setGlobalTourActive, isGlobalTourActive } = usePetStore();
-  const { isGlobalTourSeen, isLoading: onboardingLoading } = useOnboarding();
+  const { addPet, showAlert, isGlobalTourActive } = usePetStore();
+
   
   const [step, setStep] = useState(1);
   
