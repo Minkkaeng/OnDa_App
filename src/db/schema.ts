@@ -42,17 +42,25 @@ export interface AppSettings {
   isSettingsWarnSeen: boolean;
 }
 
+export interface HospitalCache {
+  queryKey: string; // e.g. "hospital:city:district" or "pharmacy:city:district"
+  data: any[];      // Cached items list
+  updatedAt: number; // Timestamp (epoch ms)
+}
+
 export class OnDaDatabase extends Dexie {
   pets!: Table<Pet>;
   calendarEvents!: Table<CalendarEvent>;
   app_settings!: Table<AppSettings>;
+  hospital_cache!: Table<HospitalCache>;
 
   constructor() {
     super('OnDaDatabase');
-    this.version(2).stores({
+    this.version(3).stores({
       pets: 'id, name, breed, birth',
       calendarEvents: 'id, petId, date, type',
-      app_settings: 'key'
+      app_settings: 'key',
+      hospital_cache: 'queryKey'
     });
   }
 }

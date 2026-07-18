@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { CalendarEvent } from '../../db/schema';
 import ImageCropper from '../common/ImageCropper';
+import { analyzePoopImage } from '../../services/aiService';
 
 interface PoopAnalyzerProps {
   onClose: () => void;
@@ -12,7 +13,12 @@ const PoopAnalyzer: React.FC<PoopAnalyzerProps> = ({ onClose, onSave }) => {
   const [rawImage, setRawImage] = useState<string>('');
   const [showCropModal, setShowCropModal] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [userMemo, setUserMemo] = useState('');
   const [analysisResult, setAnalysisResult] = useState<{ status: 'good' | 'loose' | 'hard' | 'bloody', text: string } | null>(null);
+
+  // Rewarded Ad Simulation States
+  const [isPlayingAd, setIsPlayingAd] = useState(false);
+  const [adCountdown, setAdCountdown] = useState(3);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,25 +40,38 @@ const PoopAnalyzer: React.FC<PoopAnalyzerProps> = ({ onClose, onSave }) => {
     setRawImage('');
   };
 
+  const runActualAnalysis = useCallback(async () => {
+    setStep('analyzing');
+    try {
+      const result = await analyzePoopImage(imageUrl, userMemo);
+      setAnalysisResult(result);
+    } catch {
+      setAnalysisResult({
+        status: 'good',
+        text: 'AI 분석 중 예기치 못한 에러가 발생했습니다. 강아지가 평소와 달리 잘 먹지 않거나 기운이 없다면 수의사와 직접 상담해보시기를 권장합니다.'
+      });
+    } finally {
+      setStep('result');
+    }
+  }, [imageUrl, userMemo]);
+
+  useEffect(() => {
+    if (!isPlayingAd) return;
+    if (adCountdown === 0) {
+      setIsPlayingAd(false);
+      runActualAnalysis();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAdCountdown(prev => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [isPlayingAd, adCountdown, runActualAnalysis]);
+
   const handleStartAnalysis = () => {
     if (!imageUrl) return;
-    setStep('analyzing');
-    
-    // Mock AI Analysis Delay
-    setTimeout(() => {
-      // For demo, pseudo-random status
-      const statuses: ('good' | 'loose' | 'hard' | 'bloody')[] = ['good', 'good', 'loose', 'hard'];
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      
-      let text = '';
-      if (randomStatus === 'good') text = '황금빛 훌륭한 상태의 배변입니다. 현재 식단과 음수량이 반려견에게 아주 잘 맞고 있으며, 소화 기관이 매우 건강하게 기능하고 있습니다.';
-      if (randomStatus === 'loose') text = '다소 무른 형태의 배변입니다. 최근 섭취한 간식이나 음식의 변화가 원인일 수 있습니다. 하루 이틀 정도 유산균 급여와 수분 섭취를 신경 써주세요.';
-      if (randomStatus === 'hard') text = '수분이 부족하여 딱딱하고 끊어지는 배변 형태입니다. 음수량을 꼭 늘려주시고, 섬유질이 풍부한 식단으로 교체해 주시는 것을 권장합니다.';
-      if (randomStatus === 'bloody') text = '혈변 또는 매우 심각한 색상의 배변이 감지되었습니다! 내부 출혈이나 심각한 장염의 증상일 수 있으니, 지체하지 마시고 사진을 지참하여 즉시 동물병원에 내원하세요.';
-
-      setAnalysisResult({ status: randomStatus, text });
-      setStep('result');
-    }, 2500);
+    setIsPlayingAd(true);
+    setAdCountdown(3);
   };
 
   const handleSaveToRecord = () => {
@@ -127,6 +146,27 @@ const PoopAnalyzer: React.FC<PoopAnalyzerProps> = ({ onClose, onSave }) => {
                   onClick={() => setImageUrl('')}
                   style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                 >&times;</button>
+              </div>
+            )}
+
+            {imageUrl && (
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>추가 증상/특이사항 적기 (선택)</label>
+                <textarea
+                  value={userMemo}
+                  onChange={(e) => setUserMemo(e.target.value)}
+                  placeholder="예: 아침 간식으로 과일을 먹었습니다. 대변 색이 평소보다 밝습니다."
+                  className="form-input"
+                  style={{
+                    minHeight: '60px',
+                    fontSize: '0.85rem',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    borderColor: 'var(--steel-gray)',
+                    resize: 'none',
+                    margin: 0
+                  }}
+                />
               </div>
             )}
 
@@ -209,6 +249,45 @@ const PoopAnalyzer: React.FC<PoopAnalyzerProps> = ({ onClose, onSave }) => {
             >
               케어 일지에 영구 기록하기 💾
             </button>
+          </div>
+        )}
+
+        {isPlayingAd && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(18, 27, 42, 0.95)',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            padding: '24px',
+            textAlign: 'center',
+            animation: 'fadeIn 0.2s ease-out'
+          }}>
+            <span style={{ fontSize: '3rem', animation: 'spin 2s infinite linear', marginBottom: '16px' }}>🎬</span>
+            <style>
+              {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+            </style>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 8px 0' }}>무료 AI 정밀 배변 분석</h4>
+            <p style={{ fontSize: '0.85rem', color: '#a0abbc', margin: '0 0 24px 0', lineHeight: 1.4 }}>
+              보상형 광고 시청 완료 후 즉시 분석 결과가 오픈됩니다.
+            </p>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              border: '3px solid var(--mint-green)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              fontWeight: 800
+            }}>
+              {adCountdown}
+            </div>
           </div>
         )}
 

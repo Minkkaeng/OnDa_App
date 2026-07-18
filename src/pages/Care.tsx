@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { usePetStore } from '../store/petStore';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import PoopAnalyzer from '../components/care/PoopAnalyzer';
+import { fetchHospitalsOrPharmacies, type HospitalOrPharmacy } from '../services/hospitalService';
+
+const REGION_MAP: Record<string, string[]> = {
+  '서울특별시': ['강남구', '송파구', '서초구', '마포구', '종로구', '성동구', '영등포구'],
+  '경기도': ['수원시', '성남시', '고양시', '용인시', '부천시', '안양시', '의정부시'],
+  '인천광역시': ['연수구', '남동구', '부평구', '서구', '미추홀구'],
+  '부산광역시': ['해운대구', '부산진구', '수영구', '동래구', '사하구'],
+  '대구광역시': ['수성구', '중구', '북구', '달서구', '동구']
+};
 
 const Care: React.FC = () => {
   const { pets, activePetId, showAlert, updatePet } = usePetStore();
@@ -21,6 +30,17 @@ const Care: React.FC = () => {
 
   // Poop Analyzer
   const [showPoopAnalyzer, setShowPoopAnalyzer] = useState(false);
+
+  // Hospital/Pharmacy Locator State
+  const [selectedCity, setSelectedCity] = useState('서울특별시');
+  const [selectedDistrict, setSelectedDistrict] = useState('강남구');
+  const [locatorSearchType, setLocatorSearchType] = useState<'hospital' | 'pharmacy'>('hospital');
+  const [locatorResults, setLocatorResults] = useState<HospitalOrPharmacy[]>([]);
+  const [isLocatorLoading, setIsLocatorLoading] = useState(false);
+
+  // AI Care Guide State
+  const [aiTip, setAiTip] = useState<{ title: string; content: string } | null>(null);
+  const [isAiTipLoading, setIsAiTipLoading] = useState(false);
 
   useEffect(() => {
     if (activePetId) {
@@ -158,6 +178,75 @@ const Care: React.FC = () => {
     return tips;
   };
 
+  useEffect(() => {
+    const districts = REGION_MAP[selectedCity] || [];
+    if (districts.length > 0 && !districts.includes(selectedDistrict)) {
+      setSelectedDistrict(districts[0]);
+    }
+  }, [selectedCity, selectedDistrict]);
+
+  useEffect(() => {
+    let active = true;
+    const runSearch = async () => {
+      if (!selectedCity || !selectedDistrict) return;
+      setIsLocatorLoading(true);
+      try {
+        const results = await fetchHospitalsOrPharmacies(selectedCity, selectedDistrict, locatorSearchType);
+        if (active) {
+          setLocatorResults(results);
+        }
+      } catch {
+        if (active) {
+          showAlert('지역 정보 조회를 실패했습니다.');
+        }
+      } finally {
+        if (active) {
+          setIsLocatorLoading(false);
+        }
+      }
+    };
+    runSearch();
+    return () => {
+      active = false;
+    };
+  }, [selectedCity, selectedDistrict, locatorSearchType, showAlert]);
+
+  useEffect(() => {
+    let active = true;
+    const loadAiTip = async () => {
+      if (!activePet) return;
+      setIsAiTipLoading(true);
+      try {
+        const { fetchAIPersonalizedTip } = await import('../services/aiService');
+        const tipText = await fetchAIPersonalizedTip({
+          name: activePet.name,
+          breed: activePet.breed,
+          birth: activePet.birth,
+          weight: activePet.weight,
+          allergies: activePet.allergies,
+          medications: activePet.medications,
+          notes: activePet.notes
+        });
+        if (active) {
+          setAiTip({
+            title: `💡 ${activePet.name} 맞춤 AI 데일리 케어 가이드`,
+            content: tipText
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching AI tip:', error);
+      } finally {
+        if (active) {
+          setIsAiTipLoading(false);
+        }
+      }
+    };
+    loadAiTip();
+    return () => {
+      active = false;
+    };
+  }, [activePet]);
+
   if (!activePet) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted-gray)' }}>
@@ -177,12 +266,23 @@ const Care: React.FC = () => {
               💡 맞춤형 건강 케어 가이드
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {getPersonalizedTips().map((tip, idx) => (
-                <div key={idx} style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
-                  <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{tip.title}</h4>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{tip.content}</p>
+              {isAiTipLoading ? (
+                <div style={{ fontSize: '0.85rem', color: 'var(--muted-gray)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>
+                  💡 실시간 AI 맞춤 가이드를 작성 중입니다...
                 </div>
-              ))}
+              ) : aiTip ? (
+                <div style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{aiTip.title}</h4>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{aiTip.content}</p>
+                </div>
+              ) : (
+                getPersonalizedTips().map((tip, idx) => (
+                  <div key={idx} style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
+                    <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{tip.title}</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{tip.content}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -294,6 +394,120 @@ const Care: React.FC = () => {
                 );
               })}
             </div>
+          </div>
+
+          {/* 6. 내 주변 동물병원 & 약국 찾기 */}
+          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
+            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
+              🏥 주변 동물병원 & 약국 검색
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select 
+                  value={selectedCity} 
+                  onChange={(e) => setSelectedCity(e.target.value)} 
+                  className="form-input" 
+                  style={{ flex: 1, height: '40px', fontSize: '0.85rem', margin: 0, padding: '0 8px' }}
+                >
+                  {Object.keys(REGION_MAP).map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                <select 
+                  value={selectedDistrict} 
+                  onChange={(e) => setSelectedDistrict(e.target.value)} 
+                  className="form-input" 
+                  style={{ flex: 1, height: '40px', fontSize: '0.85rem', margin: 0, padding: '0 8px' }}
+                >
+                  {(REGION_MAP[selectedCity] || []).map(dist => (
+                    <option key={dist} value={dist}>{dist}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', background: 'var(--ice-white)', padding: '4px', borderRadius: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setLocatorSearchType('hospital')}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
+                    fontSize: '0.85rem', fontWeight: locatorSearchType === 'hospital' ? 800 : 600, cursor: 'pointer',
+                    backgroundColor: locatorSearchType === 'hospital' ? 'var(--white)' : 'transparent',
+                    color: locatorSearchType === 'hospital' ? 'var(--deep-navy)' : 'var(--muted-gray)',
+                    boxShadow: locatorSearchType === 'hospital' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  동물병원 🏥
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLocatorSearchType('pharmacy')}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
+                    fontSize: '0.85rem', fontWeight: locatorSearchType === 'pharmacy' ? 800 : 600, cursor: 'pointer',
+                    backgroundColor: locatorSearchType === 'pharmacy' ? 'var(--white)' : 'transparent',
+                    color: locatorSearchType === 'pharmacy' ? 'var(--deep-navy)' : 'var(--muted-gray)',
+                    boxShadow: locatorSearchType === 'pharmacy' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  동물약국 💊
+                </button>
+              </div>
+            </div>
+
+            {isLocatorLoading ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem', fontWeight: 600 }}>
+                가까운 {locatorSearchType === 'hospital' ? '병원' : '약국'} 정보를 조회 중입니다...
+              </div>
+            ) : locatorResults.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem' }}>
+                검색 결과가 없습니다.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px' }}>
+                {locatorResults.map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      padding: '12px', 
+                      background: 'var(--ice-white)', 
+                      borderRadius: '10px', 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{item.name}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.3 }}>{item.address}</span>
+                    </div>
+                    {item.tel && item.tel !== '전화번호 없음' && (
+                      <a 
+                        href={`tel:${item.tel}`} 
+                        style={{ 
+                          backgroundColor: 'var(--white)',
+                          border: '1.5px solid var(--steel-gray)',
+                          color: 'var(--deep-navy)',
+                          textDecoration: 'none',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        📞 전화
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>

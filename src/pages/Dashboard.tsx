@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProfileCard } from '../components/ProfileCard';
 import { usePetStore } from '../store/petStore';
+import AdBanner from '../components/common/AdBanner';
 
 const Dashboard: React.FC = () => {
   const { 
@@ -215,6 +216,8 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </div>
+
+        <AdBanner />
 
         {/* 3. Care Task List */}
         <div id="home-guide-step2" className="panel">
