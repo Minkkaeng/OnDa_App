@@ -78,12 +78,17 @@ body {
 /* Panel Styles */
 .panel {
   background-color: var(--white);
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid var(--steel-gray);
-  border-top: 6px solid var(--mint-green);
-  padding: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  border-top: 5px solid var(--mint-green);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
   margin-bottom: 16px;
+  transition: var(--transition-smooth);
+}
+.panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
 /* 3. Global Footer */

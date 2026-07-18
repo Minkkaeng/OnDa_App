@@ -31,6 +31,7 @@ export interface CalendarEvent {
   imageUrl?: string;
   poopStatus?: 'good' | 'loose' | 'hard' | 'bloody';
   aiAnalysisText?: string;
+  category?: string;
 }
 
 export interface AppSettings {

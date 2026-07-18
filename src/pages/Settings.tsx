@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePetStore, type CustomTheme, type CustomReminder, type BackupSnapshot, type Inquiry } from '../store/petStore';
 import { db } from '../db';
+import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const {
@@ -394,23 +395,49 @@ const Settings: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         
         {/* MENU 1: Theme Settings Accordion */}
-        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'theme' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+        <div className="panel" style={{ 
+          padding: '0', 
+          overflow: 'hidden', 
+          border: expandedMenu === 'theme' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          marginBottom: '16px',
+          transition: 'all 0.25s ease'
+        }}>
           <div 
             onClick={() => setExpandedMenu(expandedMenu === 'theme' ? null : 'theme')}
             style={{ 
-              padding: '16px 20px', 
+              padding: '18px 20px', 
               display: 'flex', 
+              alignItems: 'center',
               justifyContent: 'space-between', 
-              alignItems: 'center', 
               cursor: 'pointer',
-              fontWeight: 800,
               backgroundColor: expandedMenu === 'theme' ? 'var(--mint-green-light)' : 'transparent',
-              color: 'var(--deep-navy)',
-              fontSize: '1rem'
+              transition: 'background-color 0.2s'
             }}
           >
-            <span>🎨 어플리케이션 커스텀 테마 설정</span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'theme' ? '▼' : '▶'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                backgroundColor: expandedMenu === 'theme' ? 'var(--white)' : 'var(--mint-green-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--mint-green)',
+                flexShrink: 0
+              }}>
+                <Palette size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>어플리케이션 테마 설정</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>나만의 고유 테마 제작 및 기본 화면 스타일 지정</p>
+              </div>
+            </div>
+            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+              {expandedMenu === 'theme' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </div>
           </div>
           {expandedMenu === 'theme' && (
             <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
@@ -523,23 +550,49 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 2: Notification Settings Accordion */}
-        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'notification' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+        <div className="panel" style={{ 
+          padding: '0', 
+          overflow: 'hidden', 
+          border: expandedMenu === 'notification' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          marginBottom: '16px',
+          transition: 'all 0.25s ease'
+        }}>
           <div 
             onClick={() => setExpandedMenu(expandedMenu === 'notification' ? null : 'notification')}
             style={{ 
-              padding: '16px 20px', 
+              padding: '18px 20px', 
               display: 'flex', 
+              alignItems: 'center',
               justifyContent: 'space-between', 
-              alignItems: 'center', 
               cursor: 'pointer',
-              fontWeight: 800,
               backgroundColor: expandedMenu === 'notification' ? 'var(--mint-green-light)' : 'transparent',
-              color: 'var(--deep-navy)',
-              fontSize: '1rem'
+              transition: 'background-color 0.2s'
             }}
           >
-            <span>🔔 알림 및 알람 리마인더 설정</span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'notification' ? '▼' : '▶'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                backgroundColor: expandedMenu === 'notification' ? 'var(--white)' : 'var(--mint-green-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--mint-green)',
+                flexShrink: 0
+              }}>
+                <Bell size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>알림 및 알람 리마인더 설정</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>반려견을 위한 투약 일정 및 케어 푸시 리마인더</p>
+              </div>
+            </div>
+            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+              {expandedMenu === 'notification' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </div>
           </div>
           {expandedMenu === 'notification' && (
             <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
@@ -674,23 +727,49 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 3: System Settings Accordion */}
-        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'system' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+        <div className="panel" style={{ 
+          padding: '0', 
+          overflow: 'hidden', 
+          border: expandedMenu === 'system' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          marginBottom: '16px',
+          transition: 'all 0.25s ease'
+        }}>
           <div 
             onClick={() => setExpandedMenu(expandedMenu === 'system' ? null : 'system')}
             style={{ 
-              padding: '16px 20px', 
+              padding: '18px 20px', 
               display: 'flex', 
+              alignItems: 'center',
               justifyContent: 'space-between', 
-              alignItems: 'center', 
               cursor: 'pointer',
-              fontWeight: 800,
               backgroundColor: expandedMenu === 'system' ? 'var(--mint-green-light)' : 'transparent',
-              color: 'var(--deep-navy)',
-              fontSize: '1rem'
+              transition: 'background-color 0.2s'
             }}
           >
-            <span>⚙️ 시스템 데이터 백업 및 관리</span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'system' ? '▼' : '▶'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                backgroundColor: expandedMenu === 'system' ? 'var(--white)' : 'var(--mint-green-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--mint-green)',
+                flexShrink: 0
+              }}>
+                <Database size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>시스템 백업 및 복원</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>데이터 내보내기, 복원 및 데이터 초기화</p>
+              </div>
+            </div>
+            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+              {expandedMenu === 'system' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </div>
           </div>
           {expandedMenu === 'system' && (
             <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
@@ -807,23 +886,49 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 4: Support Accordion */}
-        <div className="panel" style={{ padding: '0', overflow: 'hidden', border: expandedMenu === 'support' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)', marginBottom: 0 }}>
+        <div className="panel" style={{ 
+          padding: '0', 
+          overflow: 'hidden', 
+          border: expandedMenu === 'support' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          marginBottom: '16px',
+          transition: 'all 0.25s ease'
+        }}>
           <div 
             onClick={() => setExpandedMenu(expandedMenu === 'support' ? null : 'support')}
             style={{ 
-              padding: '16px 20px', 
+              padding: '18px 20px', 
               display: 'flex', 
+              alignItems: 'center',
               justifyContent: 'space-between', 
-              alignItems: 'center', 
               cursor: 'pointer',
-              fontWeight: 800,
               backgroundColor: expandedMenu === 'support' ? 'var(--mint-green-light)' : 'transparent',
-              color: 'var(--deep-navy)',
-              fontSize: '1rem'
+              transition: 'background-color 0.2s'
             }}
           >
-            <span>💬 자주 묻는 질문 및 1:1 고객센터</span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{expandedMenu === 'support' ? '▼' : '▶'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                backgroundColor: expandedMenu === 'support' ? 'var(--white)' : 'var(--mint-green-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--mint-green)',
+                flexShrink: 0
+              }}>
+                <HelpCircle size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>자주 묻는 질문 & 고객센터</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>1:1 문의 접수와 자주 하는 질문 모음</p>
+              </div>
+            </div>
+            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+              {expandedMenu === 'support' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </div>
           </div>
           {expandedMenu === 'support' && (
             <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>

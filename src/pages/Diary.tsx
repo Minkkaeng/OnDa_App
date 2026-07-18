@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePetStore } from '../store/petStore';
 import { useOnboarding } from '../hooks/useOnboarding';
 import ImageCropper from '../components/common/ImageCropper';
+import BottomSheet from '../components/common/BottomSheet';
 
 const Diary: React.FC = () => {
   const { pets, activePetId, events, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, isGlobalTourActive, showAlert, showConfirm } = usePetStore();
@@ -12,6 +13,10 @@ const Diary: React.FC = () => {
   const [formStep, setFormStep] = useState<1 | 2>(1);
   const [editingDiaryId, setEditingDiaryId] = useState<string | null>(null);
   const modalContentRef = React.useRef<HTMLDivElement>(null);
+
+  const [category, setCategory] = useState<string>('일상');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
 
   const handleInputFocus = () => {
     // 안드로이드 키보드가 올라오는 애니메이션 시간을 고려하여 지연 스크롤 처리
@@ -40,6 +45,11 @@ const Diary: React.FC = () => {
   // Filter diary events
   const diaryEvents = events
     .filter(e => e.petId === activePet?.id && (e.type === 'diary' || e.type === 'poop' || e.imageUrl))
+    .filter(e => {
+      if (selectedFilter === 'all') return true;
+      if (selectedFilter === '건강' && e.type === 'poop') return true;
+      return e.category === selectedFilter;
+    })
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +98,8 @@ const Diary: React.FC = () => {
           type: 'diary',
           title,
           content,
-          imageUrl: imageUrl || undefined
+          imageUrl: imageUrl || undefined,
+          category: category
         });
         showAlert('기록일기가 수정 완료되었습니다!');
       } else {
@@ -99,7 +110,8 @@ const Diary: React.FC = () => {
           type: 'diary',
           title,
           content,
-          imageUrl: imageUrl || undefined
+          imageUrl: imageUrl || undefined,
+          category: category
         });
         showAlert('기록일기가 새로 저장되었습니다!');
       }
@@ -118,6 +130,7 @@ const Diary: React.FC = () => {
     setContent(ev.content || '');
     setDate(ev.date);
     setImageUrl(ev.imageUrl || '');
+    setCategory(ev.category || '일상');
     setFormStep(1); // Start from image select step
     setShowFormModal(true);
   };
@@ -126,6 +139,7 @@ const Diary: React.FC = () => {
     setTitle('');
     setContent('');
     setImageUrl('');
+    setCategory('일상');
     setEditingDiaryId(null);
     setFormStep(1);
     setShowFormModal(false);
@@ -338,6 +352,26 @@ const Diary: React.FC = () => {
                     [Step 2] 세부 텍스트 메모를 채워주세요.
                   </p>
 
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label" style={{ fontSize: '0.8rem' }}>카테고리</label>
+                    <div 
+                      onClick={() => setIsCategorySheetOpen(true)}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '12px 14px', borderRadius: '8px', border: '1px solid #D1D9E1',
+                        cursor: 'pointer', backgroundColor: 'var(--white)'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--deep-navy)' }}>
+                        {category === '일상' ? '일상 📝' :
+                         category === '건강' ? '건강 🩺' :
+                         category === '산책' ? '산책 🐕' :
+                         category === '훈련' ? '훈련 🎓' : '기타 ✨'}
+                      </span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--mint-green)', fontWeight: 'bold' }}>선택하기 ➡️</span>
+                    </div>
+                  </div>
+
                   <div className="form-group" style={{ marginBottom: '8px' }}>
                     <label className="form-label" style={{ fontSize: '0.8rem' }}>작성 일자</label>
                     <input 
@@ -448,6 +482,41 @@ const Diary: React.FC = () => {
         />
       )}
 
+      {/* Filter Chip Bar */}
+      <div style={{
+        display: 'flex', gap: '8px', overflowX: 'auto', padding: '12px 4px',
+        margin: '0 0 16px 0', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch'
+      }}>
+        {[
+          { value: 'all', label: '전체' },
+          { value: '일상', label: '일상 📝' },
+          { value: '건강', label: '건강 🩺' },
+          { value: '산책', label: '산책 🐕' },
+          { value: '훈련', label: '훈련 🎓' },
+          { value: '기타', label: '기타 ✨' }
+        ].map(f => {
+          const isActive = selectedFilter === f.value;
+          return (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setSelectedFilter(f.value)}
+              style={{
+                flexShrink: 0, padding: '8px 16px', borderRadius: '20px',
+                fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                border: isActive ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                backgroundColor: isActive ? 'var(--mint-green-light)' : 'var(--white)',
+                color: isActive ? 'var(--mint-green)' : 'var(--deep-navy)',
+                transition: 'all 0.2s',
+                marginTop: 0
+              }}
+            >
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Feed List */}
       <div className="diary-feed">
         {diaryEvents.length === 0 ? (
@@ -486,7 +555,18 @@ const Diary: React.FC = () => {
             return (
               <div key={ev.id} className="diary-card" style={{ marginBottom: '24px' }}>
                 <div className="diary-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--steel-gray)' }}>
-                  <div className="diary-date" style={{ fontWeight: 700, color: 'var(--deep-navy)' }}>{formattedDate}</div>
+                  <div className="diary-date" style={{ fontWeight: 700, color: 'var(--deep-navy)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {formattedDate}
+                    {ev.category && (
+                      <span style={{ 
+                        fontSize: '0.75rem', fontWeight: 'bold',
+                        color: 'var(--mint-green)', backgroundColor: 'var(--mint-green-light)',
+                        padding: '2px 8px', borderRadius: '12px'
+                      }}>
+                        {ev.category}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ fontSize: '0.85rem', color: ev.type === 'poop' ? '#8B5A2B' : 'var(--muted-gray)', fontWeight: 700, backgroundColor: ev.type === 'poop' ? '#F4E4D4' : 'transparent', padding: ev.type === 'poop' ? '4px 8px' : 0, borderRadius: '8px' }}>
                       {ev.type === 'poop' ? '💩 AI 배변 분석' : '일기 기록'}
@@ -563,6 +643,46 @@ const Diary: React.FC = () => {
         )}
       </div>
     </div>
+
+    {/* 카테고리 선택을 위한 바텀시트 */}
+    <BottomSheet 
+      isOpen={isCategorySheetOpen} 
+      onClose={() => setIsCategorySheetOpen(false)}
+      title="🏷️ 일기 카테고리 선택"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '8px 0' }}>
+        {[
+          { value: '일상', label: '일상 📝', desc: '오늘 하루 반려견과 함께한 평범하고 행복한 일상' },
+          { value: '건강', label: '건강 🩺', desc: '병원 내원, 예방 접종 및 건강 관련 특이사항' },
+          { value: '산책', label: '산책 🐕', desc: '산책 중 있었던 특별한 에피소드나 기록' },
+          { value: '훈련', label: '훈련 🎓', desc: '새로 배운 명령어, 개인기 및 훈련 과정' },
+          { value: '기타', label: '기타 ✨', desc: '그 외 기록하고 싶은 다양한 소중한 기록' }
+        ].map(opt => {
+          const isSelected = category === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setCategory(opt.value);
+                setIsCategorySheetOpen(false);
+              }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                padding: '16px', borderRadius: '12px', 
+                border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
+                cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
+                marginTop: 0
+              }}
+            >
+              <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', marginTop: '4px' }}>{opt.desc}</span>
+            </button>
+          );
+        })}
+      </div>
+    </BottomSheet>
     </>
   );
 };

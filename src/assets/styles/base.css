@@ -2,18 +2,24 @@
 
 :root {
   /* OnDa Color System */
-  --deep-navy: #121B2A;
-  --mint-green: #14C3A3;
-  --mint-green-light: #e8f9f5;
-  --ice-white: #F0F3F5;
-  --steel-gray: #D1D9E1;
-  --error-red: #FF4D4D;
-  --error-red-light: #ffecec;
+  --deep-navy: #0F172A;
+  --mint-green: #0D9488;
+  --mint-green-light: #F0FDFA;
+  --ice-white: #F8FAFC;
+  --steel-gray: #E2E8F0;
+  --error-red: #EF4444;
+  --error-red-light: #FEF2F2;
   --white: #FFFFFF;
-  --muted-gray: #a0abbc;
+  --muted-gray: #64748B;
   
+  /* UI Premium Visual Tokens */
+  --shadow-premium: 0 10px 25px -5px rgba(13, 148, 136, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 12px 30px -10px rgba(18, 27, 42, 0.04), 0 1px 3px rgba(18, 27, 42, 0.01);
+  --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
   /* Typography */
-  --font-main: 'Pretendard', sans-serif;
+  --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 * { 

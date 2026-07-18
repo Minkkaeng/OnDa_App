@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ProfileCard } from '../components/ProfileCard';
 import { usePetStore } from '../store/petStore';
 import AdBanner from '../components/common/AdBanner';
+import BottomSheet from '../components/common/BottomSheet';
+import { ChevronRight } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { 
@@ -9,6 +11,8 @@ const Dashboard: React.FC = () => {
     walkState, walkElapsedSec, walkTargetMin, setWalkState, setWalkElapsedSec, setWalkTargetMin
   } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
+  
+  const [activeCategory, setActiveCategory] = useState<'stool' | 'meal' | 'energy' | null>(null);
 
   // 초기화면(프로필)에서 설정한 산책 목표 시간을 대시보드 산책 기록에 연동
   useEffect(() => {
@@ -108,34 +112,6 @@ const Dashboard: React.FC = () => {
   };
   const checklist = getChecklist();
 
-  const SegmentControl = ({ label, category, options }: { label: string, category: 'stool'|'meal'|'energy', options: {value:string, label:string}[] }) => (
-    <div>
-      <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '8px', display: 'block' }}>{label}</label>
-      <div style={{ display: 'flex', background: 'var(--ice-white)', padding: '4px', borderRadius: '12px', position: 'relative' }}>
-        {options.map(opt => {
-          const isActive = dailyHealth[category] === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => handleToggleHealth(category, opt.value)}
-              style={{
-                flex: 1, padding: '10px 4px', borderRadius: '8px', border: 'none',
-                fontSize: '0.85rem', fontWeight: isActive ? 800 : 600, cursor: 'pointer',
-                backgroundColor: isActive ? 'var(--white)' : 'transparent',
-                color: isActive ? 'var(--deep-navy)' : 'var(--muted-gray)',
-                boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   return (
     <>
       <div style={{ paddingBottom: '16px' }}>
@@ -145,17 +121,97 @@ const Dashboard: React.FC = () => {
       <div className="tab-content-fade" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* 1. 데일리 기초 건강 기록 */}
-        <div className="panel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>오늘의 컨디션 체크</h3>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '12px' }}>
-              오늘
+        <div className="panel" style={{ padding: '20px', borderRadius: '16px', boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'var(--deep-navy)' }}>오늘의 건강 체크</h3>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 10px', borderRadius: '20px' }}>
+              오늘 기록
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <SegmentControl label="배변 상태" category="stool" options={[{ value: 'good', label: '정상 💩' }, { value: 'loose', label: '설사 💧' }, { value: 'hard', label: '변비 🪵' }]} />
-            <SegmentControl label="식사 및 음수량" category="meal" options={[{ value: 'full', label: '완식 🍚' }, { value: 'half', label: '보통 🥣' }, { value: 'none', label: '남김 ❌' }]} />
-            <SegmentControl label="활력 컨디션" category="energy" options={[{ value: 'active', label: '좋음 ⚡' }, { value: 'normal', label: '보통 🙂' }, { value: 'low', label: '기운없음 😴' }]} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* 배변 상태 카드 */}
+            <div 
+              onClick={() => setActiveCategory('stool')}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--steel-gray)',
+                backgroundColor: 'var(--white)', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.3rem' }}>💩</span>
+                <div style={{ textAlign: 'left' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>배변 상태</h4>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)' }}>변의 묽기와 상태 기록</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {dailyHealth.stool ? (
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '6px' }}>
+                    {dailyHealth.stool === 'good' ? '정상 💩' : dailyHealth.stool === 'loose' ? '설사 💧' : '변비 🪵'}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>기록하기</span>
+                )}
+                <ChevronRight size={16} color="var(--muted-gray)" />
+              </div>
+            </div>
+
+            {/* 식사 및 음수량 카드 */}
+            <div 
+              onClick={() => setActiveCategory('meal')}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--steel-gray)',
+                backgroundColor: 'var(--white)', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.3rem' }}>🍚</span>
+                <div style={{ textAlign: 'left' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>식사 및 음수량</h4>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)' }}>오늘 먹은 밥과 물의 양</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {dailyHealth.meal ? (
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '6px' }}>
+                    {dailyHealth.meal === 'full' ? '완식 🍚' : dailyHealth.meal === 'half' ? '보통 🥣' : '남김 ❌'}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>기록하기</span>
+                )}
+                <ChevronRight size={16} color="var(--muted-gray)" />
+              </div>
+            </div>
+
+            {/* 활력 컨디션 카드 */}
+            <div 
+              onClick={() => setActiveCategory('energy')}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--steel-gray)',
+                backgroundColor: 'var(--white)', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.3rem' }}>⚡</span>
+                <div style={{ textAlign: 'left' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>활력 컨디션</h4>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)' }}>활동성과 전반적인 기분</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {dailyHealth.energy ? (
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '6px' }}>
+                    {dailyHealth.energy === 'active' ? '좋음 ⚡' : dailyHealth.energy === 'normal' ? '보통 🙂' : '기운없음 😴'}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>기록하기</span>
+                )}
+                <ChevronRight size={16} color="var(--muted-gray)" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -244,6 +300,106 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 건강 카테고리 입력을 위한 바텀시트 */}
+      <BottomSheet 
+        isOpen={activeCategory !== null} 
+        onClose={() => setActiveCategory(null)}
+        title={
+          activeCategory === 'stool' ? '💩 배변 상태 기록' :
+          activeCategory === 'meal' ? '🍚 식사 및 음수량 기록' :
+          activeCategory === 'energy' ? '⚡ 활력 컨디션 기록' : ''
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '8px 0' }}>
+          {activeCategory === 'stool' && [
+            { value: 'good', label: '정상 💩', desc: '건강하고 단단한 예쁜 대변' },
+            { value: 'loose', label: '설사 💧', desc: '묽거나 수분이 많은 대변' },
+            { value: 'hard', label: '변비 🪵', desc: '끊기거나 딱딱해서 힘든 대변' }
+          ].map(opt => {
+            const isSelected = dailyHealth.stool === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  handleToggleHealth('stool', opt.value);
+                  setActiveCategory(null);
+                }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                  padding: '16px', borderRadius: '12px', 
+                  border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                  backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
+                  cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
+                  marginTop: 0
+                }}
+              >
+                <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', marginTop: '4px' }}>{opt.desc}</span>
+              </button>
+            );
+          })}
+
+          {activeCategory === 'meal' && [
+            { value: 'full', label: '완식 🍚', desc: '남김없이 깨끗하게 다 먹었어요' },
+            { value: 'half', label: '보통 🥣', desc: '적당량 남기거나 평소만큼 먹었어요' },
+            { value: 'none', label: '남김 ❌', desc: '거의 먹지 않거나 다 남겼어요' }
+          ].map(opt => {
+            const isSelected = dailyHealth.meal === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  handleToggleHealth('meal', opt.value);
+                  setActiveCategory(null);
+                }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                  padding: '16px', borderRadius: '12px', 
+                  border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                  backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
+                  cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
+                  marginTop: 0
+                }}
+              >
+                <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', marginTop: '4px' }}>{opt.desc}</span>
+              </button>
+            );
+          })}
+
+          {activeCategory === 'energy' && [
+            { value: 'active', label: '좋음 ⚡', desc: '평소보다 에너지가 넘치고 신나요' },
+            { value: 'normal', label: '보통 🙂', desc: '늘 그렇듯 얌전하고 편안해요' },
+            { value: 'low', label: '기운없음 😴', desc: '쳐져 있고 힘이 없어 보여요' }
+          ].map(opt => {
+            const isSelected = dailyHealth.energy === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  handleToggleHealth('energy', opt.value);
+                  setActiveCategory(null);
+                }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                  padding: '16px', borderRadius: '12px', 
+                  border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                  backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
+                  cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
+                  marginTop: 0
+                }}
+              >
+                <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', marginTop: '4px' }}>{opt.desc}</span>
+              </button>
+            );
+          })}
+        </div>
+      </BottomSheet>
     </>
   );
 };

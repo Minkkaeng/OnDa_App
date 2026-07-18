@@ -4,18 +4,22 @@ export interface HospitalOrPharmacy {
   name: string;
   address: string;
   tel: string;
-  type: 'hospital' | 'pharmacy';
+  type: 'hospital' | 'pharmacy' | 'grooming';
 }
 
 const CACHE_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Curated fallbacks for demo/fallback experience in major districts
-const generateFallbacks = (city: string, district: string, type: 'hospital' | 'pharmacy'): HospitalOrPharmacy[] => {
-  const isHosp = type === 'hospital';
+const generateFallbacks = (city: string, district: string, type: 'hospital' | 'pharmacy' | 'grooming'): HospitalOrPharmacy[] => {
   const prefix = `${city} ${district}`;
-  const suffixList = isHosp 
-    ? ['온다 동물병원', '다정 동물의료센터', '튼튼 동물병원', '가온 동물병원', '바른 동물의료센터']
-    : ['행복 동물약국', '민트 동물약국', '튼튼 동물약국', '온다 약국 (동물약품취급)', '푸른 사랑 동물약국'];
+  let suffixList: string[] = [];
+  if (type === 'hospital') {
+    suffixList = ['온다 동물병원', '다정 동물의료센터', '튼튼 동물병원', '가온 동물병원', '바른 동물의료센터'];
+  } else if (type === 'pharmacy') {
+    suffixList = ['행복 동물약국', '민트 동물약국', '튼튼 동물약국', '온다 약국 (동물약품취급)', '푸른 사랑 동물약국'];
+  } else {
+    suffixList = ['온다 펫살롱 (미용)', '초코네 애견미용', '스타일독 미용실', '도그뷰티 애견미용', '행복한 가위질 미용숍'];
+  }
 
   return suffixList.map((suffix, idx) => ({
     name: `🐾 ${suffix}`,
@@ -26,12 +30,12 @@ const generateFallbacks = (city: string, district: string, type: 'hospital' | 'p
 };
 
 /**
- * Fetch animal hospitals or pharmacies based on city & district with Dexie 30-day caching.
+ * Fetch animal hospitals, pharmacies, or grooming shops based on city & district with Dexie 30-day caching.
  */
 export const fetchHospitalsOrPharmacies = async (
   city: string,
   district: string,
-  type: 'hospital' | 'pharmacy'
+  type: 'hospital' | 'pharmacy' | 'grooming'
 ): Promise<HospitalOrPharmacy[]> => {
   const queryKey = `${type}:${city}:${district}`;
 
@@ -60,12 +64,17 @@ export const fetchHospitalsOrPharmacies = async (
       return fallbacks;
     }
 
-    const endpoint = type === 'hospital' 
-      ? 'http://apis.data.go.kr/1543000/AnimalHospService/getAnimalHospList'
-      : 'http://apis.data.go.kr/1543000/AnimalPharmacyService/getAnimalPharmacyList';
+    let endpoint = '';
+    if (type === 'hospital') {
+      endpoint = 'https://apis.data.go.kr/1741000/animal_hospitals';
+    } else if (type === 'pharmacy') {
+      endpoint = 'https://apis.data.go.kr/1741000/animal_pharmacies';
+    } else {
+      endpoint = 'https://apis.data.go.kr/1741000/pet_grooming';
+    }
 
     // We query a larger page size (150 items) to cover the selected region
-    const url = `${endpoint}?serviceKey=${apiKey}&pageNo=1&numOfRows=150&_type=json`;
+    const url = `${endpoint}?serviceKey=${apiKey}&pageNo=1&numOfRows=150&type=json`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -73,25 +82,37 @@ export const fetchHospitalsOrPharmacies = async (
     }
 
     const json = await response.json();
-    const items = json?.response?.body?.items?.item;
+    let rootKey = '';
+    if (type === 'hospital') {
+      rootKey = 'animal_hospitals';
+    } else if (type === 'pharmacy') {
+      rootKey = 'animal_pharmacies';
+    } else {
+      rootKey = 'pet_grooming';
+    }
+
+    const items = json?.[rootKey]?.row || json?.response?.body?.items?.item;
     
     let list: HospitalOrPharmacy[] = [];
 
     if (items) {
       const rawList = Array.isArray(items) ? items : [items];
       
-      // Filter for active clinics/pharmacies within the specified district (구/군)
+      // Filter for active clinics/pharmacies/salons within the specified district (구/군)
       list = rawList
         .filter((item: any) => {
-          const isNormal = item.state === '정상';
-          const address = item.roadAddr || item.jibunAddr || '';
+          const isNormal = item.trdstategbn === '01' || 
+                           item.sitgstdscnm === '영업/정상' || 
+                           item.state === '정상' ||
+                           !item.trdstategbn;
+          const address = item.rdnwhladdr || item.rdnaddr || item.sitelnaddr || item.roadAddr || item.jibunAddr || '';
           const matchesRegion = address.includes(district);
           return isNormal && matchesRegion;
         })
         .map((item: any) => ({
-          name: item.yadmNm || '알 수 없는 시설',
-          address: item.roadAddr || item.jibunAddr || '주소 정보 없음',
-          tel: item.tel || '전화번호 없음',
+          name: item.bplcnm || item.yadmNm || item.hospNm || '알 수 없는 시설',
+          address: item.rdnwhladdr || item.rdnaddr || item.sitelnaddr || item.roadAddr || item.jibunAddr || '주소 정보 없음',
+          tel: item.tel || item.phone || '전화번호 없음',
           type
         }));
     }

@@ -18,18 +18,18 @@ import Profile from './pages/Profile';
 
 const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string }> = {
   light: {
-    primary: '#14C3A3',
-    background: '#F0F3F5',
+    primary: '#0D9488',
+    background: '#F8FAFC',
     paper: '#FFFFFF',
-    text: '#121B2A',
-    muted: '#a0abbc'
+    text: '#0F172A',
+    muted: '#64748B'
   },
   dark: {
-    primary: '#14C3A3',
-    background: '#121B2A',
-    paper: '#1e293b',
-    text: '#F0F3F5',
-    muted: '#94a3b8'
+    primary: '#0D9488',
+    background: '#0F172A',
+    paper: '#1E293B',
+    text: '#F8FAFC',
+    muted: '#94A3B8'
   }
 };
 

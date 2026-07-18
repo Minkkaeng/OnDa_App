@@ -34,7 +34,7 @@ const Care: React.FC = () => {
   // Hospital/Pharmacy Locator State
   const [selectedCity, setSelectedCity] = useState('서울특별시');
   const [selectedDistrict, setSelectedDistrict] = useState('강남구');
-  const [locatorSearchType, setLocatorSearchType] = useState<'hospital' | 'pharmacy'>('hospital');
+  const [locatorSearchType, setLocatorSearchType] = useState<'hospital' | 'pharmacy' | 'grooming'>('hospital');
   const [locatorResults, setLocatorResults] = useState<HospitalOrPharmacy[]>([]);
   const [isLocatorLoading, setIsLocatorLoading] = useState(false);
 
@@ -432,7 +432,7 @@ const Care: React.FC = () => {
                   onClick={() => setLocatorSearchType('hospital')}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
-                    fontSize: '0.85rem', fontWeight: locatorSearchType === 'hospital' ? 800 : 600, cursor: 'pointer',
+                    fontSize: '0.8rem', fontWeight: locatorSearchType === 'hospital' ? 800 : 600, cursor: 'pointer',
                     backgroundColor: locatorSearchType === 'hospital' ? 'var(--white)' : 'transparent',
                     color: locatorSearchType === 'hospital' ? 'var(--deep-navy)' : 'var(--muted-gray)',
                     boxShadow: locatorSearchType === 'hospital' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
@@ -446,7 +446,7 @@ const Care: React.FC = () => {
                   onClick={() => setLocatorSearchType('pharmacy')}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
-                    fontSize: '0.85rem', fontWeight: locatorSearchType === 'pharmacy' ? 800 : 600, cursor: 'pointer',
+                    fontSize: '0.8rem', fontWeight: locatorSearchType === 'pharmacy' ? 800 : 600, cursor: 'pointer',
                     backgroundColor: locatorSearchType === 'pharmacy' ? 'var(--white)' : 'transparent',
                     color: locatorSearchType === 'pharmacy' ? 'var(--deep-navy)' : 'var(--muted-gray)',
                     boxShadow: locatorSearchType === 'pharmacy' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
@@ -455,12 +455,26 @@ const Care: React.FC = () => {
                 >
                   동물약국 💊
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setLocatorSearchType('grooming')}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
+                    fontSize: '0.8rem', fontWeight: locatorSearchType === 'grooming' ? 800 : 600, cursor: 'pointer',
+                    backgroundColor: locatorSearchType === 'grooming' ? 'var(--white)' : 'transparent',
+                    color: locatorSearchType === 'grooming' ? 'var(--deep-navy)' : 'var(--muted-gray)',
+                    boxShadow: locatorSearchType === 'grooming' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  동물미용 ✂️
+                </button>
               </div>
             </div>
 
             {isLocatorLoading ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem', fontWeight: 600 }}>
-                가까운 {locatorSearchType === 'hospital' ? '병원' : '약국'} 정보를 조회 중입니다...
+                가까운 {locatorSearchType === 'hospital' ? '병원' : locatorSearchType === 'pharmacy' ? '약국' : '미용숍'} 정보를 조회 중입니다...
               </div>
             ) : locatorResults.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem' }}>
