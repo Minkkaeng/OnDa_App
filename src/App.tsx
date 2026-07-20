@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { HashRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { usePetStore } from './store/petStore';
 import { Home, Heart, Calendar as CalendarIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
@@ -15,6 +15,7 @@ import GlobalTour from './components/GlobalTour';
 import GlobalWalkBar from './components/common/GlobalWalkBar';
 import { useOnboarding } from './hooks/useOnboarding';
 import Profile from './pages/Profile';
+import { ProfileCard } from './components/ProfileCard';
 
 const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string }> = {
   light: {
@@ -131,10 +132,6 @@ const AppContent: React.FC = () => {
     loadAllData, 
     isGlobalTourActive, 
     setGlobalTourActive,
-    pets,
-    activePetId,
-    setActivePetId,
-    showAlert,
     showConfirm,
     activeThemeId,
     customThemes,
@@ -142,15 +139,13 @@ const AppContent: React.FC = () => {
     setShowSplash
   } = usePetStore();
   const [splashFade, setSplashFade] = useState(false);
-  const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
-  const headerDropdownRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoading: onboardingLoading, isGlobalTourSeen } = useOnboarding();
 
-  const activePet = pets.find(p => p.id === activePetId) || pets[0];
+
 
   const isExitPromptShowingRef = useRef(false);
 
@@ -223,16 +218,7 @@ const AppContent: React.FC = () => {
     }
   }, [activeThemeId, customThemes]);
 
-  // Click outside for header dropdown
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (headerDropdownRef.current && !headerDropdownRef.current.contains(e.target as Node)) {
-        setHeaderDropdownOpen(false);
-      }
-    };
-    document.addEventListener('click', handleOutsideClick);
-    return () => document.removeEventListener('click', handleOutsideClick);
-  }, []);
+
 
   const handleDevReset = async () => {
     showConfirm('모든 데이터(LocalStorage, IndexedDB)를 초기화하시겠습니까?', '개발용 데이터 초기화', async () => {
@@ -282,93 +268,18 @@ const AppContent: React.FC = () => {
 
   const isObPage = location.pathname === '/onboarding';
 
-  const handlePremiumClick = () => {
-    showAlert("현재 프리미엄 멤버십 오픈 준비 중입니다.");
-  };
+
 
 
 
   const renderAppLayout = () => {
     return (
       <div className="web-layout" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', width: '100%', overflow: 'hidden' }}>
-        {/* 1. App Top Bar */}
+        {/* 1. App Top Profile Bar (Image 1 디자인 접목 & 고정 배치) */}
         {!isObPage && (
-          <header className="app-top-bar">
-            <Link to="/" className="brand-logo-link" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '34px' }}>
-                <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M 168 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 128 85 V 45" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
-                <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
-                <circle cx="240" cy="65" r="20" fill="none" stroke="#0E9B82" strokeWidth="16"/>
-                <path d="M 260 45 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
-              </svg>
-            </Link>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button className="premium-btn" onClick={handlePremiumClick} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>PREMIUM</button>
-              
-              {/* Profile Menu */}
-              {location.pathname !== '/dashboard' && activePet && (
-                <div className="header-profile-menu-container" ref={headerDropdownRef}>
-                  <img 
-                    src={activePet.image} 
-                    alt="Profile Menu" 
-                    onClick={() => setHeaderDropdownOpen(!headerDropdownOpen)} 
-                    className="header-profile-avatar-btn"
-                    style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
-                  />
-                  {headerDropdownOpen && (
-                    <div className="header-profile-dropdown-menu">
-                      <div className="google-profile-header">
-                        <img src={activePet.image} className="google-profile-large-avatar" alt="Avatar" />
-                        <h4 className="google-profile-name">{activePet.name}</h4>
-                        <p className="google-profile-email">🐾 {activePet.breed} | ⚖️ {activePet.weight}kg</p>
-                        <button 
-                          className="google-profile-edit-btn"
-                          onClick={() => {
-                            setHeaderDropdownOpen(false);
-                            navigate(`/profile?id=${activePet.id}`);
-                          }}
-                        >
-                          프로필 수정
-                        </button>
-                      </div>
-                      
-                      <div className="google-profile-divider"></div>
-                      
-                      <div className="google-profile-pet-list">
-                        <p className="google-profile-list-title">다른 반려동물 프로필</p>
-                        {pets.filter(p => p.id !== activePet.id).map(pet => (
-                          <div 
-                            key={pet.id} 
-                            className="google-pet-item" 
-                            onClick={() => {
-                              setActivePetId(pet.id);
-                              setHeaderDropdownOpen(false);
-                            }}
-                          >
-                            <img src={pet.image} className="google-pet-item-avatar" alt={pet.name} />
-                            <span className="google-pet-item-name">{pet.name}</span>
-                          </div>
-                        ))}
-                        <div 
-                          className="google-pet-add-btn" 
-                          onClick={() => {
-                            setHeaderDropdownOpen(false);
-                            navigate('/profile?add=true');
-                          }}
-                        >
-                          + 새 프로필 추가
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </header>
+          <div style={{ padding: '16px 16px 8px 16px', backgroundColor: 'var(--ice-white)', flexShrink: 0 }}>
+            <ProfileCard />
+          </div>
         )}
 
         {/* 2. Center Content Area (Router View) */}

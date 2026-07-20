@@ -139,7 +139,7 @@ const Care: React.FC = () => {
     if (ageMonths < 12 && ageMonths > 0) {
       tips.push({
         id: 'tip-puppy',
-        title: '🌱 자견 맞춤 면역 & 사회성 케어',
+        title: '자견 맞춤 면역 & 사회성 케어',
         content: `현재 ${ageMonths}개월령인 어린 시기입니다. 5차 접종 전까지는 외부 외출 시 위생에 주의하고, 긍정적인 사회성 기르기를 위해 낯선 소리와 실내 환경 체험을 자주 접하게 해주세요.`
       });
     }
@@ -148,7 +148,7 @@ const Care: React.FC = () => {
       const years = Math.floor(ageMonths / 12);
       tips.push({
         id: 'tip-senior',
-        title: '🍂 노령견 슬개골 및 영양 관리',
+        title: '노령견 슬개골 및 영양 관리',
         content: `올해 ${years}살로 노령기에 진입했습니다. 발바닥 털이 길면 관절에 무리가 가므로 정기 미용을 하고, 슬개골 보호를 위해 거실 매트와 안전 계단을 설치해 주세요.`
       });
     }
@@ -156,13 +156,13 @@ const Care: React.FC = () => {
     if (wt > 15) {
       tips.push({
         id: 'tip-weight-heavy',
-        title: '🏃 관절 무리 방지 분산 산책 추천',
+        title: '관절 무리 방지 분산 산책 추천',
         content: `${wt}kg의 든든한 체격이므로, 한 번에 길게 걷기보다는 15~20분씩 하루 2번 나누어 걷는 것이 심폐와 슬개골 건강에 더욱 이상적입니다.`
       });
     } else if (wt > 0 && wt < 3) {
       tips.push({
         id: 'tip-weight-light',
-        title: '🦴 소형견 저혈당 및 연골 관리',
+        title: '소형견 저혈당 및 연골 관리',
         content: `${wt}kg의 아담한 소형견은 공복 시간이 너무 길어지면 저혈당이 올 수 있으니 급여 시간을 잘 지켜주시고 슬개골 연골 관리를 위한 영양제 보충을 추천합니다.`
       });
     }
@@ -170,7 +170,7 @@ const Care: React.FC = () => {
     if (tips.length === 0) {
       tips.push({
         id: 'tip-default',
-        title: '✨ 온다 맞춤 데일리 건강 관리',
+        title: '온다 맞춤 데일리 건강 관리',
         content: `${activePet.name}의 활력을 위해 매일 투약 복용과 선호 시간대에 맞춰 산책하는 습관을 들여보세요. 꾸준한 루틴이 아이의 면역 체계를 강하게 유지해 줍니다.`
       });
     }
@@ -229,7 +229,7 @@ const Care: React.FC = () => {
         });
         if (active) {
           setAiTip({
-            title: `💡 ${activePet.name} 맞춤 AI 데일리 케어 가이드`,
+            title: `${activePet.name} 맞춤 AI 데일리 케어 가이드`,
             content: tipText
           });
         }
@@ -263,12 +263,12 @@ const Care: React.FC = () => {
           {/* 1. 맞춤형 건강 케어 가이드 (From Dashboard) */}
           <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-              💡 맞춤형 건강 케어 가이드
+              맞춤형 건강 케어 가이드
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {isAiTipLoading ? (
                 <div style={{ fontSize: '0.85rem', color: 'var(--muted-gray)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>
-                  💡 실시간 AI 맞춤 가이드를 작성 중입니다...
+                  실시간 AI 맞춤 가이드를 작성 중입니다...
                 </div>
               ) : aiTip ? (
                 <div style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
@@ -316,13 +316,13 @@ const Care: React.FC = () => {
               boxShadow: '0 4px 12px rgba(20, 195, 163, 0.3)'
             }}
           >
-            <span style={{ fontSize: '1.2rem' }}>📸</span> AI 배변 사진 분석하기
+            AI 배변 사진 분석하기
           </button>
 
           {/* 4. 체중 기록 및 히스토리 */}
           <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-              ⚖️ 체중 변화 기록
+              체중 변화 기록
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '12px 16px', background: 'var(--ice-white)', borderRadius: '12px' }}>
               <span style={{ fontSize: '0.9rem', color: 'var(--deep-navy)', fontWeight: 700 }}>현재 체중</span>
@@ -359,14 +359,14 @@ const Care: React.FC = () => {
           {/* 5. 정기 예방의학 D-Day 스케줄 */}
           <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-              💉 예방의학 D-Day 스케줄
+              예방의학 D-Day 스케줄
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {[
-                { id: 'dhppi', label: '🧪 종합백신 (DHPPi)', type: 'annual' },
-                { id: 'corona', label: '🦠 코로나 장염 백신', type: 'annual' },
-                { id: 'rabies', label: '🐕 광견병 예방 백신', type: 'annual' },
-                { id: 'parasite', label: '🪱 내/외부 기생충 케어', type: 'monthly' }
+                { id: 'dhppi', label: '종합백신 (DHPPi)', type: 'annual' },
+                { id: 'corona', label: '코로나 장염 백신', type: 'annual' },
+                { id: 'rabies', label: '광견병 예방 백신', type: 'annual' },
+                { id: 'parasite', label: '내/외부 기생충 케어', type: 'monthly' }
               ].map(vac => {
                 const lastDate = vaccines[vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite'];
                 const ddayStatus = getDDay(lastDate, vac.type as 'annual' | 'monthly');
@@ -399,7 +399,7 @@ const Care: React.FC = () => {
           {/* 6. 내 주변 동물병원 & 약국 찾기 */}
           <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-              🏥 주변 동물병원 & 약국 검색
+              주변 동물병원 & 약국 검색
             </h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>

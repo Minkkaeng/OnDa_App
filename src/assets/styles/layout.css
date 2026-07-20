@@ -50,7 +50,8 @@ body {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: 8px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
   z-index: 500;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
   flex-shrink: 0;
@@ -62,7 +63,7 @@ body {
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 10px 0;
+  padding: 4px 0;
   color: var(--muted-gray);
   text-decoration: none;
   font-size: 0.75rem;

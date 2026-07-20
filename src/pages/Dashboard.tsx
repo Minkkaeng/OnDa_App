@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ProfileCard } from '../components/ProfileCard';
+
 import { usePetStore } from '../store/petStore';
 import AdBanner from '../components/common/AdBanner';
 import BottomSheet from '../components/common/BottomSheet';
-import { ChevronRight } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { 
-    addCalendarEvent, pets, activePetId, showAlert, isGlobalTourActive,
+    addCalendarEvent, pets, activePetId, showAlert,
     walkState, walkElapsedSec, walkTargetMin, setWalkState, setWalkElapsedSec, setWalkTargetMin
   } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
@@ -55,9 +55,41 @@ const Dashboard: React.FC = () => {
     localStorage.setItem(`onda_daily_health_${activePetId}_${todayStr}`, JSON.stringify(updated));
   };
 
+  // Walk timer 1-second interval
+  useEffect(() => {
+    let interval: any = null;
+    if (walkState === 'running') {
+      interval = setInterval(() => {
+        setWalkElapsedSec((prev: number) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [walkState, setWalkElapsedSec]);
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const getRemainingSec = () => {
+    const totalTargetSec = walkTargetMin * 60;
+    return totalTargetSec - walkElapsedSec;
+  };
+
+  const remainingSec = getRemainingSec();
+
+  const formatCountdownTime = (remSec: number) => {
+    if (remSec < 0) {
+      const overtime = Math.abs(remSec);
+      const m = Math.floor(overtime / 60).toString().padStart(2, '0');
+      const s = (overtime % 60).toString().padStart(2, '0');
+      return `+${m}:${s}`;
+    }
+    const m = Math.floor(remSec / 60).toString().padStart(2, '0');
+    const s = (remSec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
@@ -75,230 +107,335 @@ const Dashboard: React.FC = () => {
   const handleFinishWalk = async () => {
     if (!activePet) return;
     const formattedWalkTime = formatTime(walkElapsedSec);
+    const totalTargetSec = walkTargetMin * 60;
+    
+    let contentDetail = '';
+    if (walkElapsedSec > totalTargetSec) {
+      const overtimeSec = walkElapsedSec - totalTargetSec;
+      const formattedOvertime = formatTime(overtimeSec);
+      contentDetail = `총 산책 시간: ${formattedWalkTime} (목표 ${walkTargetMin}분 + 추가 ${formattedOvertime})`;
+    } else {
+      contentDetail = `총 산책 시간: ${formattedWalkTime} / 목표 시간: ${walkTargetMin}분`;
+    }
+
     await addCalendarEvent({
       petId: activePet.id,
       date: todayStr,
       type: 'diary',
-      title: '🐶 산책 완료!',
-      content: `총 산책 시간: ${formattedWalkTime} / 목표 시간: ${walkTargetMin}분`
+      title: '산책 완료',
+      content: contentDetail
     });
-    showAlert('산책 기록이 캘린더에 성공적으로 저장되었습니다!');
+    showAlert(`산책 기록이 캘린더에 저장되었습니다!\n\n${contentDetail}`);
     setWalkState('idle');
     setWalkElapsedSec(0);
   };
 
-  const getChecklist = () => {
-    if (isGlobalTourActive) {
-      return [
-        { title: '영양제 및 사료 급여', desc: '오전 루틴 정상 급여 완료', status: '완료 09:30', completed: true },
-        { title: '위생 케어 및 브러싱', desc: '기본 털망 정돈 및 위생 케어 완료', status: '완료 14:00', completed: true },
-        { title: '저녁 정기 산책 예정', desc: '보호자 동반 야외 활동 예정', status: '대기중 18:00', completed: false }
-      ];
+  const handleSaveHealthCheck = async () => {
+    if (!activePet) return;
+    
+    // Check if at least one category has a value selected
+    if (!dailyHealth.stool && !dailyHealth.meal && !dailyHealth.energy) {
+      showAlert('최소 한 가지 항목은 선택하고 저장해 주세요!');
+      return;
     }
 
-    const list = [];
-    if (activePet) {
-      if (activePet.allergies) {
-        list.push({ title: '질병 및 주의사항', desc: activePet.allergies, status: '확인 완료', completed: true });
-      }
-      if (activePet.medications) {
-        list.push({ title: '정기 투약', desc: activePet.medications, status: '대기중', completed: false });
-      }
-      if (activePet.notes) {
-        list.push({ title: '산책 일정 정보', desc: activePet.notes, status: '확인', completed: true });
-      }
-    }
-    return list;
+    const stoolText = 
+      dailyHealth.stool === 'good' ? '정상' : 
+      dailyHealth.stool === 'loose' ? '설사' : 
+      dailyHealth.stool === 'hard' ? '변비' : '기록 없음';
+      
+    const mealText = 
+      dailyHealth.meal === 'full' ? '완식' : 
+      dailyHealth.meal === 'half' ? '보통' : 
+      dailyHealth.meal === 'none' ? '남김' : '기록 없음';
+      
+    const energyText = 
+      dailyHealth.energy === 'active' ? '좋음' : 
+      dailyHealth.energy === 'normal' ? '보통' : 
+      dailyHealth.energy === 'low' ? '기운없음' : '기록 없음';
+
+    await addCalendarEvent({
+      petId: activePet.id,
+      date: todayStr,
+      type: 'diary',
+      category: '건강',
+      title: '오늘의 건강 체크 기록',
+      content: `오늘의 일일 건강 체크 결과입니다.\n\n• 배변 상태: ${stoolText}\n• 식사 및 음수량: ${mealText}\n• 활력 컨디션: ${energyText}`
+    });
+
+    showAlert('오늘의 건강 체크 기록이 일기장(기록) 탭에 성공적으로 저장되었습니다!');
   };
-  const checklist = getChecklist();
+
+
+
+
 
   return (
     <>
-      <div style={{ paddingBottom: '16px' }}>
-        <ProfileCard />
-      </div>
+
 
       <div className="tab-content-fade" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* 1. 데일리 기초 건강 기록 */}
-        <div className="panel" style={{ padding: '20px', borderRadius: '16px', boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'var(--deep-navy)' }}>오늘의 건강 체크</h3>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 10px', borderRadius: '20px' }}>
-              오늘 기록
-            </span>
+        {/* 오늘의 건강 체크 - 이미지 1 디자인 스타일 접목 */}
+        <div className="panel" style={{ padding: '24px 20px', borderRadius: '20px', boxShadow: 'var(--shadow-card)', borderTop: '5px solid var(--mint-green)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--deep-navy)' }}>오늘의 건강 체크</h3>
+            <CheckCircle2 size={18} color="var(--mint-green)" fill="var(--mint-green-light)" />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* 배변 상태 카드 */}
+
+          {/* 3 Circles Grid Row (식인증 마크 디자인 스타일) */}
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '24px' }}>
+            
+            {/* Circle 1: Stool */}
             <div 
               onClick={() => setActiveCategory('stool')}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--steel-gray)',
-                backgroundColor: 'var(--white)', cursor: 'pointer', transition: 'all 0.2s'
-              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.3rem' }}>💩</span>
-                <div style={{ textAlign: 'left' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>배변 상태</h4>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)' }}>변의 묽기와 상태 기록</p>
-                </div>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: dailyHealth.stool ? 'var(--white)' : '#EEF2F6',
+                border: dailyHealth.stool ? '2.5px solid var(--mint-green)' : '1.5px solid var(--steel-gray)',
+                boxShadow: dailyHealth.stool ? '0 4px 12px rgba(20, 195, 163, 0.15)' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: dailyHealth.stool ? 'var(--mint-green)' : 'var(--deep-navy)' }}>배변</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {dailyHealth.stool ? (
-                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '6px' }}>
-                    {dailyHealth.stool === 'good' ? '정상 💩' : dailyHealth.stool === 'loose' ? '설사 💧' : '변비 🪵'}
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>기록하기</span>
-                )}
-                <ChevronRight size={16} color="var(--muted-gray)" />
-              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: dailyHealth.stool ? 'var(--mint-green)' : 'var(--deep-navy)' }}>
+                배변 상태
+              </span>
             </div>
 
-            {/* 식사 및 음수량 카드 */}
+            {/* Circle 2: Meal */}
             <div 
               onClick={() => setActiveCategory('meal')}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--steel-gray)',
-                backgroundColor: 'var(--white)', cursor: 'pointer', transition: 'all 0.2s'
-              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.3rem' }}>🍚</span>
-                <div style={{ textAlign: 'left' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>식사 및 음수량</h4>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)' }}>오늘 먹은 밥과 물의 양</p>
-                </div>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: dailyHealth.meal ? 'var(--white)' : '#EEF2F6',
+                border: dailyHealth.meal ? '2.5px solid var(--mint-green)' : '1.5px solid var(--steel-gray)',
+                boxShadow: dailyHealth.meal ? '0 4px 12px rgba(20, 195, 163, 0.15)' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: dailyHealth.meal ? 'var(--mint-green)' : 'var(--deep-navy)' }}>식사</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {dailyHealth.meal ? (
-                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '6px' }}>
-                    {dailyHealth.meal === 'full' ? '완식 🍚' : dailyHealth.meal === 'half' ? '보통 🥣' : '남김 ❌'}
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>기록하기</span>
-                )}
-                <ChevronRight size={16} color="var(--muted-gray)" />
-              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: dailyHealth.meal ? 'var(--mint-green)' : 'var(--deep-navy)' }}>
+                식사 & 음수
+              </span>
             </div>
 
-            {/* 활력 컨디션 카드 */}
+            {/* Circle 3: Energy */}
             <div 
               onClick={() => setActiveCategory('energy')}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            >
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: dailyHealth.energy ? 'var(--white)' : '#EEF2F6',
+                border: dailyHealth.energy ? '2.5px solid var(--mint-green)' : '1.5px solid var(--steel-gray)',
+                boxShadow: dailyHealth.energy ? '0 4px 12px rgba(20, 195, 163, 0.15)' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: dailyHealth.energy ? 'var(--mint-green)' : 'var(--deep-navy)' }}>활력</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: dailyHealth.energy ? 'var(--mint-green)' : 'var(--deep-navy)' }}>
+                활력 컨디션
+              </span>
+            </div>
+
+          </div>
+
+          {/* Bullets Summary List Box (인증 안내글 박스 디자인 스타일) */}
+          <div style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            backgroundColor: 'var(--ice-white)',
+            padding: '12px 14px',
+            borderRadius: '12px'
+          }}>
+            <div style={{ 
+              textAlign: 'left', 
+              fontSize: '0.75rem', 
+              color: 'var(--muted-gray)', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '8px',
+              flex: 1
+            }}>
+              <p style={{ margin: 0, display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--mint-green)', fontWeight: 800 }}>•</span> 
+                <span>배변 상태: {
+                  dailyHealth.stool === 'good' ? '정상' : 
+                  dailyHealth.stool === 'loose' ? '설사' : 
+                  dailyHealth.stool === 'hard' ? '변비' : 
+                  <span style={{ color: 'var(--muted-gray)', opacity: 0.65 }}>기록 없음</span>
+                }</span>
+              </p>
+              <p style={{ margin: 0, display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--mint-green)', fontWeight: 800 }}>•</span> 
+                <span>식사 및 음수량: {
+                  dailyHealth.meal === 'full' ? '완식' : 
+                  dailyHealth.meal === 'half' ? '보통' : 
+                  dailyHealth.meal === 'none' ? '남김' : 
+                  <span style={{ color: 'var(--muted-gray)', opacity: 0.65 }}>기록 없음</span>
+                }</span>
+              </p>
+              <p style={{ margin: 0, display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--mint-green)', fontWeight: 800 }}>•</span> 
+                <span>활력 컨디션: {
+                  dailyHealth.energy === 'active' ? '좋음' : 
+                  dailyHealth.energy === 'normal' ? '보통' : 
+                  dailyHealth.energy === 'low' ? '기운없음' : 
+                  <span style={{ color: 'var(--muted-gray)', opacity: 0.65 }}>기록 없음</span>
+                }</span>
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSaveHealthCheck}
               style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--steel-gray)',
-                backgroundColor: 'var(--white)', cursor: 'pointer', transition: 'all 0.2s'
+                backgroundColor: 'var(--mint-green)',
+                color: 'white',
+                padding: '8px 14px',
+                borderRadius: '16px',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                border: 'none',
+                boxShadow: '0 2px 8px rgba(13, 148, 136, 0.2)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.3rem' }}>⚡</span>
-                <div style={{ textAlign: 'left' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>활력 컨디션</h4>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)' }}>활동성과 전반적인 기분</p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {dailyHealth.energy ? (
-                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--mint-green)', background: 'var(--mint-green-light)', padding: '4px 8px', borderRadius: '6px' }}>
-                    {dailyHealth.energy === 'active' ? '좋음 ⚡' : dailyHealth.energy === 'normal' ? '보통 🙂' : '기운없음 😴'}
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>기록하기</span>
-                )}
-                <ChevronRight size={16} color="var(--muted-gray)" />
-              </div>
-            </div>
+              저장
+            </button>
           </div>
         </div>
 
-        {/* 2. Quick Walk Form */}
-        <div id="home-guide-step3" className="panel">
-          <h3 style={{ marginBottom: '12px', fontSize: '1.15rem', fontWeight: 800 }}>오늘의 산책 기록</h3>
-          <div className="form-group" style={{ marginBottom: '12px' }}>
-            <label className="form-label">산책 목표 시간</label>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-              <div style={{ 
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                fontSize: '1.2rem', fontWeight: 800, color: 'var(--mint-green)',
-                background: 'var(--ice-white)', borderRadius: '12px', border: '1.5px solid var(--steel-gray)'
-              }}>
-                {walkTargetMin}분
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flex: 2 }}>
-                <button type="button" onClick={() => setWalkTargetMin(Math.max(10, walkTargetMin - 10))} className="btn-submit" style={{ flex: 1, margin: 0, padding: '10px 0', backgroundColor: 'var(--steel-gray)', color: 'var(--deep-navy)' }}>
-                  -10분
+        {/* 2. Compact Quick Walk Tracker */}
+        <div id="home-guide-step3" className="panel" style={{ padding: '16px 20px', borderRadius: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>오늘의 산책</h3>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 700, marginRight: '2px' }}>목표:</span>
+              {[15, 30, 45, 60].map(min => (
+                <button
+                  key={min}
+                  type="button"
+                  disabled={walkState !== 'idle'}
+                  onClick={() => setWalkTargetMin(min)}
+                  style={{
+                    padding: '3px 8px',
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    border: walkTargetMin === min ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                    backgroundColor: walkTargetMin === min ? 'var(--mint-green-light)' : 'var(--white)',
+                    color: walkTargetMin === min ? 'var(--mint-green)' : 'var(--muted-gray)',
+                    cursor: walkState !== 'idle' ? 'not-allowed' : 'pointer',
+                    opacity: walkState !== 'idle' ? 0.5 : 1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {min}분
                 </button>
-                <button type="button" onClick={() => setWalkTargetMin(walkTargetMin + 10)} className="btn-submit" style={{ flex: 1, margin: 0, padding: '10px 0', backgroundColor: 'var(--ice-white)', color: 'var(--deep-navy)', border: '1px solid var(--mint-green)' }}>
-                  +10분
-                </button>
-                <button type="button" onClick={() => setWalkTargetMin(walkTargetMin + 30)} className="btn-submit" style={{ flex: 1, margin: 0, padding: '10px 0', backgroundColor: 'var(--mint-green)', color: 'white' }}>
-                  +30분
-                </button>
-              </div>
-            </div>
-            <label className="form-label">현재 산책 시간</label>
-            <div 
-              id="walk-timer-display" 
-              className="form-input" 
-              style={{ 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                fontVariantNumeric: 'tabular-nums', fontWeight: 800, 
-                background: walkState === 'running' ? '#E6FAF6' : 'var(--ice-white)', 
-                color: walkState === 'running' ? 'var(--mint-green)' : 'var(--muted-gray)', 
-                fontSize: '1.8rem', height: '60px', padding: '0', transition: 'all 0.3s'
-              }}
-            >
-              {formatTime(walkElapsedSec)}
+              ))}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button 
-              type="button" onClick={handleStartWalk} className="btn-submit" 
-              style={{ flex: 1, backgroundColor: walkState === 'running' ? '#4CE0C4' : 'var(--mint-green)', borderColor: walkState === 'running' ? '#4CE0C4' : 'var(--mint-green)', marginTop: 0, padding: '10px' }}
-            >
-              {walkState === 'idle' ? '시작하기' : walkState === 'running' ? '중단하기' : '재시작'}
-            </button>
-            {walkState !== 'idle' && (
-              <button 
-                type="button" onClick={handleFinishWalk} className="btn-submit" 
-                style={{ flex: 1, backgroundColor: 'var(--muted-gray)', borderColor: 'var(--muted-gray)', marginTop: 0, padding: '10px' }}
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: walkState === 'running' ? '#E6FAF6' : 'var(--ice-white)',
+            padding: '12px 16px',
+            borderRadius: '14px',
+            transition: 'all 0.3s',
+            border: walkState === 'running' ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.7rem', color: remainingSec < 0 ? '#D97706' : 'var(--muted-gray)', fontWeight: 700 }}>
+                {walkState === 'idle' ? '목표 시간' : remainingSec < 0 ? '추가 진행 시간 (+)' : '남은 시간'}
+              </span>
+              <span style={{
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: remainingSec < 0 ? '#D97706' : walkState === 'running' ? 'var(--mint-green)' : 'var(--deep-navy)',
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1.1
+              }}>
+                {formatCountdownTime(remainingSec)}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={handleStartWalk}
+                style={{
+                  backgroundColor: walkState === 'running' ? '#F59E0B' : 'var(--mint-green)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s'
+                }}
               >
-                완료하기
+                {walkState === 'idle' ? '산책 시작' : walkState === 'running' ? '일시정지' : '재시작'}
               </button>
-            )}
+
+              {walkState !== 'idle' && (
+                <button
+                  type="button"
+                  onClick={handleFinishWalk}
+                  style={{
+                    backgroundColor: 'var(--mint-green)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.2)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  기록 저장
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         <AdBanner />
 
-        {/* 3. Care Task List */}
-        <div id="home-guide-step2" className="panel">
-          <h3 style={{ marginBottom: '12px', fontSize: '1.15rem', fontWeight: 800 }}>오늘의 케어 체크리스트</h3>
-          <div className="task-list">
-            {checklist.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)' }}>
-                오늘 예정된 케어 일정이 없습니다.<br />
-                <span style={{ fontSize: '0.85rem' }}>캘린더 탭에서 주의사항 및 투약 주기를 설정해 보세요!</span>
-              </div>
-            ) : (
-              checklist.map((item, idx) => (
-                <div key={idx} className={`task-card ${item.completed ? '' : 'pending'}`}>
-                  <div className="task-info">
-                    <h3>{item.title}</h3>
-                    <p>{item.desc}</p>
-                  </div>
-                  <div className={`task-status ${item.completed ? 'completed' : 'pending'}`}>
-                    {item.status}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+
       </div>
 
       {/* 건강 카테고리 입력을 위한 바텀시트 */}
@@ -306,16 +443,16 @@ const Dashboard: React.FC = () => {
         isOpen={activeCategory !== null} 
         onClose={() => setActiveCategory(null)}
         title={
-          activeCategory === 'stool' ? '💩 배변 상태 기록' :
-          activeCategory === 'meal' ? '🍚 식사 및 음수량 기록' :
-          activeCategory === 'energy' ? '⚡ 활력 컨디션 기록' : ''
+          activeCategory === 'stool' ? '배변 상태 기록' :
+          activeCategory === 'meal' ? '식사 및 음수량 기록' :
+          activeCategory === 'energy' ? '활력 컨디션 기록' : ''
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '8px 0' }}>
           {activeCategory === 'stool' && [
-            { value: 'good', label: '정상 💩', desc: '건강하고 단단한 예쁜 대변' },
-            { value: 'loose', label: '설사 💧', desc: '묽거나 수분이 많은 대변' },
-            { value: 'hard', label: '변비 🪵', desc: '끊기거나 딱딱해서 힘든 대변' }
+            { value: 'good', label: '정상', desc: '건강하고 단단한 예쁜 대변' },
+            { value: 'loose', label: '설사', desc: '묽거나 수분이 많은 대변' },
+            { value: 'hard', label: '변비', desc: '끊기거나 딱딱해서 힘든 대변' }
           ].map(opt => {
             const isSelected = dailyHealth.stool === opt.value;
             return (
@@ -342,9 +479,9 @@ const Dashboard: React.FC = () => {
           })}
 
           {activeCategory === 'meal' && [
-            { value: 'full', label: '완식 🍚', desc: '남김없이 깨끗하게 다 먹었어요' },
-            { value: 'half', label: '보통 🥣', desc: '적당량 남기거나 평소만큼 먹었어요' },
-            { value: 'none', label: '남김 ❌', desc: '거의 먹지 않거나 다 남겼어요' }
+            { value: 'full', label: '완식', desc: '남김없이 깨끗하게 다 먹었어요' },
+            { value: 'half', label: '보통', desc: '적당량 남기거나 평소만큼 먹었어요' },
+            { value: 'none', label: '남김', desc: '거의 먹지 않거나 다 남겼어요' }
           ].map(opt => {
             const isSelected = dailyHealth.meal === opt.value;
             return (
@@ -371,9 +508,9 @@ const Dashboard: React.FC = () => {
           })}
 
           {activeCategory === 'energy' && [
-            { value: 'active', label: '좋음 ⚡', desc: '평소보다 에너지가 넘치고 신나요' },
-            { value: 'normal', label: '보통 🙂', desc: '늘 그렇듯 얌전하고 편안해요' },
-            { value: 'low', label: '기운없음 😴', desc: '쳐져 있고 힘이 없어 보여요' }
+            { value: 'active', label: '좋음', desc: '평소보다 에너지가 넘치고 신나요' },
+            { value: 'normal', label: '보통', desc: '늘 그렇듯 얌전하고 편안해요' },
+            { value: 'low', label: '기운없음', desc: '쳐져 있고 힘이 없어 보여요' }
           ].map(opt => {
             const isSelected = dailyHealth.energy === opt.value;
             return (

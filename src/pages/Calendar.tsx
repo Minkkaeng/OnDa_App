@@ -315,7 +315,7 @@ const Calendar: React.FC = () => {
         <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
-              ⏰ 기본 루틴 설정
+              기본 루틴 설정
             </h2>
             <button 
               onClick={() => {
@@ -330,7 +330,7 @@ const Calendar: React.FC = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '8px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>💊 정기 투약</span>
+              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>정기 투약</span>
               {isEditingRoutine ? (
                 <input 
                   type="text" value={routineMeds} onChange={(e) => setRoutineMeds(e.target.value)} 
@@ -341,7 +341,7 @@ const Calendar: React.FC = () => {
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '8px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>👟 산책 목표량</span>
+              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>산책 목표량</span>
               {isEditingRoutine ? (
                 <input 
                   type="text" value={routineWalkGoal} onChange={(e) => setRoutineWalkGoal(e.target.value)} 
@@ -352,7 +352,7 @@ const Calendar: React.FC = () => {
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>⏰ 산책 예정 시간</span>
+              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>산책 예정 시간</span>
               {isEditingRoutine ? (
                 <input 
                   type="text" value={routineWalk} onChange={(e) => setRoutineWalk(e.target.value)} 
@@ -435,7 +435,6 @@ const Calendar: React.FC = () => {
                 const isSat = gridItem.isSat;
                 const isActive = gridItem.dateStr === selectedDateStr;
                 const dayEvents = petEvents.filter(e => e.date === gridItem.dateStr);
-                const hasEvents = dayEvents.length > 0;
 
                 let dayClass = 'cal-day';
                 if (gridItem.type === 'prev') dayClass += ' prev-month';
@@ -449,40 +448,102 @@ const Calendar: React.FC = () => {
                     key={idx}
                     className={dayClass}
                     onClick={() => handleDayClick(gridItem.dateStr)}
-                    style={{ opacity: gridItem.type !== 'curr' ? 0.4 : 1, position: 'relative' }}
                   >
-                    <span style={{ fontWeight: isActive ? '800' : '500' }}>{gridItem.dayNum}</span>
-                    {hasEvents && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '4px',
-                        display: 'flex',
-                        gap: '2px',
-                        justifyContent: 'center',
-                        width: '100%'
-                      }}>
-                        {dayEvents.slice(0, 3).map((ev, eIdx) => {
-                          let dotColor = 'var(--mint-green)';
-                          if (ev.type === 'hospital') dotColor = 'var(--error-red)';
-                          if (ev.type === 'schedule') dotColor = '#3b82f6';
+                    {/* Date Header Row */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
+                      <span style={{ fontWeight: isActive ? '800' : '600', fontSize: '0.85rem' }}>{gridItem.dayNum}</span>
+                      {isActive && activePet && (
+                        <span style={{ fontSize: '0.6rem', color: 'var(--muted-gray)', fontWeight: 700 }}>
+                          {activePet.weight}kg
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Events List inside Day Cell */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%', overflow: 'hidden', flex: 1 }}>
+                      {dayEvents.slice(0, 2).map((ev, eIdx) => {
+                        const cleanTitle = ev.title.replace(/^[^\w\s\dㄱ-ㅎㅏ-ㅣ가-힣]/, '').trim() || ev.title;
+                        const isHospital = ev.type === 'hospital';
+                        
+                        if (isHospital) {
                           return (
-                            <span 
+                            <div 
                               key={eIdx} 
-                              style={{ 
-                                width: '4px', 
-                                height: '4px', 
-                                backgroundColor: isActive ? 'var(--white)' : dotColor, 
-                                borderRadius: '50%',
-                                display: 'inline-block'
+                              style={{
+                                backgroundColor: 'var(--error-red-light)',
+                                color: 'var(--error-red)',
+                                borderRadius: '4px',
+                                fontSize: '0.55rem',
+                                padding: '1px 3px',
+                                textAlign: 'left',
+                                whiteSpace: 'nowrap',
+                                textOverflow: 'ellipsis',
+                                overflow: 'hidden',
+                                fontWeight: 800,
+                                display: 'block',
+                                lineHeight: '1.2'
                               }}
-                            />
+                              title={ev.title}
+                            >
+                              {cleanTitle}
+                            </div>
                           );
-                        })}
-                      </div>
-                    )}
+                        } else {
+                          const accentColor = ev.type === 'diary' ? 'var(--mint-green)' : (ev.type === 'poop' ? '#D97706' : '#8B5CF6');
+                          return (
+                            <div 
+                              key={eIdx} 
+                              style={{
+                                borderLeft: `2.5px solid ${accentColor}`,
+                                paddingLeft: '3px',
+                                fontSize: '0.55rem',
+                                color: 'var(--deep-navy)',
+                                textAlign: 'left',
+                                whiteSpace: 'nowrap',
+                                textOverflow: 'ellipsis',
+                                overflow: 'hidden',
+                                fontWeight: 700,
+                                display: 'block',
+                                lineHeight: '1.2'
+                              }}
+                              title={ev.title}
+                            >
+                              {cleanTitle}
+                            </div>
+                          );
+                        }
+                      })}
+                    </div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Bottom Add Event Pill Button */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', marginBottom: '8px' }}>
+              <button
+                type="button"
+                onClick={handleAddEventOpen}
+                style={{
+                  backgroundColor: 'var(--white)',
+                  border: '1.5px solid var(--steel-gray)',
+                  borderRadius: '30px',
+                  padding: '10px 24px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  color: 'var(--deep-navy)',
+                  boxShadow: '0 4px 12px rgba(18, 27, 42, 0.05)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s',
+                  marginTop: '4px'
+                }}
+              >
+                <span>{`${selectedDateObj.getMonth() + 1}월 ${selectedDateObj.getDate()}일에 추가`}</span>
+                <span style={{ fontSize: '1.15rem', color: 'var(--mint-green)', fontWeight: 800 }}>+</span>
+              </button>
             </div>
 
             <div className="cal-ad-zone" style={{ marginTop: '20px', padding: '12px' }}>
