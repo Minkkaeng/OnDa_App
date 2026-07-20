@@ -144,6 +144,7 @@ const AppContent: React.FC = () => {
   const [splashFade, setSplashFade] = useState(false);
   const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
   const headerDropdownRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -152,6 +153,14 @@ const AppContent: React.FC = () => {
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   const isExitPromptShowingRef = useRef(false);
+
+  // Scroll to top when navigation changes (tab switching)
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   // Handle Android Hardware Back Button
   useEffect(() => {
@@ -363,7 +372,7 @@ const AppContent: React.FC = () => {
         )}
 
         {/* 2. Center Content Area (Router View) */}
-        <main className={isObPage ? "content-onboarding" : "content-center"}>
+        <main ref={mainRef} className={isObPage ? "content-onboarding" : "content-center"}>
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
               <p style={{ color: 'var(--deep-navy)', fontWeight: 'bold' }}>로컬 데이터를 불러오는 중...</p>
