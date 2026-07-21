@@ -57,7 +57,7 @@ const AdBanner: React.FC = () => {
         alignItems: 'center',
         cursor: 'pointer',
         transition: 'transform 0.2s',
-        marginTop: '8px'
+        marginTop: 0
       }}
       onClick={() => {
         // If native capacitor implementation, this could trigger AdMob SDK click tracker

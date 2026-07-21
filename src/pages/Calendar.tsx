@@ -310,9 +310,9 @@ const Calendar: React.FC = () => {
     <>
       {/* Calendar Guide overlay disabled for global tour */}
 
-      <div style={{ paddingBottom: '16px' }}>
+      <div style={{ paddingBottom: '0' }}>
         {/* Routine Scheduler Panel */}
-        <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '16px' }}>
+        <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
               기본 루틴 설정

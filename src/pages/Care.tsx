@@ -13,7 +13,7 @@ const REGION_MAP: Record<string, string[]> = {
 };
 
 const Care: React.FC = () => {
-  const { pets, activePetId, showAlert, updatePet } = usePetStore();
+  const { pets, activePetId, showAlert, updatePet, addCalendarEvent } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId);
 
   // Weight History
@@ -102,6 +102,23 @@ const Care: React.FC = () => {
     const updated = { ...vaccines, [key]: val };
     setVaccines(updated);
     localStorage.setItem(`onda_vaccines_${activePet.id}`, JSON.stringify(updated));
+  };
+
+  const handleCompleteVaccineToday = async (key: 'dhppi' | 'corona' | 'rabies' | 'parasite', label: string) => {
+    if (!activePet) return;
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    handleUpdateVaccine(key, todayStr);
+    
+    await addCalendarEvent({
+      petId: activePet.id,
+      date: todayStr,
+      type: 'hospital',
+      title: `💉 [접종완료] ${label}`,
+      content: `케어 탭에서 ${label} 접종 완료가 기록되었습니다.`
+    });
+    
+    showAlert(`'${label}' 오늘 접종 완료가 기록되었으며 캘린더에 연동 완료되었습니다!`);
   };
 
   const getDDay = (lastDateStr?: string, type: 'annual' | 'monthly' = 'annual') => {
@@ -257,11 +274,11 @@ const Care: React.FC = () => {
 
   return (
     <>
-      <div style={{ paddingBottom: '16px' }}>
-        <div className="care-layout" style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: 0 }}>
+      <div style={{ paddingBottom: '0' }}>
+        <div className="care-layout" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 0 }}>
         
           {/* 1. 맞춤형 건강 케어 가이드 (From Dashboard) */}
-          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
+          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
             <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
               맞춤형 건강 케어 가이드
             </h2>
@@ -388,7 +405,23 @@ const Care: React.FC = () => {
                         onChange={(e) => handleUpdateVaccine(vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite', e.target.value)}
                         className="form-input" style={{ height: '34px', fontSize: '0.8rem', padding: '0 8px', flex: 1, margin: 0 }}
                       />
-                      <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>마지막 접종일</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCompleteVaccineToday(vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite', vac.label)}
+                        style={{
+                          backgroundColor: 'var(--mint-green)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 10px',
+                          borderRadius: '10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        오늘 접종 완료
+                      </button>
                     </div>
                   </div>
                 );

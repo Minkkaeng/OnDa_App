@@ -57,6 +57,7 @@ interface PetState {
   setActivePetId: (id: string | null) => void;
   addPet: (pet: Omit<Pet, 'id'>) => Promise<Pet>;
   updatePet: (pet: Pet) => Promise<void>;
+  deletePet: (id: string) => Promise<void>;
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<CalendarEvent>;
   updateCalendarEvent: (event: CalendarEvent) => Promise<void>;
   deleteCalendarEvent: (id: string) => Promise<void>;
@@ -405,6 +406,22 @@ export const usePetStore = create<PetState>((set, get) => ({
       // Sync in case active pet details changed
       set({ activePetId: pet.id });
     }
+  },
+
+  deletePet: async (id) => {
+    await db.pets.delete(id);
+    const updatedPets = await db.pets.toArray();
+    const updatedEvents = await db.calendarEvents.toArray();
+    let nextActiveId = get().activePetId;
+    if (nextActiveId === id) {
+      nextActiveId = updatedPets.length > 0 ? updatedPets[0].id : null;
+      if (nextActiveId) {
+        localStorage.setItem('activePetId', nextActiveId);
+      } else {
+        localStorage.removeItem('activePetId');
+      }
+    }
+    set({ pets: updatedPets, events: updatedEvents, activePetId: nextActiveId });
   },
 
   addCalendarEvent: async (eventData) => {

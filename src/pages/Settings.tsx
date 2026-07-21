@@ -343,7 +343,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div style={{ paddingBottom: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ paddingBottom: '0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
       {/* 1. Premium AD Promotional Board Banner */}
       <div 

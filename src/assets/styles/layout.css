@@ -21,11 +21,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background-color: var(--white);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #4CE0C4 0%, #0D9488 100%);
   flex-shrink: 0;
   z-index: 50;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
 }
 
 /* 2. Center Content Area */
@@ -38,6 +38,8 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  padding: 12px 0;
+  box-sizing: border-box;
 }
 
 /* 3. App Bottom Nav */
@@ -50,11 +52,13 @@ body {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding-top: 8px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-top: 6px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   z-index: 500;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
   flex-shrink: 0;
+  min-height: 62px;
+  box-sizing: border-box;
 }
 
 .bottom-nav-item {
@@ -63,12 +67,20 @@ body {
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 4px 0;
+  padding: 2px 0;
   color: var(--muted-gray);
   text-decoration: none;
-  font-size: 0.75rem;
-  gap: 4px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  gap: 2px;
   transition: color 0.2s ease;
+}
+
+.bottom-nav-item span {
+  display: block;
+  white-space: nowrap;
+  line-height: 1.2;
+  font-size: 0.72rem;
 }
 
 .bottom-nav-item.active {
@@ -82,9 +94,9 @@ body {
   border-radius: 20px;
   border: 1px solid var(--steel-gray);
   border-top: 5px solid var(--mint-green);
-  padding: 20px;
+  padding: 18px 16px;
   box-shadow: var(--shadow-card);
-  margin-bottom: 16px;
+  margin-bottom: 0;
   transition: var(--transition-smooth);
 }
 .panel:hover {
