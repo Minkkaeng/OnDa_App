@@ -13,7 +13,7 @@ const REGION_MAP: Record<string, string[]> = {
 };
 
 const Care: React.FC = () => {
-  const { pets, activePetId, showAlert, updatePet, addCalendarEvent } = usePetStore();
+  const { pets, activePetId, showAlert, updatePet, addCalendarEvent, events } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId);
 
   // Weight History
@@ -39,9 +39,9 @@ const Care: React.FC = () => {
   const [isLocatorLoading, setIsLocatorLoading] = useState(false);
   const [locatorError, setLocatorError] = useState(false);
 
-  // AI Care Guide State
-  const [aiTip, setAiTip] = useState<{ title: string; content: string } | null>(null);
-  const [isAiTipLoading, setIsAiTipLoading] = useState(false);
+  // Care Guide State
+  const [careTips, setCareTips] = useState<{ id: string; title: string; content: string }[]>([]);
+  const [isTipsLoading, setIsTipsLoading] = useState(false);
 
   useEffect(() => {
     if (activePetId) {
@@ -141,60 +141,7 @@ const Care: React.FC = () => {
     return `D-${diffDays}`;
   };
 
-  const getPersonalizedTips = () => {
-    const tips = [];
-    if (!activePet) return [];
-
-    let ageMonths = 0;
-    if (activePet.birth) {
-      const birth = new Date(activePet.birth);
-      const today = new Date();
-      ageMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
-    }
-
-    const wt = typeof activePet.weight === 'string' ? parseFloat(activePet.weight) : (activePet.weight || 0);
-
-    if (ageMonths < 12 && ageMonths > 0) {
-      tips.push({
-        id: 'tip-puppy',
-        title: '자견 맞춤 면역 & 사회성 케어',
-        content: `현재 ${ageMonths}개월령인 어린 시기입니다. 5차 접종 전까지는 외부 외출 시 위생에 주의하고, 긍정적인 사회성 기르기를 위해 낯선 소리와 실내 환경 체험을 자주 접하게 해주세요.`
-      });
-    }
-
-    if (ageMonths >= 84) {
-      const years = Math.floor(ageMonths / 12);
-      tips.push({
-        id: 'tip-senior',
-        title: '노령견 슬개골 및 영양 관리',
-        content: `올해 ${years}살로 노령기에 진입했습니다. 발바닥 털이 길면 관절에 무리가 가므로 정기 미용을 하고, 슬개골 보호를 위해 거실 매트와 안전 계단을 설치해 주세요.`
-      });
-    }
-
-    if (wt > 15) {
-      tips.push({
-        id: 'tip-weight-heavy',
-        title: '관절 무리 방지 분산 산책 추천',
-        content: `${wt}kg의 든든한 체격이므로, 한 번에 길게 걷기보다는 15~20분씩 하루 2번 나누어 걷는 것이 심폐와 슬개골 건강에 더욱 이상적입니다.`
-      });
-    } else if (wt > 0 && wt < 3) {
-      tips.push({
-        id: 'tip-weight-light',
-        title: '소형견 저혈당 및 연골 관리',
-        content: `${wt}kg의 아담한 소형견은 공복 시간이 너무 길어지면 저혈당이 올 수 있으니 급여 시간을 잘 지켜주시고 슬개골 연골 관리를 위한 영양제 보충을 추천합니다.`
-      });
-    }
-
-    if (tips.length === 0) {
-      tips.push({
-        id: 'tip-default',
-        title: '온다 맞춤 데일리 건강 관리',
-        content: `${activePet.name}의 활력을 위해 매일 투약 복용과 선호 시간대에 맞춰 산책하는 습관을 들여보세요. 꾸준한 루틴이 아이의 면역 체계를 강하게 유지해 줍니다.`
-      });
-    }
-
-    return tips;
-  };
+  // Static tips moved to careGuideService
 
   useEffect(() => {
     const districts = REGION_MAP[selectedCity] || [];
@@ -233,39 +180,29 @@ const Care: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    const loadAiTip = async () => {
+    const loadTips = async () => {
       if (!activePet) return;
-      setIsAiTipLoading(true);
+      setIsTipsLoading(true);
       try {
-        const { fetchAIPersonalizedTip } = await import('../services/aiService');
-        const tipText = await fetchAIPersonalizedTip({
-          name: activePet.name,
-          breed: activePet.breed,
-          birth: activePet.birth,
-          weight: activePet.weight,
-          allergies: activePet.allergies,
-          medications: activePet.medications,
-          notes: activePet.notes
-        });
+        const { generateDailyGuides } = await import('../services/careGuideService');
+        const generatedTips = generateDailyGuides(activePet, events);
+        
         if (active) {
-          setAiTip({
-            title: `${activePet.name} 맞춤 AI 데일리 케어 가이드`,
-            content: tipText
-          });
+          setCareTips(generatedTips);
         }
       } catch (error) {
-        console.error('Error fetching AI tip:', error);
+        console.error('Error generating tips:', error);
       } finally {
         if (active) {
-          setIsAiTipLoading(false);
+          setIsTipsLoading(false);
         }
       }
     };
-    loadAiTip();
+    loadTips();
     return () => {
       active = false;
     };
-  }, [activePet]);
+  }, [activePet, events]);
 
   if (!activePet) {
     return (
@@ -286,22 +223,21 @@ const Care: React.FC = () => {
               맞춤형 건강 케어 가이드
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {isAiTipLoading ? (
+              {isTipsLoading ? (
                 <div style={{ fontSize: '0.85rem', color: 'var(--muted-gray)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>
-                  실시간 AI 맞춤 가이드를 작성 중입니다...
+                  가이드를 분석 중입니다...
                 </div>
-              ) : aiTip ? (
-                <div style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
-                  <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{aiTip.title}</h4>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{aiTip.content}</p>
-                </div>
-              ) : (
-                getPersonalizedTips().map((tip, idx) => (
+              ) : careTips.length > 0 ? (
+                careTips.map((tip, idx) => (
                   <div key={idx} style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
                     <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{tip.title}</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{tip.content}</p>
                   </div>
                 ))
+              ) : (
+                <div style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5, textAlign: 'center' }}>데이터를 기반으로 가이드를 준비중입니다.</p>
+                </div>
               )}
             </div>
           </div>
@@ -586,7 +522,7 @@ const Care: React.FC = () => {
                 poopStatus: eventData.poopStatus as any,
                 aiAnalysisText: eventData.aiAnalysisText
               });
-              showAlert('배변 분석 결과가 캘린더 기록에 성공적으로 연동되었습니다! 💾');
+              showAlert('배변 상태가 캘린더 기록에 성공적으로 연동되었습니다! 💾');
             }
             setShowPoopAnalyzer(false);
           }} 

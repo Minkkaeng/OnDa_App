@@ -81,19 +81,15 @@ const Onboarding: React.FC = () => {
     }
 
     if (birth.length > 0) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(birth)) {
-        setBirthError('유효한 날짜 형식을 선택해주세요.');
-        isValid = false;
-      } else {
-        setBirthError('');
-      }
+      setBirthError('');
     } else {
       isValid = false;
     }
 
     if (weight.length > 0) {
-      if (!/^\d+(\.\d{1})?$/.test(weight)) {
-        setWeightError('소수점 첫째 자리까지의 숫자만 입력 가능합니다.');
+      const w = parseFloat(weight);
+      if (isNaN(w) || w <= 0) {
+        setWeightError('올바른 숫자를 입력해주세요.');
         isValid = false;
       } else {
         setWeightError('');

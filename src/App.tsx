@@ -134,8 +134,8 @@ const AppContent: React.FC = () => {
     pets,
     activePetId,
     setActivePetId,
-    showAlert,
     showConfirm,
+    showAlert,
     activeThemeId,
     customThemes,
     showSplash,
@@ -167,31 +167,49 @@ const AppContent: React.FC = () => {
   // Handle Android Hardware Back Button
   useEffect(() => {
     let listener: any;
+    let backPressCount = 0;
+    let backPressTimer: any = null;
+
     const handleBackButton = async () => {
-      // 메인 탭(홈, 케어, 캘린더, 기록, 설정)이거나 온보딩/스플래시 화면일 때 앱 종료 확인 얼럿 띄우기
-      const mainPaths = ['/', '/dashboard', '/care', '/calendar', '/diary', '/settings'];
-      const isMainTab = mainPaths.includes(location.pathname) || location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/splash');
-      
-      if (isMainTab) {
+      // 확인할 수 있는 history index가 0보다 크면 뒤로 갈 곳이 있음
+      const canGoBack = window.history.state && window.history.state.idx > 0;
+
+      if (canGoBack && !isExitPromptShowingRef.current) {
+        navigate(-1);
+      } else {
+        // 더 이상 뒤로 갈 곳이 없는 경우 (앱의 최상단 루트)
         if (isExitPromptShowingRef.current) {
-          // 얼럿이 띄워진 상태에서 뒤로가기를 한 번 더 누르면 즉시 종료
+          // 이미 종료 확인창이 떠있는 상태에서 뒤로가기 누르면 즉시 종료
           CapacitorApp.exitApp();
+          return;
+        }
+
+        if (backPressCount === 0) {
+          backPressCount++;
+          // 첫 번째 누름: 토스트 안내문구 표시
+          // showAlert 대신 직접 가벼운 Toast를 띄우거나 showAlert 사용
+          // 기존에 쓰던 showAlert가 커스텀 다이얼로그라 화면을 덮을 수 있으므로 
+          // 상태가 허락한다면 간단한 UI로 처리하거나 그냥 showAlert 호출
+          showAlert('뒤로 가기 버튼을 한 번 더 누르시면 종료 확인 창이 뜹니다.');
+          
+          backPressTimer = setTimeout(() => {
+            backPressCount = 0;
+          }, 2000);
         } else {
+          // 두 번 누름: 종료 다이얼로그 띄우기
+          clearTimeout(backPressTimer);
+          backPressCount = 0;
+          
           isExitPromptShowingRef.current = true;
           showConfirm('앱을 종료하시겠습니까?', '앱 종료', 
             () => {
-              // 확인 버튼 클릭 시
               CapacitorApp.exitApp();
             },
             () => {
-              // 취소 버튼 클릭 시
               isExitPromptShowingRef.current = false;
             }
           );
         }
-      } else {
-        // 그 외의 하위 페이지에서는 이전 화면으로 돌아가기
-        navigate(-1);
       }
     };
     

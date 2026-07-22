@@ -33,7 +33,8 @@ export const fetchHospitalsOrPharmacies = async (
     const apiKey = import.meta.env.VITE_PUBLIC_DATA_PORTAL_KEY;
     if (!apiKey || apiKey === 'YOUR_PUBLIC_DATA_PORTAL_KEY') {
       console.warn(`[API Key Missing] Cannot fetch data`);
-      throw new Error("API_KEY_MISSING");
+      // Return empty array instead of throwing error to prevent UI breaks
+      return [];
     }
 
     const baseUrl = import.meta.env.DEV ? '/api/data' : 'https://apis.data.go.kr';

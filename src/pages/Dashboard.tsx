@@ -430,7 +430,7 @@ const Dashboard: React.FC = () => {
                   <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#DB2777' }}>
                     {dailyHealth.stool === 'good' ? '정상 💩' : dailyHealth.stool === 'loose' ? '설사 ⚠️' : dailyHealth.stool === 'hard' ? '변비 ⚠️' : '0회'}
                   </span>
-                  <span style={{ fontSize: '0.7rem', color: '#9D174D', opacity: 0.8 }}>분석 / 기록 ➔</span>
+                  <span style={{ fontSize: '0.7rem', color: '#9D174D', opacity: 0.8 }}>상태 기록 ➔</span>
                 </div>
 
               </div>
