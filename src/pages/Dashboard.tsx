@@ -227,7 +227,18 @@ const Dashboard: React.FC = () => {
                     <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{recentDiary.title}</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--muted-gray)' }}>{recentDiary.date}</span>
                   </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{recentDiary.content}</span>
+                  <span style={{ 
+                    fontSize: '0.75rem', 
+                    color: 'var(--muted-gray)', 
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'normal'
+                  }}>
+                    {recentDiary.content}
+                  </span>
                 </div>
               </div>
             );
@@ -537,7 +548,9 @@ const Dashboard: React.FC = () => {
                       border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
                       backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
                       cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
-                      marginTop: 0
+                      marginTop: 0,
+                      whiteSpace: 'normal',
+                      wordBreak: 'keep-all'
                     }}
                   >
                     <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>
@@ -627,9 +640,18 @@ const Dashboard: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
+                    if (activePet) {
+                      await addCalendarEvent({
+                        petId: activePet.id,
+                        date: todayStr,
+                        type: 'diary',
+                        title: '💧 음수량 기록',
+                        content: `오늘의 수분 섭취량: ${waterIntake}ml\n${waterIntake >= 250 ? '목표 달성! 잘했어요 ✨' : '조금 더 마셔야 해요 💧'}`
+                      });
+                    }
                     setActiveCategory(null);
-                    showAlert(`음수량 ${waterIntake}ml가 저장되었습니다!`);
+                    showAlert(`음수량 ${waterIntake}ml가 일기장에 저장되었습니다!`);
                   }}
                   style={{
                     flex: 1,
@@ -699,9 +721,27 @@ const Dashboard: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  if (activePet) {
+                    const given = Object.entries(snackItems)
+                      .filter(([_, v]) => v)
+                      .map(([k]) => {
+                        if (k === 'probiotic') return '유산균';
+                        if (k === 'joint') return '관절 영양제';
+                        if (k === 'treat') return '수제 간식';
+                        if (k === 'dental') return '덴탈 스틱';
+                        return k;
+                      });
+                    await addCalendarEvent({
+                      petId: activePet.id,
+                      date: todayStr,
+                      type: 'diary',
+                      title: '🍪 간식/영양제 기록',
+                      content: `오늘 챙겨준 항목:\n${given.length > 0 ? given.join(', ') : '없음'}`
+                    });
+                  }
                   setActiveCategory(null);
-                  showAlert('간식 & 영양제 체크 기록이 저장되었습니다!');
+                  showAlert('간식 & 영양제 체크 기록이 일기장에 저장되었습니다!');
                 }}
                 style={{
                   padding: '14px',
@@ -741,7 +781,9 @@ const Dashboard: React.FC = () => {
                   border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
                   backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
                   cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
-                  marginTop: 0
+                  marginTop: 0,
+                  whiteSpace: 'normal',
+                  wordBreak: 'keep-all'
                 }}
               >
                 <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>
@@ -771,7 +813,9 @@ const Dashboard: React.FC = () => {
                   border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
                   backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
                   cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
-                  marginTop: 0
+                  marginTop: 0,
+                  whiteSpace: 'normal',
+                  wordBreak: 'keep-all'
                 }}
               >
                 <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{opt.label}</span>

@@ -37,6 +37,7 @@ const Care: React.FC = () => {
   const [locatorSearchType, setLocatorSearchType] = useState<'hospital' | 'pharmacy' | 'grooming'>('hospital');
   const [locatorResults, setLocatorResults] = useState<HospitalOrPharmacy[]>([]);
   const [isLocatorLoading, setIsLocatorLoading] = useState(false);
+  const [locatorError, setLocatorError] = useState(false);
 
   // AI Care Guide State
   const [aiTip, setAiTip] = useState<{ title: string; content: string } | null>(null);
@@ -207,14 +208,16 @@ const Care: React.FC = () => {
     const runSearch = async () => {
       if (!selectedCity || !selectedDistrict) return;
       setIsLocatorLoading(true);
+      setLocatorError(false);
       try {
         const results = await fetchHospitalsOrPharmacies(selectedCity, selectedDistrict, locatorSearchType);
         if (active) {
           setLocatorResults(results);
         }
-      } catch {
+      } catch (error) {
         if (active) {
-          showAlert('지역 정보 조회를 실패했습니다.');
+          setLocatorError(true);
+          setLocatorResults([]);
         }
       } finally {
         if (active) {
@@ -509,6 +512,14 @@ const Care: React.FC = () => {
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem', fontWeight: 600 }}>
                 가까운 {locatorSearchType === 'hospital' ? '병원' : locatorSearchType === 'pharmacy' ? '약국' : '미용숍'} 정보를 조회 중입니다...
               </div>
+            ) : locatorError ? (
+              <div style={{ textAlign: 'center', padding: '32px 16px', background: 'var(--ice-white)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🛠️</div>
+                <h4 style={{ color: 'var(--deep-navy)', fontSize: '0.95rem', margin: '0 0 6px 0', fontWeight: 800 }}>공공데이터 서버 점검 중</h4>
+                <p style={{ color: 'var(--muted-gray)', fontSize: '0.8rem', margin: 0, lineHeight: 1.4 }}>
+                  현재 국가 공공데이터포털 서버 지연 또는 점검으로 인해<br/>데이터를 불러올 수 없습니다.<br/>잠시 후 다시 시도해 주세요.
+                </p>
+              </div>
             ) : locatorResults.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem' }}>
                 검색 결과가 없습니다.
@@ -560,7 +571,27 @@ const Care: React.FC = () => {
         </div>
       </div>
 
-      {showPoopAnalyzer && <PoopAnalyzer onClose={() => setShowPoopAnalyzer(false)} onSave={() => setShowPoopAnalyzer(false)} />}
+      {showPoopAnalyzer && (
+        <PoopAnalyzer 
+          onClose={() => setShowPoopAnalyzer(false)} 
+          onSave={async (eventData) => {
+            if (activePet) {
+              await addCalendarEvent({
+                petId: activePet.id,
+                date: eventData.date!,
+                type: eventData.type as any,
+                title: eventData.title!,
+                content: eventData.content || '',
+                imageUrl: eventData.imageUrl,
+                poopStatus: eventData.poopStatus as any,
+                aiAnalysisText: eventData.aiAnalysisText
+              });
+              showAlert('배변 분석 결과가 캘린더 기록에 성공적으로 연동되었습니다! 💾');
+            }
+            setShowPoopAnalyzer(false);
+          }} 
+        />
+      )}
     </>
   );
 };

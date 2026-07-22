@@ -277,10 +277,6 @@ const AppContent: React.FC = () => {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
-  const handlePremiumClick = () => {
-    showAlert("현재 프리미엄 멤버십 오픈 준비 중입니다.");
-  };
-
   const isObPage = location.pathname === '/onboarding';
   const isSubPage = location.pathname !== '/dashboard' && location.pathname !== '/';
 
@@ -329,22 +325,7 @@ const AppContent: React.FC = () => {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button 
-                className="premium-btn" 
-                onClick={handlePremiumClick} 
-                style={{ 
-                  padding: '4px 10px', 
-                  fontSize: '0.7rem', 
-                  fontWeight: 800,
-                  backgroundColor: 'rgba(255, 255, 255, 0.22)',
-                  color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  backdropFilter: 'blur(4px)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-                }}
-              >
-                PREMIUM
-              </button>
+
               
               {/* Profile Menu Mini Banner Chip */}
               {activePet && (

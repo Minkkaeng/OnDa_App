@@ -9,26 +9,6 @@ export interface HospitalOrPharmacy {
 
 const CACHE_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-// Curated fallbacks for demo/fallback experience in major districts
-const generateFallbacks = (city: string, district: string, type: 'hospital' | 'pharmacy' | 'grooming'): HospitalOrPharmacy[] => {
-  const prefix = `${city} ${district}`;
-  let suffixList: string[] = [];
-  if (type === 'hospital') {
-    suffixList = ['온다 동물병원', '다정 동물의료센터', '튼튼 동물병원', '가온 동물병원', '바른 동물의료센터'];
-  } else if (type === 'pharmacy') {
-    suffixList = ['행복 동물약국', '민트 동물약국', '튼튼 동물약국', '온다 약국 (동물약품취급)', '푸른 사랑 동물약국'];
-  } else {
-    suffixList = ['온다 펫살롱 (미용)', '초코네 애견미용', '스타일독 미용실', '도그뷰티 애견미용', '행복한 가위질 미용숍'];
-  }
-
-  return suffixList.map((suffix, idx) => ({
-    name: `🐾 ${suffix}`,
-    address: `${prefix} 평화로 ${idx * 15 + 10}번길`,
-    tel: `02-${100 + idx * 5}-${2000 + idx * 11}`,
-    type
-  }));
-};
-
 /**
  * Fetch animal hospitals, pharmacies, or grooming shops based on city & district with Dexie 30-day caching.
  */
@@ -37,7 +17,7 @@ export const fetchHospitalsOrPharmacies = async (
   district: string,
   type: 'hospital' | 'pharmacy' | 'grooming'
 ): Promise<HospitalOrPharmacy[]> => {
-  const queryKey = `${type}:${city}:${district}`;
+  const queryKey = `v2:${type}:${city}:${district}`;
 
   try {
     // 1. Check local Dexie cache first
@@ -52,25 +32,19 @@ export const fetchHospitalsOrPharmacies = async (
     // 2. Fetch from Public Data Portal API
     const apiKey = import.meta.env.VITE_PUBLIC_DATA_PORTAL_KEY;
     if (!apiKey || apiKey === 'YOUR_PUBLIC_DATA_PORTAL_KEY') {
-      console.warn(`[API Key Missing] Using local fallback for ${queryKey}`);
-      const fallbacks = generateFallbacks(city, district, type);
-      
-      // Store fallback in cache so we don't warn repeatedly
-      await db.hospital_cache.put({
-        queryKey,
-        data: fallbacks,
-        updatedAt: now
-      });
-      return fallbacks;
+      console.warn(`[API Key Missing] Cannot fetch data`);
+      throw new Error("API_KEY_MISSING");
     }
 
+    const baseUrl = import.meta.env.DEV ? '/api/data' : 'https://apis.data.go.kr';
+    
     let endpoint = '';
     if (type === 'hospital') {
-      endpoint = 'https://apis.data.go.kr/1741000/animal_hospitals';
+      endpoint = `${baseUrl}/1741000/animal_hospitals`;
     } else if (type === 'pharmacy') {
-      endpoint = 'https://apis.data.go.kr/1741000/animal_pharmacies';
+      endpoint = `${baseUrl}/1741000/animal_pharmacies`;
     } else {
-      endpoint = 'https://apis.data.go.kr/1741000/pet_grooming';
+      endpoint = `${baseUrl}/1741000/pet_grooming`;
     }
 
     // We query a larger page size (150 items) to cover the selected region
@@ -81,7 +55,13 @@ export const fetchHospitalsOrPharmacies = async (
       throw new Error(`API returned status ${response.status}`);
     }
 
-    const json = await response.json();
+    const text = await response.text();
+    // Catch XML or non-JSON error responses from public data portal
+    if (text.includes("Unexpected errors") || text.trim().startsWith("<")) {
+      throw new Error("SERVER_ERROR");
+    }
+
+    const json = JSON.parse(text);
     let rootKey = '';
     if (type === 'hospital') {
       rootKey = 'animal_hospitals';
@@ -117,11 +97,6 @@ export const fetchHospitalsOrPharmacies = async (
         }));
     }
 
-    // If API returned nothing or empty list, fall back to simulated entries
-    if (list.length === 0) {
-      list = generateFallbacks(city, district, type);
-    }
-
     // 3. Store in Dexie Cache
     await db.hospital_cache.put({
       queryKey,
@@ -141,7 +116,7 @@ export const fetchHospitalsOrPharmacies = async (
       return cached.data as HospitalOrPharmacy[];
     }
 
-    // Otherwise return generated fallbacks
-    return generateFallbacks(city, district, type);
+    // Propagate the error so UI can show a proper server error message
+    throw error;
   }
 };
