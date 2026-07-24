@@ -8,7 +8,7 @@
   flex-direction: column;
   align-items: center;
   animation: fadeIn 0.5s ease-out;
-  background-color: var(--white);
+  background-color: var(--card-bg);
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -22,13 +22,13 @@
 
 .onboarding-header h1 {
   font-size: 1.6rem;
-  color: var(--deep-navy);
+  color: var(--text-main);
   margin-bottom: 8px;
   font-weight: 800;
 }
 
 .onboarding-header p {
-  color: var(--muted-gray);
+  color: var(--text-muted);
   font-size: 0.9rem;
   word-break: keep-all;
 }
@@ -43,12 +43,12 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: var(--ice-white);
-  border: 2px dashed var(--mint-green);
+  background-color: var(--screen-bg);
+  border: 2px dashed var(--main-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mint-green);
+  color: var(--main-primary);
   cursor: pointer;
   overflow: hidden;
   position: relative;
@@ -73,7 +73,7 @@
 .onboarding-form .form-label {
   display: block;
   font-weight: 700;
-  color: var(--deep-navy);
+  color: var(--text-main);
   margin-bottom: 6px;
   font-size: 0.9rem;
 }
@@ -83,17 +83,17 @@
   height: 46px;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid var(--steel-gray);
+  border: 1px solid var(--border-color);
   font-size: 0.95rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
-  background-color: var(--white);
-  color: var(--deep-navy);
+  background-color: var(--card-bg);
+  color: var(--text-main);
 }
 
 .onboarding-form .form-input:focus {
   outline: none;
-  border-color: var(--mint-green);
+  border-color: var(--main-primary);
 }
 
 .onboarding-footer {
@@ -104,7 +104,7 @@
   width: 100%;
   padding: 14px;
   border-radius: 10px;
-  background-color: var(--mint-green);
+  background-color: var(--main-primary);
   color: white;
   border: none;
   font-size: 1rem;

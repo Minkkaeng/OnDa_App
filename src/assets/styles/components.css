@@ -1,21 +1,21 @@
 .premium-btn {
-  background-color: var(--mint-green); color: var(--white); border: none; padding: 8px 16px;
+  background-color: var(--main-primary); color: var(--card-bg); border: none; padding: 8px 16px;
   border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
   white-space: nowrap;
 }
 
 .ad-zone-top {
-  background-color: var(--mint-green-light); border: 1px solid rgba(20, 195, 163, 0.2);
+  background-color: var(--butter-cream); border: 1px solid rgba(20, 195, 163, 0.2);
   border-radius: 12px; padding: 16px 24px; display: flex; align-items: center; gap: 16px;
 }
 .ad-badge { 
-  background-color: var(--mint-green); color: var(--white); font-size: 0.7rem; font-weight: 700; 
+  background-color: var(--main-primary); color: var(--card-bg); font-size: 0.7rem; font-weight: 700; 
   padding: 4px 8px; border-radius: 4px; white-space: nowrap; display: inline-block;
 }
 
 .task-list { display: flex; flex-direction: column; gap: 12px; }
 .task-card {
-  background-color: var(--white); border: 1px solid var(--steel-gray); border-radius: 12px; padding: 16px;
+  background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;
   display: flex; justify-content: space-between; align-items: center;
   gap: 12px;
   border-left: 6px solid var(--completed-green);
@@ -23,15 +23,15 @@
 .task-card.pending { border-left: 6px solid var(--waiting-yellow); background-color: var(--waiting-yellow-light); border-color: var(--waiting-yellow-border); }
 .task-card.warning { border-left: 6px solid var(--blood-coral); background-color: var(--blood-coral-light); border-color: var(--blood-coral-border); }
 .task-card.completed { border-left: 6px solid var(--completed-green); background-color: var(--completed-green-light); border-color: var(--completed-green-border); }
-.task-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--deep-navy); margin-bottom: 4px; }
-.task-info p { font-size: 0.9rem; color: #64748b; margin: 0; }
+.task-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.task-info p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
 .task-status { white-space: nowrap; font-size: 0.95rem; }
 .task-status.completed { color: var(--completed-green); font-weight: bold; }
 .task-status.pending { color: var(--waiting-yellow); font-weight: bold; }
 .task-status.warning { color: var(--blood-coral); font-weight: bold; }
 
 .btn-submit { 
-  width: 100%; padding: 16px; background: var(--mint-green); color: var(--white); 
+  width: 100%; padding: 16px; background: var(--main-primary); color: var(--card-bg); 
   border: none; border-radius: 8px; font-weight: 700; cursor: pointer; 
   margin-top: 16px; font-size: 1rem; 
 }
@@ -44,13 +44,13 @@
 }
 .modal-overlay.hidden { display: none; }
 .modal-content {
-  background: var(--white); border-radius: 12px; width: 90%; max-width: 500px;
+  background: var(--card-bg); border-radius: 12px; width: 90%; max-width: 500px;
   padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   display: flex; flex-direction: column; gap: 16px;
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; }
 .modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 700; }
-.modal-close-btn { background: none; border: none; cursor: pointer; color: var(--muted-gray); padding: 4px; }
+.modal-close-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; }
 .crop-container { width: 100%; height: 300px; background: #eee; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .crop-container img { max-width: 100%; max-height: 100%; display: block; }
 
@@ -65,21 +65,21 @@
   flex-shrink: 0; cursor: pointer; object-fit: cover; opacity: 0.5; transition: all 0.2s ease;
 }
 .pet-tab.active, .home-pet-tab.active {
-  border-color: var(--mint-green); opacity: 1; transform: scale(1.05); box-shadow: 0 4px 12px rgba(20, 195, 163, 0.3);
+  border-color: var(--main-primary); opacity: 1; transform: scale(1.05); box-shadow: 0 4px 12px rgba(20, 195, 163, 0.3);
 }
 .pet-tab-add {
-  width: 64px; height: 64px; border-radius: 50%; border: 2px dashed var(--mint-green);
+  width: 64px; height: 64px; border-radius: 50%; border: 2px dashed var(--main-primary);
   flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  background-color: var(--ice-white); color: var(--mint-green); font-size: 24px; transition: all 0.2s ease;
+  background-color: var(--screen-bg); color: var(--main-primary); font-size: 24px; transition: all 0.2s ease;
 }
-.pet-tab-add.active { border-style: solid; background-color: var(--mint-green); color: var(--white); transform: scale(1.05); }
+.pet-tab-add.active { border-style: solid; background-color: var(--main-primary); color: var(--card-bg); transform: scale(1.05); }
 
 /* Global Profile Card */
 .global-profile-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--white);
+  background-color: var(--card-bg);
   padding: 16px;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.05);
@@ -98,14 +98,14 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--mint-green);
+  border: 3px solid var(--main-primary);
   flex-shrink: 0;
 }
 
 .global-profile-info h3 {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--deep-navy);
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
@@ -124,13 +124,13 @@
 }
 
 .global-profile-switch-btn {
-  background: var(--ice-white);
+  background: var(--screen-bg);
   border: 1px solid #eee;
   padding: 6px 10px;
   border-radius: 16px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--deep-navy);
+  color: var(--text-main);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -146,7 +146,7 @@
   position: absolute;
   top: 100%;
   right: 24px;
-  background: var(--white);
+  background: var(--card-bg);
   border: 1px solid #eee;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
@@ -174,7 +174,7 @@
   border-bottom: none;
 }
 .dropdown-item:hover {
-  background: var(--ice-white);
+  background: var(--screen-bg);
 }
 .dropdown-avatar {
   width: 32px;
@@ -184,11 +184,11 @@
 }
 .dropdown-name {
   font-weight: 700;
-  color: var(--deep-navy);
+  color: var(--text-main);
   font-size: 0.95rem;
 }
 .dropdown-add-btn {
-  color: var(--mint-green);
+  color: var(--main-primary);
   justify-content: center;
   font-weight: 700;
 }
@@ -229,7 +229,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: 2px solid var(--mint-green);
+  border: 2px solid var(--main-primary);
   object-fit: cover;
   cursor: pointer;
   transition: transform 0.2s;
@@ -242,8 +242,8 @@
   position: absolute;
   top: 48px;
   right: 0;
-  background-color: var(--white);
-  border: 1px solid var(--steel-gray);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   width: 280px;
   box-shadow: 0 10px 25px rgba(18, 27, 42, 0.15);
@@ -264,25 +264,25 @@
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  border: 3px solid var(--mint-green);
+  border: 3px solid var(--main-primary);
   object-fit: cover;
   margin-bottom: 8px;
 }
 .google-profile-name {
   margin: 0;
-  color: var(--deep-navy);
+  color: var(--text-main);
   font-size: 1.1rem;
   font-weight: 700;
 }
 .google-profile-email {
   margin: 4px 0 12px 0;
   font-size: 0.85rem;
-  color: var(--muted-gray);
+  color: var(--text-muted);
 }
 .google-profile-edit-btn {
-  background-color: var(--white);
-  border: 1px solid var(--steel-gray);
-  color: var(--deep-navy);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 6px 16px;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -291,11 +291,11 @@
   transition: background-color 0.2s;
 }
 .google-profile-edit-btn:hover {
-  background-color: var(--ice-white);
+  background-color: var(--screen-bg);
 }
 .google-profile-divider {
   height: 1px;
-  background-color: var(--steel-gray);
+  background-color: var(--border-color);
   margin: 8px 0;
 }
 .google-profile-pet-list {
@@ -305,7 +305,7 @@
 .google-profile-list-title {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--muted-gray);
+  color: var(--text-muted);
   margin-bottom: 8px;
 }
 .google-pet-item {
@@ -317,7 +317,7 @@
   transition: background-color 0.2s;
 }
 .google-pet-item:hover {
-  background-color: var(--mint-green-light);
+  background-color: var(--butter-cream);
 }
 .google-pet-item-avatar {
   width: 32px;
@@ -329,7 +329,7 @@
 .google-pet-item-name {
   font-weight: 600;
   font-size: 0.9rem;
-  color: var(--deep-navy);
+  color: var(--text-main);
 }
 .google-pet-add-btn {
   display: flex;
@@ -339,15 +339,15 @@
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--mint-green);
+  color: var(--main-primary);
   cursor: pointer;
-  border: 1px dashed var(--mint-green);
+  border: 1px dashed var(--main-primary);
   text-align: center;
   margin-top: 8px;
   transition: background-color 0.2s;
 }
 .google-pet-add-btn:hover {
-  background-color: var(--mint-green-light);
+  background-color: var(--butter-cream);
 }
 
 /* Settings Submenus Styles */
@@ -366,9 +366,9 @@
 .settings-tab-btn {
   padding: 14px 20px;
   border-radius: 12px;
-  border: 1px solid var(--steel-gray);
-  background-color: var(--white);
-  color: var(--deep-navy);
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  color: var(--text-main);
   font-weight: 700;
   text-align: left;
   cursor: pointer;
@@ -379,26 +379,26 @@
   gap: 10px;
 }
 .settings-tab-btn.active {
-  background-color: var(--mint-green);
-  border-color: var(--mint-green);
-  color: var(--white);
+  background-color: var(--main-primary);
+  border-color: var(--main-primary);
+  color: var(--card-bg);
 }
 .settings-content-col {
   flex: 3;
 }
 .settings-sub-panel {
-  background-color: var(--white);
+  background-color: var(--card-bg);
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid var(--steel-gray);
+  border: 1px solid var(--border-color);
   box-shadow: 0 4px 16px rgba(0,0,0,0.03);
 }
 .settings-sub-panel h3 {
   margin-top: 0;
   margin-bottom: 20px;
   font-size: 1.3rem;
-  color: var(--deep-navy);
-  border-bottom: 2px solid var(--mint-green-light);
+  color: var(--text-main);
+  border-bottom: 2px solid var(--butter-cream);
   padding-bottom: 12px;
 }
 
@@ -417,13 +417,13 @@
 .color-input-wrapper label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--muted-gray);
+  color: var(--text-muted);
 }
 .color-picker-input {
   width: 100%;
   height: 40px;
   padding: 0;
-  border: 1px solid var(--steel-gray);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
 }
@@ -439,7 +439,7 @@
 .form-label {
   font-weight: 800;
   font-size: 0.95rem;
-  color: var(--deep-navy);
+  color: var(--text-main);
 }
 
 .form-input {
@@ -447,10 +447,10 @@
   height: 54px;
   padding: 0 16px;
   font-size: 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-color);
   border-radius: 12px;
-  background-color: #f8fafc;
-  color: var(--deep-navy);
+  background-color: var(--screen-bg);
+  color: var(--text-main);
   font-family: inherit;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -464,8 +464,8 @@
 
 .form-input:focus {
   outline: none;
-  border-color: var(--mint-green);
-  background-color: var(--white);
+  border-color: var(--main-primary);
+  background-color: var(--card-bg);
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
 
@@ -479,8 +479,8 @@ textarea.form-input {
 .btn-submit {
   width: 100%;
   height: 56px;
-  background: linear-gradient(135deg, var(--mint-green) 0%, #0f766e 100%);
-  color: var(--white);
+  background: linear-gradient(135deg, var(--main-primary) 0%, #0f766e 100%);
+  color: var(--card-bg);
   font-weight: 800;
   font-size: 1.05rem;
   border: none;

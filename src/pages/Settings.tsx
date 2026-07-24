@@ -47,16 +47,17 @@ const Settings: React.FC = () => {
 
   // Theme Form States
   const [themeName, setThemeName] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#14C3A3');
-  const [backgroundColor, setBackgroundColor] = useState('#F0F3F5');
+  const [primaryColor, setPrimaryColor] = useState('#4A3B32');
+  const [backgroundColor, setBackgroundColor] = useState('#FAFAFA');
   const [paperColor, setPaperColor] = useState('#FFFFFF');
-  const [textColor, setTextColor] = useState('#121B2A');
-  const [mutedColor, setMutedColor] = useState('#a0abbc');
+  const [textColor, setTextColor] = useState('#2B2825');
+  const [mutedColor, setMutedColor] = useState('#78716C');
 
   // Reminder Form States
   const [reminderTitle, setReminderTitle] = useState('');
   const [reminderTime, setReminderTime] = useState('09:00');
   const [reminderPetId, setReminderPetId] = useState(pets[0]?.id || '');
+  const [reminderRepeat, setReminderRepeat] = useState<'none' | 'daily' | 'weekly'>('none');
 
   // Snapshot Form State
   const [snapshotName, setSnapshotName] = useState('');
@@ -136,7 +137,8 @@ const Settings: React.FC = () => {
           ...existing,
           title: reminderTitle.trim(),
           time: reminderTime,
-          petId: reminderPetId
+          petId: reminderPetId,
+          repeat: reminderRepeat
         });
       }
       showAlert('알림 정보가 수정되었습니다.');
@@ -144,7 +146,8 @@ const Settings: React.FC = () => {
       addCustomReminder({
         title: reminderTitle.trim(),
         time: reminderTime,
-        petId: reminderPetId
+        petId: reminderPetId,
+        repeat: reminderRepeat
       });
       showAlert('새로운 예약 알림이 등록되었습니다.');
     }
@@ -159,6 +162,7 @@ const Settings: React.FC = () => {
     setReminderTitle(reminder.title);
     setReminderTime(reminder.time);
     setReminderPetId(reminder.petId);
+    setReminderRepeat(reminder.repeat || 'none');
     setShowReminderForm(true);
   };
 
@@ -318,24 +322,21 @@ const Settings: React.FC = () => {
   };
 
   const handleDeleteAll = () => {
-    showConfirm(
-      '경고: 모든 반려동물 프로필, 케어 기록, 일기가 영구적으로 삭제됩니다. 백업하지 않은 데이터는 복구할 수 없습니다. 계속하시겠습니까?',
-      '전체 데이터 삭제 (1/2)',
-      () => {
-        setTimeout(() => {
-          showConfirm(
-            '정말 모든 데이터를 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
-            '마지막 경고 (2/2)',
-            async () => {
-              await db.pets.clear();
-              await db.calendarEvents.clear();
-              localStorage.clear();
-              window.location.reload();
-            }
-          );
-        }, 100);
-      }
+    const confirmText = window.prompt(
+      '경고: 모든 반려동물 프로필, 케어 기록, 일기가 영구적으로 삭제됩니다. 백업하지 않은 데이터는 복구할 수 없습니다.\n계속하시려면 아래에 "삭제합니다"를 정확히 입력해주세요.'
     );
+    
+    if (confirmText === '삭제합니다') {
+      const executeReset = async () => {
+        await db.pets.clear();
+        await db.calendarEvents.clear();
+        localStorage.clear();
+        window.location.reload();
+      };
+      executeReset();
+    } else if (confirmText !== null) {
+      showAlert('입력한 텍스트가 일치하지 않습니다. 데이터 삭제가 취소되었습니다.');
+    }
   };
 
   const getMockedReply = (inq: Inquiry) => {
@@ -349,7 +350,7 @@ const Settings: React.FC = () => {
       <div 
         style={{
           borderRadius: '16px',
-          background: 'linear-gradient(135deg, #14C3A3 0%, #121B2A 100%)',
+          background: 'linear-gradient(135deg, var(--main-primary) 0%, var(--text-main) 100%)',
           padding: '20px 24px',
           color: '#FFFFFF',
           boxShadow: '0 8px 24px rgba(20, 195, 163, 0.15)',
@@ -391,6 +392,15 @@ const Settings: React.FC = () => {
         }} />
       </div>
 
+      {/* 1.5. Data Safety Trust Badge */}
+      <div style={{ backgroundColor: 'var(--butter-cream)', border: '1px solid var(--main-primary)', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(20, 195, 163, 0.1)' }}>
+        <div style={{ fontSize: '1.5rem' }}>🔒</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>안전한 로컬 데이터 저장소</span>
+          <span style={{ fontSize: '0.75rem', color: '#065F46', lineHeight: 1.4 }}>모든 소중한 데이터는 서버가 아닌 기기에 오프라인으로 안전하게 보관됩니다.</span>
+        </div>
+      </div>
+
       {/* 2. Unified Accordion Menu List (Mobile Optimized) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         
@@ -398,7 +408,7 @@ const Settings: React.FC = () => {
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'theme' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          border: expandedMenu === 'theme' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
           borderRadius: '16px',
           boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
           marginBottom: '16px',
@@ -412,7 +422,7 @@ const Settings: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between', 
               cursor: 'pointer',
-              backgroundColor: expandedMenu === 'theme' ? 'var(--mint-green-light)' : 'transparent',
+              backgroundColor: expandedMenu === 'theme' ? 'var(--butter-cream)' : 'transparent',
               transition: 'background-color 0.2s'
             }}
           >
@@ -421,26 +431,26 @@ const Settings: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: expandedMenu === 'theme' ? 'var(--white)' : 'var(--mint-green-light)',
+                backgroundColor: expandedMenu === 'theme' ? 'var(--card-bg)' : 'var(--butter-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--mint-green)',
+                color: 'var(--main-primary)',
                 flexShrink: 0
               }}>
                 <Palette size={20} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>어플리케이션 테마 설정</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>나만의 고유 테마 제작 및 기본 화면 스타일 지정</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>어플리케이션 테마 설정</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>나만의 고유 테마 제작 및 기본 화면 스타일 지정</p>
               </div>
             </div>
-            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
               {expandedMenu === 'theme' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
           {expandedMenu === 'theme' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               {/* Custom Themes List */}
               <div style={{ marginBottom: '0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -450,11 +460,11 @@ const Settings: React.FC = () => {
                       onClick={() => {
                         setEditingThemeId(null);
                         setThemeName('');
-                        setPrimaryColor('#14C3A3');
-                        setBackgroundColor('#F0F3F5');
+                        setPrimaryColor('#4A3B32');
+                        setBackgroundColor('#FAFAFA');
                         setPaperColor('#FFFFFF');
-                        setTextColor('#121B2A');
-                        setMutedColor('#a0abbc');
+                        setTextColor('#2B2825');
+                        setMutedColor('#78716C');
                         setShowThemeForm(true);
                       }}
                       className="premium-btn"
@@ -466,7 +476,7 @@ const Settings: React.FC = () => {
                 </div>
 
                 {customThemes.length === 0 && !showThemeForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 커스텀 테마가 없습니다.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 커스텀 테마가 없습니다.</p>
                 )}
 
                 {/* Custom Theme Cards */}
@@ -480,8 +490,8 @@ const Settings: React.FC = () => {
                         alignItems: 'center', 
                         padding: '10px 14px', 
                         borderRadius: '8px', 
-                        border: activeThemeId === t.id ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
-                        backgroundColor: 'var(--white)'
+                        border: activeThemeId === t.id ? '2px solid var(--main-primary)' : '1px solid var(--border-color)',
+                        backgroundColor: 'var(--card-bg)'
                       }}
                     >
                       <div 
@@ -505,8 +515,8 @@ const Settings: React.FC = () => {
 
                 {/* Theme Edit Form */}
                 {showThemeForm && (
-                  <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--ice-white)' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>
+                  <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--screen-bg)' }}>
+                    <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
                       {editingThemeId ? '테마 정보 수정' : '새 커스텀 테마 등록'}
                     </h4>
                     <div className="form-group" style={{ marginBottom: '10px' }}>
@@ -539,7 +549,7 @@ const Settings: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '16px' }}>
-                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
                       <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                     </div>
                   </form>
@@ -553,7 +563,7 @@ const Settings: React.FC = () => {
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'notification' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          border: expandedMenu === 'notification' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
           borderRadius: '16px',
           boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
           marginBottom: '16px',
@@ -567,7 +577,7 @@ const Settings: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between', 
               cursor: 'pointer',
-              backgroundColor: expandedMenu === 'notification' ? 'var(--mint-green-light)' : 'transparent',
+              backgroundColor: expandedMenu === 'notification' ? 'var(--butter-cream)' : 'transparent',
               transition: 'background-color 0.2s'
             }}
           >
@@ -576,36 +586,36 @@ const Settings: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: expandedMenu === 'notification' ? 'var(--white)' : 'var(--mint-green-light)',
+                backgroundColor: expandedMenu === 'notification' ? 'var(--card-bg)' : 'var(--butter-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--mint-green)',
+                color: 'var(--main-primary)',
                 flexShrink: 0
               }}>
                 <Bell size={20} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>알림 및 알람 리마인더 설정</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>반려견을 위한 투약 일정 및 케어 푸시 리마인더</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>알림 및 알람 리마인더 설정</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>반려견을 위한 투약 일정 및 케어 푸시 리마인더</p>
               </div>
             </div>
-            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
               {expandedMenu === 'notification' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
           {expandedMenu === 'notification' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               <div className="set-item" style={{ padding: '0 0 12px 0', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="set-info" style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: 'var(--deep-navy)' }}>로컬 실시간 푸시 알림</h4>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--muted-gray)' }}>투약 시간 및 케어 스케줄 알림 브라우저 활성화</p>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>로컬 실시간 푸시 알림</h4>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>투약 시간 및 케어 스케줄 알림 브라우저 활성화</p>
                 </div>
                 <div 
                   onClick={() => setIsPushActive(!isPushActive)}
                   style={{ 
                     width: '44px', height: '22px', 
-                    background: isPushActive ? 'var(--mint-green)' : 'var(--steel-gray)', 
+                    background: isPushActive ? 'var(--main-primary)' : 'var(--border-color)', 
                     borderRadius: '11px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' 
                   }}
                 >
@@ -630,6 +640,7 @@ const Settings: React.FC = () => {
                         setReminderTitle('');
                         setReminderTime('09:00');
                         setReminderPetId(pets[0]?.id || '');
+                        setReminderRepeat('none');
                         setShowReminderForm(true);
                       }}
                       className="premium-btn"
@@ -641,7 +652,7 @@ const Settings: React.FC = () => {
                 </div>
 
                 {customReminders.length === 0 && !showReminderForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 고유 알람이 없습니다.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 고유 알람이 없습니다.</p>
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -656,17 +667,22 @@ const Settings: React.FC = () => {
                           alignItems: 'center', 
                           padding: '10px 12px', 
                           borderRadius: '8px', 
-                          border: '1px solid var(--steel-gray)',
-                          backgroundColor: rem.enabled ? 'var(--white)' : 'var(--ice-white)',
+                          border: '1px solid var(--border-color)',
+                          backgroundColor: rem.enabled ? 'var(--card-bg)' : 'var(--screen-bg)',
                           fontSize: '0.85rem'
                         }}
                       >
                         <div style={{ opacity: rem.enabled ? 1 : 0.6 }}>
-                          <span style={{ fontSize: '0.75rem', background: 'var(--mint-green-light)', color: 'var(--mint-green)', padding: '2px 4px', borderRadius: '4px', marginRight: '6px', fontWeight: 'bold' }}>
+                          <span style={{ fontSize: '0.75rem', background: 'var(--butter-cream)', color: 'var(--main-primary)', padding: '2px 4px', borderRadius: '4px', marginRight: '6px', fontWeight: 'bold' }}>
                             {pet?.name || '공통'}
                           </span>
                           <span style={{ fontWeight: 'bold', marginRight: '8px' }}>{rem.time}</span>
                           <span>{rem.title}</span>
+                          {rem.repeat && rem.repeat !== 'none' && (
+                            <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: 'var(--main-primary)', border: '1px solid var(--main-primary)', borderRadius: '4px', padding: '1px 4px' }}>
+                              {rem.repeat === 'daily' ? '매일' : '매주'}
+                            </span>
+                          )}
                         </div>
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <input 
@@ -684,8 +700,8 @@ const Settings: React.FC = () => {
                 </div>
 
                 {showReminderForm && (
-                  <form onSubmit={handleSaveReminder} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--ice-white)' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>
+                  <form onSubmit={handleSaveReminder} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--screen-bg)' }}>
+                    <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
                       {editingReminderId ? '알람 일정 수정' : '새 알람 예약 등록'}
                     </h4>
                     <div className="form-group" style={{ marginBottom: '10px' }}>
@@ -711,12 +727,26 @@ const Settings: React.FC = () => {
                         required 
                       />
                     </div>
-                    <div className="form-group" style={{ marginBottom: '16px' }}>
-                      <label className="form-label" style={{ fontSize: '0.8rem' }}>알림 시각</label>
-                      <input type="time" className="form-input" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} required />
+                    <div className="form-group" style={{ marginBottom: '16px', display: 'flex', gap: '10px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>알림 시각</label>
+                        <input type="time" className="form-input" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} required />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>반복 설정</label>
+                        <select 
+                          className="form-input" 
+                          value={reminderRepeat} 
+                          onChange={(e) => setReminderRepeat(e.target.value as 'none' | 'daily' | 'weekly')}
+                        >
+                          <option value="none">반복 안 함</option>
+                          <option value="daily">매일</option>
+                          <option value="weekly">매주</option>
+                        </select>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button type="button" onClick={() => setShowReminderForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="button" onClick={() => setShowReminderForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
                       <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                     </div>
                   </form>
@@ -730,7 +760,7 @@ const Settings: React.FC = () => {
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'system' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          border: expandedMenu === 'system' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
           borderRadius: '16px',
           boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
           marginBottom: '16px',
@@ -744,7 +774,7 @@ const Settings: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between', 
               cursor: 'pointer',
-              backgroundColor: expandedMenu === 'system' ? 'var(--mint-green-light)' : 'transparent',
+              backgroundColor: expandedMenu === 'system' ? 'var(--butter-cream)' : 'transparent',
               transition: 'background-color 0.2s'
             }}
           >
@@ -753,33 +783,33 @@ const Settings: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: expandedMenu === 'system' ? 'var(--white)' : 'var(--mint-green-light)',
+                backgroundColor: expandedMenu === 'system' ? 'var(--card-bg)' : 'var(--butter-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--mint-green)',
+                color: 'var(--main-primary)',
                 flexShrink: 0
               }}>
                 <Database size={20} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>시스템 백업 및 복원</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>데이터 내보내기, 복원 및 데이터 초기화</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>시스템 백업 및 복원</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>데이터 내보내기, 복원 및 데이터 초기화</p>
               </div>
             </div>
-            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
               {expandedMenu === 'system' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
           {expandedMenu === 'system' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--steel-gray)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--deep-navy)' }}>백업 파일 내보내기</h4>
-                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted-gray)' }}>모든 기록 데이터를 JSON 파일로 보관합니다.</p>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--text-main)' }}>백업 파일 내보내기</h4>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>모든 기록 데이터를 JSON 파일로 보관합니다.</p>
                     {lastBackupDate && (
-                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', color: 'var(--mint-green)', fontWeight: 'bold' }}>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', color: 'var(--main-primary)', fontWeight: 'bold' }}>
                         최근 백업일: {new Date(lastBackupDate).toLocaleDateString()} {new Date(lastBackupDate).toLocaleTimeString()}
                       </p>
                     )}
@@ -787,20 +817,29 @@ const Settings: React.FC = () => {
                   <button onClick={handleExport} className="set-btn" style={{ fontSize: '0.75rem', padding: '6px 12px' }}>내보내기</button>
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--steel-gray)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--deep-navy)' }}>데이터 복원 가져오기</h4>
-                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted-gray)' }}>백업 JSON 파일을 업로드하여 복원합니다.</p>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--text-main)' }}>데이터 복원 가져오기</h4>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>백업 JSON 파일을 업로드하여 복원합니다.</p>
                   </div>
                   <button onClick={handleImport} className="set-btn secondary" style={{ fontSize: '0.75rem', padding: '6px 12px' }}>가져오기</button>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ 
+                  marginTop: '16px',
+                  padding: '16px', 
+                  backgroundColor: '#FEF2F2', 
+                  border: '1px solid #FCA5A5', 
+                  borderRadius: '12px',
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center' 
+                }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--error-red)' }}>데이터 완전 초기화</h4>
-                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted-gray)' }}>기기의 모든 데이터와 설정을 영구 소멸합니다.</p>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#B91C1C', fontWeight: 800 }}>⚠️ 데이터 완전 초기화 (Danger Zone)</h4>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#991B1B' }}>기기의 모든 데이터와 설정을 영구 소멸합니다. 복구할 수 없습니다.</p>
                   </div>
-                  <button onClick={handleDeleteAll} className="set-btn" style={{ fontSize: '0.75rem', padding: '6px 12px', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제하기</button>
+                  <button onClick={handleDeleteAll} style={{ fontSize: '0.75rem', padding: '8px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)' }}>삭제하기</button>
                 </div>
 
                 <div className="google-profile-divider" style={{ margin: '16px 0' }}></div>
@@ -825,7 +864,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   {backupSnapshots.length === 0 && !showSnapshotForm && (
-                    <p style={{ color: 'var(--muted-gray)', fontSize: '0.8rem', textAlign: 'center', padding: '12px 0' }}>저장된 스냅샷이 없습니다.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '12px 0' }}>저장된 스냅샷이 없습니다.</p>
                   )}
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
@@ -838,19 +877,19 @@ const Settings: React.FC = () => {
                           alignItems: 'center', 
                           padding: '10px 12px', 
                           borderRadius: '8px', 
-                          border: '1px solid var(--steel-gray)',
-                          backgroundColor: 'var(--white)',
+                          border: '1px solid var(--border-color)',
+                          backgroundColor: 'var(--card-bg)',
                           fontSize: '0.8rem'
                         }}
                       >
                         <div style={{ flex: 1, paddingRight: '8px' }}>
                           <span style={{ fontWeight: 'bold', display: 'block', fontSize: '0.85rem' }}>{snap.name}</span>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--muted-gray)' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                             {new Date(snap.createdAt).toLocaleDateString()} | 프로필 {snap.pets.length}개
                           </span>
                         </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => handleRestoreSnapshotClick(snap)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--mint-green)', color: '#FFF' }}>복원</button>
+                          <button onClick={() => handleRestoreSnapshotClick(snap)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--main-primary)', color: '#FFF' }}>복원</button>
                           <button onClick={() => deleteBackupSnapshot(snap.id)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
                         </div>
                       </div>
@@ -858,8 +897,8 @@ const Settings: React.FC = () => {
                   </div>
 
                   {showSnapshotForm && (
-                    <form onSubmit={handleSaveSnapshot} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--ice-white)' }}>
-                      <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>
+                    <form onSubmit={handleSaveSnapshot} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--screen-bg)' }}>
+                      <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
                         {editingSnapshotId ? '스냅샷 수정' : '현재 백업 스냅샷 저장'}
                       </h4>
                       <div className="form-group" style={{ marginBottom: '12px' }}>
@@ -874,7 +913,7 @@ const Settings: React.FC = () => {
                         />
                       </div>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button type="button" onClick={() => setShowSnapshotForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                        <button type="button" onClick={() => setShowSnapshotForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
                         <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                       </div>
                     </form>
@@ -889,7 +928,7 @@ const Settings: React.FC = () => {
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'support' ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)', 
+          border: expandedMenu === 'support' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
           borderRadius: '16px',
           boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
           marginBottom: '16px',
@@ -903,7 +942,7 @@ const Settings: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between', 
               cursor: 'pointer',
-              backgroundColor: expandedMenu === 'support' ? 'var(--mint-green-light)' : 'transparent',
+              backgroundColor: expandedMenu === 'support' ? 'var(--butter-cream)' : 'transparent',
               transition: 'background-color 0.2s'
             }}
           >
@@ -912,26 +951,26 @@ const Settings: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: expandedMenu === 'support' ? 'var(--white)' : 'var(--mint-green-light)',
+                backgroundColor: expandedMenu === 'support' ? 'var(--card-bg)' : 'var(--butter-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--mint-green)',
+                color: 'var(--main-primary)',
                 flexShrink: 0
               }}>
                 <HelpCircle size={20} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>자주 묻는 질문 & 고객센터</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 'normal' }}>1:1 문의 접수와 자주 하는 질문 모음</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>자주 묻는 질문 & 고객센터</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>1:1 문의 접수와 자주 하는 질문 모음</p>
               </div>
             </div>
-            <div style={{ color: 'var(--muted-gray)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
               {expandedMenu === 'support' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
           {expandedMenu === 'support' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--steel-gray)' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               
               {/* FAQ Section */}
               <div style={{ marginBottom: '20px' }}>
@@ -943,8 +982,8 @@ const Settings: React.FC = () => {
                       style={{ 
                         padding: '10px 12px', 
                         borderRadius: '8px', 
-                        border: '1px solid var(--steel-gray)', 
-                        background: 'var(--white)',
+                        border: '1px solid var(--border-color)', 
+                        background: 'var(--card-bg)',
                         cursor: 'pointer',
                         fontSize: '0.85rem'
                       }}
@@ -980,32 +1019,32 @@ const Settings: React.FC = () => {
                 </div>
 
                 {inquiries.length === 0 && !showInquiryForm && (
-                  <p style={{ color: 'var(--muted-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>접수된 문의 건이 없습니다.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>접수된 문의 건이 없습니다.</p>
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
                   {inquiries.map(inq => (
-                    <div key={inq.id} style={{ borderRadius: '8px', border: '1px solid var(--steel-gray)', backgroundColor: 'var(--white)', overflow: 'hidden', fontSize: '0.85rem' }}>
+                    <div key={inq.id} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)', overflow: 'hidden', fontSize: '0.85rem' }}>
                       <div 
                         onClick={() => setExpandedInquiryId(expandedInquiryId === inq.id ? null : inq.id)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', cursor: 'pointer', backgroundColor: expandedInquiryId === inq.id ? 'var(--mint-green-light)' : 'transparent' }}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', cursor: 'pointer', backgroundColor: expandedInquiryId === inq.id ? 'var(--butter-cream)' : 'transparent' }}
                       >
                         <div>
                           <span style={{ fontSize: '0.7rem', background: '#e0e6ed', padding: '2px 4px', borderRadius: '4px', marginRight: '6px', fontWeight: 'bold' }}>{inq.category}</span>
                           <span style={{ fontWeight: 'bold' }}>{inq.title}</span>
                         </div>
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: inq.status === '답변완료' ? 'var(--mint-green)' : 'var(--muted-gray)' }}>{inq.status}</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: inq.status === '답변완료' ? 'var(--main-primary)' : 'var(--text-muted)' }}>{inq.status}</span>
                           <button onClick={(e) => { e.stopPropagation(); handleEditInquiryClick(inq); }} className="set-btn secondary" style={{ padding: '3px 8px', fontSize: '0.75rem' }}>수정</button>
                           <button onClick={(e) => { e.stopPropagation(); deleteInquiry(inq.id); }} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
                         </div>
                       </div>
 
                       {expandedInquiryId === inq.id && (
-                        <div style={{ padding: '12px', borderTop: '1px solid var(--steel-gray)', backgroundColor: '#fcfcfc', fontSize: '0.8rem' }}>
+                        <div style={{ padding: '12px', borderTop: '1px solid var(--border-color)', backgroundColor: '#fcfcfc', fontSize: '0.8rem' }}>
                           <p style={{ whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{inq.content}</p>
-                          <p style={{ fontWeight: 'bold', color: 'var(--mint-green)' }}>[답변]</p>
-                          <p style={{ whiteSpace: 'pre-wrap', backgroundColor: 'var(--mint-green-light)', padding: '8px', borderRadius: '4px' }}>{getMockedReply(inq)}</p>
+                          <p style={{ fontWeight: 'bold', color: 'var(--main-primary)' }}>[답변]</p>
+                          <p style={{ whiteSpace: 'pre-wrap', backgroundColor: 'var(--butter-cream)', padding: '8px', borderRadius: '4px' }}>{getMockedReply(inq)}</p>
                         </div>
                       )}
                     </div>
@@ -1013,8 +1052,8 @@ const Settings: React.FC = () => {
                 </div>
 
                 {showInquiryForm && (
-                  <form onSubmit={handleSaveInquiry} style={{ border: '1.5px solid var(--mint-green)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--ice-white)' }}>
-                    <h4 style={{ color: 'var(--mint-green)', marginBottom: '12px', fontSize: '0.9rem' }}>{editingInquiryId ? '1:1 문의사항 수정' : '새로운 문의 등록'}</h4>
+                  <form onSubmit={handleSaveInquiry} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--screen-bg)' }}>
+                    <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>{editingInquiryId ? '1:1 문의사항 수정' : '새로운 문의 등록'}</h4>
                     <div className="form-group" style={{ marginBottom: '10px' }}>
                       <label className="form-label" style={{ fontSize: '0.8rem' }}>문의 유형</label>
                       <select className="form-input" value={inquiryCategory} onChange={(e) => setInquiryCategory(e.target.value)}>
@@ -1033,7 +1072,7 @@ const Settings: React.FC = () => {
                       <textarea className="form-input" value={inquiryContent} onChange={(e) => setInquiryContent(e.target.value)} style={{ minHeight: '80px', resize: 'none' }} required />
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button type="button" onClick={() => setShowInquiryForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--muted-gray)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="button" onClick={() => setShowInquiryForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
                       <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>보내기</button>
                     </div>
                   </form>

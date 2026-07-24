@@ -10,7 +10,7 @@
 
 .landing-hero h1 {
   font-size: 2.5rem;
-  color: var(--deep-navy);
+  color: var(--text-main);
   margin-bottom: 16px;
   font-weight: 800;
   line-height: 1.2;
@@ -27,7 +27,7 @@
   font-size: 1.1rem;
   padding: 14px 32px;
   border-radius: 30px;
-  background: linear-gradient(135deg, var(--mint-green) 0%, #0fa388 100%);
+  background: linear-gradient(135deg, var(--main-primary) 0%, #0fa388 100%);
   color: white;
   border: none;
   cursor: pointer;
@@ -73,12 +73,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mint-green);
+  color: var(--main-primary);
 }
 
 .feature-card h3 {
   font-size: 1.25rem;
-  color: var(--deep-navy);
+  color: var(--text-main);
   margin-bottom: 12px;
 }
 

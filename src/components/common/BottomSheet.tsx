@@ -55,7 +55,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, child
         zIndex: 2,
         width: '100%',
         maxWidth: '500px',
-        backgroundColor: 'var(--white)',
+        backgroundColor: 'var(--card-bg)',
         borderTopLeftRadius: '24px',
         borderTopRightRadius: '24px',
         padding: '16px 20px 24px 20px',
@@ -77,7 +77,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, child
             width: '40px',
             height: '5px',
             borderRadius: '3px',
-            backgroundColor: '#E2E8F0', // steel/light gray
+            backgroundColor: 'var(--border-color)', // steel/light gray
           }} />
         </div>
 
@@ -93,13 +93,13 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, child
               margin: 0,
               fontSize: '1.2rem',
               fontWeight: 800,
-              color: 'var(--deep-navy)',
+              color: 'var(--text-main)',
             }}>{title}</h3>
             <button 
               onClick={onClose}
               style={{
                 border: 'none',
-                background: '#F1F5F9',
+                background: 'var(--border-color)',
                 borderRadius: '50%',
                 width: '28px',
                 height: '28px',
@@ -108,7 +108,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, child
                 justifyContent: 'center',
                 cursor: 'pointer',
                 fontSize: '1rem',
-                color: 'var(--muted-gray)',
+                color: 'var(--text-muted)',
                 fontWeight: 'bold',
                 marginTop: 0,
                 padding: 0

@@ -22,7 +22,7 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--steel-gray);
+    border-bottom: 1px solid var(--border-color);
     gap: 16px;
 }
 
@@ -33,12 +33,12 @@
 
 .set-info p {
     font-size: 0.9rem;
-    color: var(--muted-gray);
+    color: var(--text-muted);
     margin: 0;
 }
 
 .set-btn {
-    background: var(--mint-green);
+    background: var(--main-primary);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -50,5 +50,5 @@
 }
 
 .set-btn.secondary {
-    background: #64748b;
+    background: var(--text-muted);
 }

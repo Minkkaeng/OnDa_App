@@ -26,6 +26,7 @@ export interface CustomReminder {
   id: string;
   title: string;
   time: string;
+  repeat?: 'none' | 'daily' | 'weekly';
   petId: string;
   enabled: boolean;
 }
@@ -135,10 +136,19 @@ const mockEvents: CalendarEvent[] = [
     type: 'diary',
     title: '동네 공원 산책 다녀왔어요!',
     content: '오늘 날씨가 화창해서 근처 공원으로 30분 동안 산책을 다녀왔습니다. 초코도 무척 즐거워하며 뛰어다녔네요.',
-    imageUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=250&auto=format&fit=crop'
+    imageUrl: '/mock_dog_1.png'
   },
   {
     id: 'mock-evt-2',
+    petId: 'mock-pet',
+    date: new Date().toISOString().split('T')[0],
+    type: 'diary',
+    title: '나른한 오후 낮잠',
+    content: '푹신한 담요 위에서 곤히 자는 모습이 너무 천사 같아서 한 컷 남겨봅니다.',
+    imageUrl: '/mock_dog_2.png'
+  },
+  {
+    id: 'mock-evt-3',
     petId: 'mock-pet',
     date: new Date().toISOString().split('T')[0],
     type: 'hospital',

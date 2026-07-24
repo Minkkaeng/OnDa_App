@@ -5,20 +5,20 @@
 
 .care-col {
     flex: 1;
-    background: var(--white);
+    background: var(--card-bg);
     padding: 32px;
     border-radius: 12px;
-    border: 1px solid var(--steel-gray);
+    border: 1px solid var(--border-color);
 }
 
 .care-title {
     font-size: 1.15rem;
     font-weight: 700;
     margin-bottom: 20px;
-    border-bottom: 2px solid var(--mint-green);
+    border-bottom: 2px solid var(--main-primary);
     padding-bottom: 8px;
     display: inline-block;
-    color: var(--deep-navy);
+    color: var(--text-main);
 }
 
 .form-group {
@@ -30,20 +30,20 @@
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 8px;
-    color: var(--deep-navy);
+    color: var(--text-main);
 }
 
 .form-input {
     width: 100%;
     height: 46px;
     padding: 12px 14px;
-    border: 1px solid var(--steel-gray);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     font-family: var(--font-main);
     font-size: 0.95rem;
-    color: var(--deep-navy);
+    color: var(--text-main);
     box-sizing: border-box;
-    background-color: var(--white);
+    background-color: var(--card-bg);
 }
 
 .toggle-group {
@@ -54,17 +54,17 @@
 .toggle-btn {
     flex: 1;
     padding: 10px;
-    border: 1px solid var(--steel-gray);
-    background: var(--white);
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
     border-radius: 20px;
     cursor: pointer;
     font-size: 0.9rem;
     white-space: nowrap;
-    color: var(--deep-navy);
+    color: var(--text-main);
 }
 
 .toggle-btn.active {
-    background: var(--mint-green);
-    color: var(--white);
-    border-color: var(--mint-green);
+    background: var(--main-primary);
+    color: var(--card-bg);
+    border-color: var(--main-primary);
 }

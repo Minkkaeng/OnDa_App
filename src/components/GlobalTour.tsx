@@ -6,9 +6,9 @@ import { usePetStore } from '../store/petStore';
 const TOUR_STEPS = [
   { path: '/onboarding', selector: '.avatar-upload', text: '📷 프로필 생성\n사진과 기본 정보, 맞춤 케어 정보를 입력하세요.' },
   { path: '/dashboard', selector: '#home-guide-step3', text: '🏃 스마트 대시보드\n원터치 산책 기록과 케어 체크리스트를 한눈에 관리해요.' },
-  { path: '/care', selector: '#care-guide-step1', text: '🗓️ 실시간 케어 스케줄러\n투약과 산책 일정을 연동해 데일리 루틴을 자동 생성합니다.' },
+  { path: '/care', selector: '#care-guide-step1', text: '실시간 케어 스케줄러\n투약과 산책 일정을 연동해 데일리 루틴을 자동 생성합니다.' },
   { path: '/calendar', selector: '#view-calendar', text: '📅 통합 캘린더 뷰\n산책, 다이어리, 접종 일정을 날짜별로 모아보세요.' },
-  { path: '/diary', selector: '#diary-guide-step1', text: '📝 소중한 일상 다이어리\n사진과 글로 매일의 추억을 예쁘게 기록해 보세요.' }
+  { path: '/diary', selector: '#diary-guide-step1', text: '소중한 일상 다이어리\n사진과 글로 매일의 추억을 예쁘게 기록해 보세요.' }
 ];
 
 const GlobalTour: React.FC = () => {
@@ -112,7 +112,7 @@ const GlobalTour: React.FC = () => {
       }}>
         <div style={{
           backgroundColor: '#FFF',
-          color: '#121B2A',
+          color: 'var(--text-main)',
           padding: '20px',
           borderRadius: '16px',
           boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
@@ -140,7 +140,7 @@ const GlobalTour: React.FC = () => {
                     width: '5px',
                     height: '5px',
                     borderRadius: '50%',
-                    backgroundColor: idx === currentStep ? '#14C3A3' : '#E2E8F0',
+                    backgroundColor: idx === currentStep ? 'var(--main-primary)' : 'var(--border-color)',
                     transition: 'background-color 0.2s'
                   }}
                 />
@@ -157,7 +157,7 @@ const GlobalTour: React.FC = () => {
                     borderRadius: '20px', 
                     border: '1px solid #CBD5E1', 
                     backgroundColor: 'transparent', 
-                    color: '#64748B', 
+                    color: 'var(--text-muted)', 
                     fontWeight: 600, 
                     fontSize: '0.8rem',
                     cursor: 'pointer', 
@@ -173,7 +173,7 @@ const GlobalTour: React.FC = () => {
                   padding: '6px 18px', 
                   borderRadius: '20px', 
                   border: 'none', 
-                  backgroundColor: '#14C3A3', 
+                  backgroundColor: 'var(--main-primary)', 
                   color: '#FFF', 
                   fontWeight: 700, 
                   fontSize: '0.8rem',

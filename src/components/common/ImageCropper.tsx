@@ -84,7 +84,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ rawImage, onCropComplete, o
       padding: '20px'
     }}>
       <div className="modal-content" style={{ 
-        background: 'var(--white)', 
+        background: 'var(--card-bg)', 
         borderRadius: '24px', 
         padding: '24px', 
         width: '100%', 
@@ -93,8 +93,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ rawImage, onCropComplete, o
         boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
         animation: 'scaleUp 0.3s ease-out'
       }}>
-        <h3 style={{ margin: '0 0 16px 0', color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 700 }}>이미지 자르기</h3>
-        <p style={{ margin: '0 0 16px 0', color: 'var(--muted-gray)', fontSize: '0.9rem' }}>이미지를 드래그하거나 확대하여<br/>원하는 영역을 선택해 주세요.</p>
+        <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 700 }}>이미지 자르기</h3>
+        <p style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>이미지를 드래그하거나 확대하여<br/>원하는 영역을 선택해 주세요.</p>
         
         <div style={{
           position: 'relative',
@@ -130,7 +130,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ rawImage, onCropComplete, o
             onChange={(e) => {
               setZoom(Number(e.target.value));
             }}
-            style={{ width: '100%', accentColor: 'var(--mint-green)' }}
+            style={{ width: '100%', accentColor: 'var(--main-primary)' }}
           />
           <span style={{ fontSize: '1.2rem' }}>+</span>
         </div>
@@ -141,7 +141,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ rawImage, onCropComplete, o
             className="btn-submit"
             style={{ 
               flex: 1, 
-              backgroundColor: 'var(--muted-gray)', 
+              backgroundColor: 'var(--text-muted)', 
               margin: 0, 
               padding: '12px',
               fontSize: '1rem',
@@ -155,7 +155,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ rawImage, onCropComplete, o
             className="btn-submit"
             style={{ 
               flex: 1, 
-              backgroundColor: 'var(--mint-green)', 
+              backgroundColor: 'var(--main-primary)', 
               margin: 0, 
               padding: '12px',
               fontSize: '1rem',

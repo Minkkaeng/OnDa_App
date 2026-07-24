@@ -19,14 +19,18 @@ const Calendar: React.FC = () => {
   // Routine Form State
   const [isEditingRoutine, setIsEditingRoutine] = useState(false);
   const [routineMeds, setRoutineMeds] = useState('');
+  const [routineMedsRepeat, setRoutineMedsRepeat] = useState(false);
   const [routineWalk, setRoutineWalk] = useState('');
   const [routineWalkGoal, setRoutineWalkGoal] = useState('');
+  const [routineWalkRepeat, setRoutineWalkRepeat] = useState(false);
 
   useEffect(() => {
     if (activePet) {
       setRoutineMeds(activePet.medications || '');
+      setRoutineMedsRepeat(!!activePet.medicationRepeat);
       setRoutineWalk(activePet.walkTime || '');
       setRoutineWalkGoal(activePet.walkGoal || '');
+      setRoutineWalkRepeat(!!activePet.walkRepeat);
     }
   }, [activePet]);
 
@@ -36,8 +40,10 @@ const Calendar: React.FC = () => {
         await updatePet({
           ...activePet,
           medications: routineMeds,
+          medicationRepeat: routineMedsRepeat,
           walkTime: routineWalk,
-          walkGoal: routineWalkGoal
+          walkGoal: routineWalkGoal,
+          walkRepeat: routineWalkRepeat
         });
         showAlert('루틴 정보가 성공적으로 저장되었습니다.');
         setIsEditingRoutine(false);
@@ -73,7 +79,7 @@ const Calendar: React.FC = () => {
 
   if (!activePet) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted-gray)' }}>
+      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
         반려동물을 먼저 등록해주세요.
       </div>
     );
@@ -312,9 +318,9 @@ const Calendar: React.FC = () => {
 
       <div style={{ paddingBottom: '0' }}>
         {/* Routine Scheduler Panel */}
-        <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '12px' }}>
+        <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '16px', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
               기본 루틴 설정
             </h2>
             <button 
@@ -322,44 +328,68 @@ const Calendar: React.FC = () => {
                 if (isEditingRoutine) handleSaveRoutine();
                 else setIsEditingRoutine(true);
               }} 
-              style={{ fontSize: '0.85rem', color: isEditingRoutine ? 'white' : 'var(--mint-green)', background: isEditingRoutine ? 'var(--mint-green)' : 'var(--mint-green-light)', border: 'none', borderRadius: '12px', padding: '6px 12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{ fontSize: '0.85rem', color: isEditingRoutine ? 'white' : 'var(--main-primary)', background: isEditingRoutine ? 'var(--main-primary)' : 'var(--butter-cream)', border: 'none', borderRadius: '12px', padding: '6px 12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
             >
               {isEditingRoutine ? '저장하기' : '루틴 수정'}
             </button>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '8px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>정기 투약</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--screen-bg)', paddingBottom: '8px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>정기 투약</span>
               {isEditingRoutine ? (
-                <input 
-                  type="text" value={routineMeds} onChange={(e) => setRoutineMeds(e.target.value)} 
-                  placeholder="예: 심장사상충 매월 1일" className="form-input" style={{ width: '160px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input 
+                    type="text" value={routineMeds} onChange={(e) => setRoutineMeds(e.target.value)} 
+                    placeholder="예: 심장사상충 매월 1일" className="form-input" style={{ width: '130px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
+                  />
+                  <button 
+                    onClick={() => setRoutineMedsRepeat(!routineMedsRepeat)} 
+                    style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', opacity: routineMedsRepeat ? 1 : 0.3 }}
+                    title="반복 알림"
+                  >
+                    🔔
+                  </button>
+                </div>
               ) : (
-                <span style={{ fontSize: '0.95rem', color: 'var(--deep-navy)', fontWeight: 800 }}>{activePet.medications || '미설정'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: 800 }}>{activePet.medications || '미설정'}</span>
+                  {activePet.medicationRepeat && <span style={{ fontSize: '1rem' }} title="알림 설정됨">🔔</span>}
+                </div>
               )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ice-white)', paddingBottom: '8px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>산책 목표량</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--screen-bg)', paddingBottom: '8px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>산책 목표량</span>
               {isEditingRoutine ? (
                 <input 
                   type="text" value={routineWalkGoal} onChange={(e) => setRoutineWalkGoal(e.target.value)} 
                   placeholder="예: 30분 달성" className="form-input" style={{ width: '160px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
                 />
               ) : (
-                <span style={{ fontSize: '0.95rem', color: 'var(--deep-navy)', fontWeight: 800 }}>{activePet.walkGoal || '미설정'}</span>
+                <span style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: 800 }}>{activePet.walkGoal || '미설정'}</span>
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--muted-gray)', fontWeight: 600 }}>산책 예정 시간</span>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>산책 예정 시간</span>
               {isEditingRoutine ? (
-                <input 
-                  type="text" value={routineWalk} onChange={(e) => setRoutineWalk(e.target.value)} 
-                  placeholder="예: 오후 7:00" className="form-input" style={{ width: '160px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input 
+                    type="text" value={routineWalk} onChange={(e) => setRoutineWalk(e.target.value)} 
+                    placeholder="예: 오후 7:00" className="form-input" style={{ width: '130px', padding: '6px 8px', margin: 0, fontSize: '0.85rem', height: 'auto' }} 
+                  />
+                  <button 
+                    onClick={() => setRoutineWalkRepeat(!routineWalkRepeat)} 
+                    style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', opacity: routineWalkRepeat ? 1 : 0.3 }}
+                    title="반복 알림"
+                  >
+                    🔔
+                  </button>
+                </div>
               ) : (
-                <span style={{ fontSize: '0.95rem', color: 'var(--deep-navy)', fontWeight: 800 }}>{activePet.walkTime || '미설정'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: 800 }}>{activePet.walkTime || '미설정'}</span>
+                  {activePet.walkRepeat && <span style={{ fontSize: '1rem' }} title="알림 설정됨">🔔</span>}
+                </div>
               )}
             </div>
           </div>
@@ -382,7 +412,7 @@ const Calendar: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button 
                   onClick={handlePrevMonth} 
-                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--deep-navy)', padding: '4px' }}
+                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--text-main)', padding: '4px' }}
                 >
                   ◀
                 </button>
@@ -392,11 +422,11 @@ const Calendar: React.FC = () => {
                   style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}
                 >
                   {year}.{String(month + 1).padStart(2, '0')}
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted-gray)' }}>▼</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>▼</span>
                 </div>
                 <button 
                   onClick={handleNextMonth} 
-                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--deep-navy)', padding: '4px' }}
+                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--text-main)', padding: '4px' }}
                 >
                   ▶
                 </button>
@@ -404,13 +434,13 @@ const Calendar: React.FC = () => {
               <button 
                 onClick={handleGoToToday} 
                 style={{
-                  backgroundColor: 'var(--white)',
-                  border: '1px solid var(--steel-gray)',
+                  backgroundColor: 'var(--card-bg)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '20px',
                   padding: '5px 12px',
                   fontSize: '0.8rem',
                   fontWeight: 'bold',
-                  color: 'var(--deep-navy)',
+                  color: 'var(--text-main)',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
@@ -453,66 +483,27 @@ const Calendar: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
                       <span style={{ fontWeight: isActive ? '800' : '600', fontSize: '0.85rem' }}>{gridItem.dayNum}</span>
                       {isActive && activePet && (
-                        <span style={{ fontSize: '0.6rem', color: 'var(--muted-gray)', fontWeight: 700 }}>
+                        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 700 }}>
                           {activePet.weight}kg
                         </span>
                       )}
                     </div>
 
                     {/* Events List inside Day Cell */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%', overflow: 'hidden', flex: 1 }}>
-                      {dayEvents.slice(0, 2).map((ev, eIdx) => {
-                        const cleanTitle = ev.title.replace(/^[^\w\s\dㄱ-ㅎㅏ-ㅣ가-힣]/, '').trim() || ev.title;
-                        const isHospital = ev.type === 'hospital';
-                        
-                        if (isHospital) {
-                          return (
-                            <div 
-                              key={eIdx} 
-                              style={{
-                                backgroundColor: 'var(--error-red-light)',
-                                color: 'var(--error-red)',
-                                borderRadius: '4px',
-                                fontSize: '0.55rem',
-                                padding: '1px 3px',
-                                textAlign: 'left',
-                                whiteSpace: 'nowrap',
-                                textOverflow: 'ellipsis',
-                                overflow: 'hidden',
-                                fontWeight: 800,
-                                display: 'block',
-                                lineHeight: '1.2'
-                              }}
-                              title={ev.title}
-                            >
-                              {cleanTitle}
-                            </div>
-                          );
-                        } else {
-                          const accentColor = ev.type === 'diary' ? 'var(--mint-green)' : (ev.type === 'poop' ? '#D97706' : '#8B5CF6');
-                          return (
-                            <div 
-                              key={eIdx} 
-                              style={{
-                                borderLeft: `2.5px solid ${accentColor}`,
-                                paddingLeft: '3px',
-                                fontSize: '0.55rem',
-                                color: 'var(--deep-navy)',
-                                textAlign: 'left',
-                                whiteSpace: 'nowrap',
-                                textOverflow: 'ellipsis',
-                                overflow: 'hidden',
-                                fontWeight: 700,
-                                display: 'block',
-                                lineHeight: '1.2'
-                              }}
-                              title={ev.title}
-                            >
-                              {cleanTitle}
-                            </div>
-                          );
-                        }
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                      {dayEvents.slice(0, 4).map((ev, eIdx) => {
+                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : (ev.type === 'poop' ? '#D97706' : (ev.type === 'diary' ? 'var(--main-primary)' : (ev.type === 'walk' ? '#10B981' : '#8B5CF6')));
+                        return (
+                          <div 
+                            key={eIdx} 
+                            style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: typeColor }}
+                            title={ev.title}
+                          />
+                        );
                       })}
+                      {dayEvents.length > 4 && (
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--text-muted)' }} title="더보기" />
+                      )}
                     </div>
                   </div>
                 );
@@ -525,13 +516,13 @@ const Calendar: React.FC = () => {
                 type="button"
                 onClick={handleAddEventOpen}
                 style={{
-                  backgroundColor: 'var(--white)',
-                  border: '1.5px solid var(--steel-gray)',
+                  backgroundColor: 'var(--card-bg)',
+                  border: '1.5px solid var(--border-color)',
                   borderRadius: '30px',
                   padding: '10px 24px',
                   fontSize: '0.85rem',
                   fontWeight: 'bold',
-                  color: 'var(--deep-navy)',
+                  color: 'var(--text-main)',
                   boxShadow: '0 4px 12px rgba(18, 27, 42, 0.05)',
                   cursor: 'pointer',
                   display: 'flex',
@@ -542,7 +533,7 @@ const Calendar: React.FC = () => {
                 }}
               >
                 <span>{`${selectedDateObj.getMonth() + 1}월 ${selectedDateObj.getDate()}일에 추가`}</span>
-                <span style={{ fontSize: '1.15rem', color: 'var(--mint-green)', fontWeight: 800 }}>+</span>
+                <span style={{ fontSize: '1.15rem', color: 'var(--main-primary)', fontWeight: 800 }}>+</span>
               </button>
             </div>
 
@@ -560,13 +551,13 @@ const Calendar: React.FC = () => {
             display: 'flex',
             gap: '8px',
             alignItems: 'center',
-            backgroundColor: 'var(--white)',
+            backgroundColor: 'var(--card-bg)',
             padding: '12px 14px',
             borderRadius: '12px',
-            border: '1px solid var(--steel-gray)',
+            border: '1px solid var(--border-color)',
             flexWrap: 'wrap'
           }}>
-            <span style={{ fontWeight: 800, color: 'var(--deep-navy)', fontSize: '0.85rem' }}>검색 필터</span>
+            <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.85rem' }}>검색 필터</span>
             <div style={{ display: 'flex', gap: '6px', flexGrow: 1 }}>
               <select 
                 value={searchYear} 
@@ -613,7 +604,7 @@ const Calendar: React.FC = () => {
 
           <div id="list-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {filteredDates.length === 0 ? (
-              <div className="panel" style={{ textAlign: 'center', color: 'var(--muted-gray)', padding: '30px 0', fontSize: '0.9rem' }}>
+              <div className="panel" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px 0', fontSize: '0.9rem' }}>
                 검색된 내역이 없습니다.
               </div>
             ) : (
@@ -628,7 +619,7 @@ const Calendar: React.FC = () => {
                     <div className="task-list">
                       {groupedEvents[dateStr].map(ev => {
                         const typeText = ev.type === 'poop' ? '배변' : (ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정'));
-                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : (ev.type === 'poop' ? '#8B5A2B' : 'var(--mint-green)');
+                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : (ev.type === 'poop' ? '#8B5A2B' : 'var(--main-primary)');
                         
                         return (
                           <div key={ev.id} className="task-card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -662,7 +653,7 @@ const Calendar: React.FC = () => {
           <div className="cal-modal-content" style={{ position: 'relative', padding: '24px', width: '90%', maxWidth: '340px' }}>
             <button 
               onClick={() => setShowDetailsModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--muted-gray)' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
             >
               &times;
             </button>
@@ -672,15 +663,15 @@ const Calendar: React.FC = () => {
                 selectedDateEvents.map(ev => {
                   const typeText = ev.type === 'poop' ? '배변' : (ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정'));
                   return (
-                    <div key={ev.id} style={{ background: 'var(--ice-white)', padding: '12px', borderRadius: '8px', marginBottom: '10px' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--muted-gray)', fontWeight: 700, marginBottom: '2px' }}>[{typeText}]</div>
-                      <h3 style={{ fontSize: '0.95rem', marginBottom: '4px', color: 'var(--deep-navy)', margin: 0, fontWeight: 700 }}>{ev.title}</h3>
+                    <div key={ev.id} style={{ background: 'var(--screen-bg)', padding: '12px', borderRadius: '8px', marginBottom: '10px' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '2px' }}>[{typeText}]</div>
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '4px', color: 'var(--text-main)', margin: 0, fontWeight: 700 }}>{ev.title}</h3>
                       <p style={{ fontSize: '0.85rem', lineHeight: 1.4, whiteSpace: 'pre-wrap', margin: 0, color: '#444' }}>{ev.content}</p>
                     </div>
                   );
                 })
               ) : (
-                <div style={{ textAlign: 'center', color: 'var(--muted-gray)', padding: '30px 0', fontSize: '0.9rem' }}>등록된 내역이 없습니다.</div>
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px 0', fontSize: '0.9rem' }}>등록된 내역이 없습니다.</div>
               )}
             </div>
             <button 
@@ -710,7 +701,7 @@ const Calendar: React.FC = () => {
           <div className="cal-modal-content" style={{ position: 'relative', padding: '24px', width: '90%', maxWidth: '340px' }}>
             <button 
               onClick={() => setShowAddModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--muted-gray)' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
             >
               &times;
             </button>
@@ -750,7 +741,7 @@ const Calendar: React.FC = () => {
                   value={newEventContent}
                   onChange={(e) => setNewEventContent(e.target.value)}
                   className="cal-editor-textarea" 
-                  style={{ minHeight: '80px', fontSize: '0.9rem', border: '1px solid var(--steel-gray)', padding: '8px', borderRadius: '8px' }} 
+                  style={{ minHeight: '80px', fontSize: '0.9rem', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '8px' }} 
                   placeholder="상세 내용을 입력해주세요..."
                   required
                 ></textarea>
@@ -772,7 +763,7 @@ const Calendar: React.FC = () => {
           }}
         >
           <div className="modal-content" style={{ background: 'white', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', gap: '16px' }}>
-            <h4 style={{ margin: 0, color: 'var(--deep-navy)', fontSize: '1rem', fontWeight: 800 }}>날짜로 이동</h4>
+            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1rem', fontWeight: 800 }}>날짜로 이동</h4>
             
             <form onSubmit={handleMonthNavSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -807,7 +798,7 @@ const Calendar: React.FC = () => {
                   type="button" 
                   onClick={() => setShowMonthNavModal(false)} 
                   className="btn-submit" 
-                  style={{ flex: 1, backgroundColor: 'var(--muted-gray)', borderColor: 'var(--muted-gray)', marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
+                  style={{ flex: 1, backgroundColor: 'var(--text-muted)', borderColor: 'var(--text-muted)', marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
                 >
                   취소
                 </button>

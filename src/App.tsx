@@ -18,18 +18,18 @@ import Profile from './pages/Profile';
 
 const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string }> = {
   light: {
-    primary: '#0D9488',
-    background: '#F8FAFC',
+    primary: '#4A3B32',
+    background: '#FAFAFA',
     paper: '#FFFFFF',
-    text: '#0F172A',
-    muted: '#64748B'
+    text: '#2B2825',
+    muted: '#78716C'
   },
   dark: {
-    primary: '#0D9488',
-    background: '#0F172A',
-    paper: '#1E293B',
-    text: '#F8FAFC',
-    muted: '#94A3B8'
+    primary: '#4A3B32',
+    background: '#1F1A17',
+    paper: '#2B2825',
+    text: '#FAFAFA',
+    muted: '#A8A29E'
   }
 };
 
@@ -59,25 +59,25 @@ const CustomDialog: React.FC = () => {
       animation: 'fadeIn 0.2s ease-out'
     }}>
       <div style={{
-        backgroundColor: 'var(--white)',
+        backgroundColor: 'var(--card-bg)',
         borderRadius: '16px',
         padding: '24px',
         width: '90%',
         maxWidth: '360px',
         boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
         textAlign: 'center',
-        border: '1px solid var(--steel-gray)',
+        border: '1px solid var(--border-color)',
         animation: 'scaleUp 0.2s ease-out'
       }}>
         <h3 style={{
           margin: '0 0 12px 0',
-          color: 'var(--deep-navy)',
+          color: 'var(--text-main)',
           fontSize: '1.2rem',
           fontWeight: 700
         }}>{customDialog.title}</h3>
         <p style={{
           margin: '0 0 24px 0',
-          color: 'var(--deep-navy)',
+          color: 'var(--text-main)',
           fontSize: '0.95rem',
           lineHeight: 1.5,
           whiteSpace: 'pre-wrap'
@@ -89,8 +89,8 @@ const CustomDialog: React.FC = () => {
               className="btn-submit"
               style={{
                 flex: 1,
-                backgroundColor: 'var(--muted-gray)',
-                borderColor: 'var(--muted-gray)',
+                backgroundColor: 'var(--text-muted)',
+                borderColor: 'var(--text-muted)',
                 color: 'white',
                 padding: '10px 16px',
                 borderRadius: '30px',
@@ -107,8 +107,8 @@ const CustomDialog: React.FC = () => {
             className="btn-submit"
             style={{
               flex: 1,
-              backgroundColor: 'var(--mint-green)',
-              borderColor: 'var(--mint-green)',
+              backgroundColor: 'var(--main-primary)',
+              borderColor: 'var(--main-primary)',
               color: 'white',
               padding: '10px 16px',
               borderRadius: '30px',
@@ -220,7 +220,7 @@ const AppContent: React.FC = () => {
     return () => {
       if (listener) listener.remove();
     };
-  }, [location.pathname, navigate, showConfirm]);
+  }, [location.pathname, navigate, showConfirm, showAlert]);
 
   // Apply Theme Colors
   useEffect(() => {
@@ -234,12 +234,12 @@ const AppContent: React.FC = () => {
 
     if (colors) {
       const root = document.documentElement;
-      root.style.setProperty('--mint-green', colors.primary);
-      root.style.setProperty('--ice-white', colors.background);
-      root.style.setProperty('--white', colors.paper);
-      root.style.setProperty('--deep-navy', colors.text);
-      root.style.setProperty('--muted-gray', colors.muted);
-      root.style.setProperty('--mint-green-light', colors.primary + '1a');
+      root.style.setProperty('--main-primary', colors.primary);
+      root.style.setProperty('--screen-bg', colors.background);
+      root.style.setProperty('--card-bg', colors.paper);
+      root.style.setProperty('--text-main', colors.text);
+      root.style.setProperty('--text-muted', colors.muted);
+      root.style.setProperty('--butter-cream', colors.primary + '1a');
     }
   }, [activeThemeId, customThemes]);
 
@@ -296,7 +296,8 @@ const AppContent: React.FC = () => {
   }, []);
 
   const isObPage = location.pathname === '/onboarding';
-  const isSubPage = location.pathname !== '/dashboard' && location.pathname !== '/';
+  const mainTabs = ['/', '/dashboard', '/care', '/calendar', '/diary', '/settings'];
+  const isSubPage = !mainTabs.includes(location.pathname) && !isObPage;
 
   const renderAppLayout = () => {
     return (
@@ -310,8 +311,8 @@ const AppContent: React.FC = () => {
                   type="button"
                   onClick={() => navigate(-1)}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    border: '1px solid rgba(255, 255, 255, 0.45)',
+                    background: 'var(--butter-cream)',
+                    border: '1px solid var(--main-primary)',
                     borderRadius: '50%',
                     width: '34px',
                     height: '34px',
@@ -319,24 +320,23 @@ const AppContent: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    color: 'white',
-                    backdropFilter: 'blur(4px)',
+                    color: 'var(--main-primary)',
                     padding: 0
                   }}
                   title="뒤로 가기"
                 >
-                  <ChevronLeft size={22} color="white" />
+                  <ChevronLeft size={22} color="var(--main-primary)" />
                 </button>
               ) : (
                 <Link to="/" className="brand-logo-link" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '30px' }}>
-                    <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="#ffffff" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M 168 25 V 85" fill="none" stroke="#ffffff" strokeWidth="16" strokeLinecap="round"/>
-                    <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="#ffffff" strokeWidth="16" strokeLinecap="round"/>
-                    <path d="M 128 85 V 45" fill="none" stroke="#ffffff" strokeWidth="16" strokeLinecap="round"/>
-                    <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="#ffffff" strokeWidth="16" strokeLinecap="round"/>
-                    <circle cx="240" cy="65" r="20" fill="none" stroke="#ffffff" strokeWidth="16"/>
-                    <path d="M 260 45 V 85" fill="none" stroke="#ffffff" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M 168 25 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 128 85 V 45" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+                    <circle cx="240" cy="65" r="20" fill="none" stroke="var(--main-primary)" strokeWidth="16"/>
+                    <path d="M 260 45 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
                   </svg>
                 </Link>
               )}
@@ -354,30 +354,30 @@ const AppContent: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                      border: '1px solid rgba(255, 255, 255, 0.45)',
+                      backgroundColor: 'var(--butter-cream)',
+                      border: '1px solid var(--main-primary)',
                       padding: '3px 8px 3px 4px',
                       borderRadius: '20px',
                       cursor: 'pointer',
-                      backdropFilter: 'blur(4px)',
-                      color: 'white'
+                      color: 'var(--main-primary)'
                     }}
                   >
                     <img 
-                      src={activePet.image} 
+                      src={activePet.image || '/default_paw.png'} 
                       alt="Profile Menu" 
-                      style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid white' }}
+                      style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--main-primary)' }}
+                      onError={(e) => { e.currentTarget.src = '/default_paw.png' }}
                     />
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'white', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--main-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px', display: 'inline-block' }}>
                       {activePet.name} ▾
                     </span>
                   </div>
                   {headerDropdownOpen && (
                     <div className="header-profile-dropdown-menu" style={{ position: 'absolute', top: '40px', right: 0, zIndex: 1000 }}>
                       <div className="google-profile-header">
-                        <img src={activePet.image} className="google-profile-large-avatar" alt="Avatar" />
+                        <img src={activePet.image || '/default_paw.png'} className="google-profile-large-avatar" alt="Avatar" onError={(e) => { e.currentTarget.src = '/default_paw.png' }} />
                         <h4 className="google-profile-name">{activePet.name}</h4>
-                        <p className="google-profile-email">🐾 {activePet.breed} | ⚖️ {activePet.weight}kg</p>
+                        <p className="google-profile-email">{activePet.breed} | {activePet.weight}kg</p>
                         <button 
                           className="google-profile-edit-btn"
                           onClick={() => {
@@ -402,7 +402,7 @@ const AppContent: React.FC = () => {
                               setHeaderDropdownOpen(false);
                             }}
                           >
-                            <img src={pet.image} className="google-pet-item-avatar" alt={pet.name} />
+                            <img src={pet.image || '/default_paw.png'} className="google-pet-item-avatar" alt={pet.name} onError={(e) => { e.currentTarget.src = '/default_paw.png' }} />
                             <span className="google-pet-item-name">{pet.name}</span>
                           </div>
                         ))}
@@ -428,7 +428,7 @@ const AppContent: React.FC = () => {
         <main ref={mainRef} className={isObPage ? "content-onboarding" : "content-center"}>
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-              <p style={{ color: 'var(--deep-navy)', fontWeight: 'bold' }}>로컬 데이터를 불러오는 중...</p>
+              <p style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>로컬 데이터를 불러오는 중...</p>
             </div>
           ) : (
             <Routes>
@@ -492,16 +492,16 @@ const AppContent: React.FC = () => {
         >
           <div className="splash-content">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '80px', marginBottom: '12px' }}>
-              <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M 168 25 V 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="#14C3A3" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 128 85 V 45" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
-              <circle cx="240" cy="65" r="20" fill="none" stroke="#0E9B82" strokeWidth="16"/>
-              <path d="M 260 45 V 85" fill="none" stroke="#0E9B82" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M 168 25 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 128 85 V 45" fill="none" stroke="var(--warm-amber)" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="var(--warm-amber)" strokeWidth="16" strokeLinecap="round"/>
+              <circle cx="240" cy="65" r="20" fill="none" stroke="var(--warm-amber)" strokeWidth="16"/>
+              <path d="M 260 45 V 85" fill="none" stroke="var(--warm-amber)" strokeWidth="16" strokeLinecap="round"/>
             </svg>
-            <h2 style={{ color: 'var(--deep-navy)', margin: '0 0 6px 0', fontSize: '1.6rem', letterSpacing: '-0.5px', fontWeight: 800 }}>OnDa Pet Care</h2>
-            <p style={{ color: 'var(--muted-gray)', margin: 0, fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.2px' }}>우리아이 맞춤 케어</p>
+            <h2 style={{ color: 'var(--text-main)', margin: '0 0 6px 0', fontSize: '1.6rem', letterSpacing: '-0.5px', fontWeight: 800 }}>OnDa Pet Care</h2>
+            <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.2px' }}>우리아이 맞춤 케어</p>
           </div>
         </div>
       )}

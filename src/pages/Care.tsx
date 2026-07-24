@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePetStore } from '../store/petStore';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import PoopAnalyzer from '../components/care/PoopAnalyzer';
 import { fetchHospitalsOrPharmacies, type HospitalOrPharmacy } from '../services/hospitalService';
 
 const REGION_MAP: Record<string, string[]> = {
@@ -28,8 +27,7 @@ const Care: React.FC = () => {
     parasite?: string;
   }>({});
 
-  // Poop Analyzer
-  const [showPoopAnalyzer, setShowPoopAnalyzer] = useState(false);
+  // Poop Analyzer Removed
 
   // Hospital/Pharmacy Locator State
   const [selectedCity, setSelectedCity] = useState('서울특별시');
@@ -206,7 +204,7 @@ const Care: React.FC = () => {
 
   if (!activePet) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted-gray)' }}>
+      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
         반려동물을 먼저 등록해주세요.
       </div>
     );
@@ -218,24 +216,26 @@ const Care: React.FC = () => {
         <div className="care-layout" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 0 }}>
         
           {/* 1. 맞춤형 건강 케어 가이드 (From Dashboard) */}
-          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '16px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
-            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
+          <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '16px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
               맞춤형 건강 케어 가이드
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {isTipsLoading ? (
-                <div style={{ fontSize: '0.85rem', color: 'var(--muted-gray)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>
                   가이드를 분석 중입니다...
                 </div>
               ) : careTips.length > 0 ? (
                 careTips.map((tip, idx) => (
-                  <div key={idx} style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
-                    <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{tip.title}</h4>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{tip.content}</p>
-                  </div>
+                  <details key={idx} style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)', cursor: 'pointer' }}>
+                    <summary style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', listStyle: 'none', display: 'flex', justifyContent: 'space-between' }}>
+                      {tip.title} <span style={{fontSize:'0.8rem', opacity: 0.6}}>▼</span>
+                    </summary>
+                    <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{tip.content}</p>
+                  </details>
                 ))
               ) : (
-                <div style={{ background: 'var(--mint-green-light)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--mint-green)' }}>
+                <div style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)' }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5, textAlign: 'center' }}>데이터를 기반으로 가이드를 준비중입니다.</p>
                 </div>
               )}
@@ -245,44 +245,21 @@ const Care: React.FC = () => {
           {/* 2. AD Zone */}
           <div className="ad-zone-top" style={{ marginBottom: '0' }}>
             <div style={{ flexGrow: 1 }}>
-              <span className="ad-badge">AD ZONE</span>
+              <span className="ad-badge" style={{ backgroundColor: 'var(--butter-yellow)', color: 'var(--text-main)' }}>AD ZONE</span>
               <div style={{ marginTop: '8px' }}>
-                <p className="ad-text" style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--deep-navy)' }}>내 손안의 반려동물 주치의, 프리미엄 온다 케어 멤버십 오픈!</p>
+                <p className="ad-text" style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>내 손안의 반려동물 주치의, 프리미엄 온다 케어 멤버십 오픈!</p>
                 <p className="ad-subtext" style={{ color: '#555', fontSize: '0.85rem' }}>실시간 전문가 비대면 상담 및 맞춤형 케어 솔루션 정식 런칭</p>
               </div>
             </div>
           </div>
-
-          {/* 3. AI 배변 분석기 (Banner/Button) */}
-          <button
-            onClick={() => setShowPoopAnalyzer(true)}
-            style={{
-              background: 'linear-gradient(135deg, #14C3A3, #0E9B82)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '16px',
-              padding: '16px',
-              fontSize: '1rem',
-              fontWeight: 800,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 12px rgba(20, 195, 163, 0.3)'
-            }}
-          >
-            AI 배변 사진 분석하기
-          </button>
-
           {/* 4. 체중 기록 및 히스토리 */}
-          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
-            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
+          <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
               체중 변화 기록
             </h2>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '12px 16px', background: 'var(--ice-white)', borderRadius: '12px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--deep-navy)', fontWeight: 700 }}>현재 체중</span>
-              <span style={{ fontSize: '1.2rem', color: 'var(--mint-green)', fontWeight: 800 }}>{activePet.weight ? `${activePet.weight} kg` : '기록 없음'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '12px 16px', background: 'var(--screen-bg)', borderRadius: '12px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700 }}>현재 체중</span>
+              <span style={{ fontSize: '1.2rem', color: 'var(--main-primary)', fontWeight: 800 }}>{activePet.weight ? `${activePet.weight} kg` : '기록 없음'}</span>
             </div>
 
             <form onSubmit={handleAddWeight} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -297,14 +274,14 @@ const Care: React.FC = () => {
 
             {weightHistory.length > 0 && (
               <div style={{ marginTop: '16px' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--deep-navy)', fontWeight: 800, display: 'block', marginBottom: '12px' }}>체중 변화 차트</label>
-                <div style={{ height: '140px', width: '100%', background: 'var(--ice-white)', borderRadius: '12px', padding: '12px 12px 0 0' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 800, display: 'block', marginBottom: '12px' }}>체중 변화 차트</label>
+                <div style={{ height: '140px', width: '100%', background: 'var(--screen-bg)', borderRadius: '12px', padding: '12px 12px 0 0' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={[...weightHistory].reverse()} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-gray)' }} axisLine={false} tickLine={false} minTickGap={10} />
-                      <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: 'var(--muted-gray)' }} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelStyle={{ fontSize: '0.75rem', color: 'var(--muted-gray)', marginBottom: '4px' }} itemStyle={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--mint-green)' }} />
-                      <Line type="monotone" dataKey="weight" stroke="var(--mint-green)" strokeWidth={3} dot={{ r: 4, fill: 'var(--mint-green)', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} minTickGap={10} />
+                      <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelStyle={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }} itemStyle={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--main-primary)' }} />
+                      <Line type="monotone" dataKey="weight" stroke="var(--main-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--main-primary)', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -313,8 +290,8 @@ const Care: React.FC = () => {
           </div>
 
           {/* 5. 정기 예방의학 D-Day 스케줄 */}
-          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
-            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
+          <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
               예방의학 D-Day 스케줄
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -327,16 +304,29 @@ const Care: React.FC = () => {
                 const lastDate = vaccines[vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite'];
                 const ddayStatus = getDDay(lastDate, vac.type as 'annual' | 'monthly');
                 const isOverdue = ddayStatus.includes('지남') || ddayStatus === 'D-Day' || !lastDate;
-                const statusColor = isOverdue ? 'var(--blood-coral)' : 'var(--completed-green)';
-                const statusBg = isOverdue ? 'var(--blood-coral-light)' : 'var(--completed-green-light)';
+                const statusColor = isOverdue ? 'var(--text-main)' : 'var(--main-primary)';
+                const statusBg = isOverdue ? 'var(--butter-yellow)' : 'var(--butter-cream)';
                 
+                const maxDays = vac.type === 'annual' ? 365 : 30;
+                let daysLeft = 0;
+                if (!isOverdue && lastDate) {
+                  const match = ddayStatus.match(/\d+/);
+                  if (match) daysLeft = parseInt(match[0], 10);
+                }
+                const progressPct = isOverdue ? 100 : Math.max(0, 100 - (daysLeft / maxDays) * 100);
+                const barColor = isOverdue ? 'var(--butter-yellow)' : 'var(--main-primary)';
+
                 return (
-                  <div key={vac.id} style={{ borderBottom: '1px solid var(--ice-white)', paddingBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--deep-navy)' }}>{vac.label}</span>
+                  <div key={vac.id} style={{ borderBottom: '1px solid var(--screen-bg)', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{vac.label}</span>
                       <span style={{ fontSize: '0.8rem', fontWeight: 800, color: statusColor, backgroundColor: statusBg, padding: '2px 8px', borderRadius: '12px' }}>
                         {ddayStatus}
                       </span>
+                    </div>
+                    {/* Visual Progress Bar */}
+                    <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--screen-bg)', borderRadius: '3px', marginBottom: '12px', overflow: 'hidden' }}>
+                      <div style={{ width: `${progressPct}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s ease' }} />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <input 
@@ -348,7 +338,7 @@ const Care: React.FC = () => {
                         type="button"
                         onClick={() => handleCompleteVaccineToday(vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite', vac.label)}
                         style={{
-                          backgroundColor: 'var(--mint-green)',
+                          backgroundColor: 'var(--main-primary)',
                           color: 'white',
                           border: 'none',
                           padding: '6px 10px',
@@ -369,8 +359,8 @@ const Care: React.FC = () => {
           </div>
 
           {/* 6. 내 주변 동물병원 & 약국 찾기 */}
-          <div className="panel" style={{ background: 'var(--white)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
-            <h2 style={{ color: 'var(--deep-navy)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--mint-green)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
+          <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', width: '100%', boxShadow: '0 8px 24px rgba(18, 27, 42, 0.04)', marginBottom: '0' }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
               주변 동물병원 & 약국 검색
             </h2>
             
@@ -398,20 +388,20 @@ const Care: React.FC = () => {
                 </select>
               </div>
 
-              <div style={{ display: 'flex', background: 'var(--ice-white)', padding: '4px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', background: 'var(--screen-bg)', padding: '4px', borderRadius: '12px' }}>
                 <button
                   type="button"
                   onClick={() => setLocatorSearchType('hospital')}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
                     fontSize: '0.8rem', fontWeight: locatorSearchType === 'hospital' ? 800 : 600, cursor: 'pointer',
-                    backgroundColor: locatorSearchType === 'hospital' ? 'var(--white)' : 'transparent',
-                    color: locatorSearchType === 'hospital' ? 'var(--deep-navy)' : 'var(--muted-gray)',
+                    backgroundColor: locatorSearchType === 'hospital' ? 'var(--card-bg)' : 'transparent',
+                    color: locatorSearchType === 'hospital' ? 'var(--text-main)' : 'var(--text-muted)',
                     boxShadow: locatorSearchType === 'hospital' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
                     transition: 'all 0.2s'
                   }}
                 >
-                  동물병원 🏥
+                  동물병원
                 </button>
                 <button
                   type="button"
@@ -419,13 +409,13 @@ const Care: React.FC = () => {
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
                     fontSize: '0.8rem', fontWeight: locatorSearchType === 'pharmacy' ? 800 : 600, cursor: 'pointer',
-                    backgroundColor: locatorSearchType === 'pharmacy' ? 'var(--white)' : 'transparent',
-                    color: locatorSearchType === 'pharmacy' ? 'var(--deep-navy)' : 'var(--muted-gray)',
+                    backgroundColor: locatorSearchType === 'pharmacy' ? 'var(--card-bg)' : 'transparent',
+                    color: locatorSearchType === 'pharmacy' ? 'var(--text-main)' : 'var(--text-muted)',
                     boxShadow: locatorSearchType === 'pharmacy' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
                     transition: 'all 0.2s'
                   }}
                 >
-                  동물약국 💊
+                  동물약국
                 </button>
                 <button
                   type="button"
@@ -433,31 +423,42 @@ const Care: React.FC = () => {
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none',
                     fontSize: '0.8rem', fontWeight: locatorSearchType === 'grooming' ? 800 : 600, cursor: 'pointer',
-                    backgroundColor: locatorSearchType === 'grooming' ? 'var(--white)' : 'transparent',
-                    color: locatorSearchType === 'grooming' ? 'var(--deep-navy)' : 'var(--muted-gray)',
+                    backgroundColor: locatorSearchType === 'grooming' ? 'var(--card-bg)' : 'transparent',
+                    color: locatorSearchType === 'grooming' ? 'var(--text-main)' : 'var(--text-muted)',
                     boxShadow: locatorSearchType === 'grooming' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
                     transition: 'all 0.2s'
                   }}
                 >
-                  동물미용 ✂️
+                  동물미용
                 </button>
               </div>
             </div>
 
             {isLocatorLoading ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem', fontWeight: 600 }}>
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>
                 가까운 {locatorSearchType === 'hospital' ? '병원' : locatorSearchType === 'pharmacy' ? '약국' : '미용숍'} 정보를 조회 중입니다...
               </div>
             ) : locatorError ? (
-              <div style={{ textAlign: 'center', padding: '32px 16px', background: 'var(--ice-white)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🛠️</div>
-                <h4 style={{ color: 'var(--deep-navy)', fontSize: '0.95rem', margin: '0 0 6px 0', fontWeight: 800 }}>공공데이터 서버 점검 중</h4>
-                <p style={{ color: 'var(--muted-gray)', fontSize: '0.8rem', margin: 0, lineHeight: 1.4 }}>
+              <div style={{ textAlign: 'center', padding: '32px 16px', background: 'var(--screen-bg)', borderRadius: '12px' }}>
+                <h4 style={{ color: 'var(--text-main)', fontSize: '0.95rem', margin: '0 0 6px 0', fontWeight: 800 }}>공공데이터 서버 점검 중</h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 16px 0', lineHeight: 1.4 }}>
                   현재 국가 공공데이터포털 서버 지연 또는 점검으로 인해<br/>데이터를 불러올 수 없습니다.<br/>잠시 후 다시 시도해 주세요.
                 </p>
+                <button 
+                  onClick={() => {
+                    setLocatorError(false);
+                    // trigger re-fetch by toggling search type temporarily or creating a retry function
+                    const prev = locatorSearchType;
+                    setLocatorSearchType('grooming'); // dummy
+                    setTimeout(() => setLocatorSearchType(prev), 10);
+                  }}
+                  style={{ backgroundColor: 'var(--main-primary)', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                  다시 시도 🔄
+                </button>
               </div>
             ) : locatorResults.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted-gray)', fontSize: '0.85rem' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                 검색 결과가 없습니다.
               </div>
             ) : (
@@ -467,7 +468,7 @@ const Care: React.FC = () => {
                     key={idx} 
                     style={{ 
                       padding: '12px', 
-                      background: 'var(--ice-white)', 
+                      background: 'var(--screen-bg)', 
                       borderRadius: '10px', 
                       display: 'flex', 
                       justifyContent: 'space-between', 
@@ -476,16 +477,16 @@ const Care: React.FC = () => {
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--deep-navy)' }}>{item.name}</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>{item.name}</span>
                       <span style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.3 }}>{item.address}</span>
                     </div>
                     {item.tel && item.tel !== '전화번호 없음' && (
                       <a 
                         href={`tel:${item.tel}`} 
                         style={{ 
-                          backgroundColor: 'var(--white)',
-                          border: '1.5px solid var(--steel-gray)',
-                          color: 'var(--deep-navy)',
+                          backgroundColor: 'var(--card-bg)',
+                          border: '1.5px solid var(--border-color)',
+                          color: 'var(--text-main)',
                           textDecoration: 'none',
                           padding: '6px 10px',
                           borderRadius: '8px',
@@ -506,28 +507,6 @@ const Care: React.FC = () => {
 
         </div>
       </div>
-
-      {showPoopAnalyzer && (
-        <PoopAnalyzer 
-          onClose={() => setShowPoopAnalyzer(false)} 
-          onSave={async (eventData) => {
-            if (activePet) {
-              await addCalendarEvent({
-                petId: activePet.id,
-                date: eventData.date!,
-                type: eventData.type as any,
-                title: eventData.title!,
-                content: eventData.content || '',
-                imageUrl: eventData.imageUrl,
-                poopStatus: eventData.poopStatus as any,
-                aiAnalysisText: eventData.aiAnalysisText
-              });
-              showAlert('배변 상태가 캘린더 기록에 성공적으로 연동되었습니다! 💾');
-            }
-            setShowPoopAnalyzer(false);
-          }} 
-        />
-      )}
     </>
   );
 };

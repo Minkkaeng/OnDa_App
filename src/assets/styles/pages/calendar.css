@@ -7,10 +7,10 @@
 
 .cal-panel {
   flex: 1;
-  background-color: var(--white);
+  background-color: var(--card-bg);
   border-radius: 12px;
-  border: 1px solid var(--steel-gray);
-  border-top: 6px solid var(--mint-green);
+  border: 1px solid var(--border-color);
+  border-top: 6px solid var(--main-primary);
   padding: 32px 24px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.02);
   display: flex;
@@ -20,7 +20,7 @@
 
 
 .cal-top-badge {
-  background-color: var(--mint-green);
+  background-color: var(--main-primary);
   color: white;
   padding: 6px 14px;
   border-radius: 20px;
@@ -43,7 +43,7 @@
   text-align: center; 
   font-weight: 600; 
   margin-bottom: 12px; 
-  color: var(--muted-gray); 
+  color: var(--text-muted); 
   font-size: 0.95rem; 
 }
 .cal-grid { 
@@ -68,11 +68,11 @@
   position: relative;
   border: 1.5px solid transparent;
 }
-.cal-day:hover { background-color: var(--ice-white); }
+.cal-day:hover { background-color: var(--screen-bg); }
 .cal-day.active { 
-  background-color: var(--white);
+  background-color: var(--card-bg);
   border-color: #A0AEC0;
-  color: var(--deep-navy) !important;
+  color: var(--text-main) !important;
   font-weight: 800; 
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
   z-index: 1;
@@ -85,7 +85,7 @@
 
 .cal-ad-zone {
   margin-top: 40px;
-  background-color: var(--mint-green-light);
+  background-color: var(--butter-cream);
   border: 1px solid rgba(20, 195, 163, 0.2);
   border-radius: 12px;
   padding: 16px;
@@ -109,9 +109,9 @@
   font-weight: 700;
 }
 .editor-btn-gray {
-  background-color: var(--ice-white);
+  background-color: var(--screen-bg);
   color: #ff5a5a;
-  border: 1px solid var(--steel-gray);
+  border: 1px solid var(--border-color);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -125,11 +125,11 @@
   margin-bottom: 12px;
 }
 .editor-meta {
-  color: var(--muted-gray);
+  color: var(--text-muted);
   font-size: 0.95rem;
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--steel-gray);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .cal-editor-textarea { 
@@ -142,14 +142,14 @@
   resize: none; 
   font-size: 1.1rem; 
   line-height: 1.8; 
-  color: var(--deep-navy);
+  color: var(--text-main);
   outline: none;
   min-height: 200px;
 }
 
 .editor-submit-btn {
   width: 100%;
-  background-color: var(--mint-green);
+  background-color: var(--main-primary);
   color: white;
   padding: 18px;
   border: none;
@@ -163,28 +163,28 @@
 /* Switch Tabs */
 .cal-tabs {
   display: inline-flex;
-  background-color: var(--ice-white);
+  background-color: var(--screen-bg);
   border-radius: 30px;
   padding: 4px;
-  border: 1px solid var(--steel-gray);
+  border: 1px solid var(--border-color);
 }
 .cal-tab-btn {
   padding: 8px 24px;
   border: none;
   border-radius: 26px;
   background-color: transparent;
-  color: var(--muted-gray);
+  color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .cal-tab-btn:hover {
-  color: var(--deep-navy);
+  color: var(--text-main);
 }
 .cal-tab-btn.active {
-  background-color: var(--white);
-  color: var(--mint-green);
+  background-color: var(--card-bg);
+  color: var(--main-primary);
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
@@ -196,7 +196,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: var(--mint-green);
+  background-color: var(--main-primary);
   color: white;
   font-size: 2rem;
   display: flex;

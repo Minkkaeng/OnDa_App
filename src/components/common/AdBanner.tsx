@@ -45,10 +45,10 @@ const AdBanner: React.FC = () => {
     <div 
       style={{
         borderRadius: '16px',
-        background: 'linear-gradient(135deg, var(--ice-white) 0%, var(--white) 100%)',
-        border: '1.5px solid var(--steel-gray)',
+        background: 'linear-gradient(135deg, var(--screen-bg) 0%, var(--card-bg) 100%)',
+        border: '1.5px solid var(--border-color)',
         padding: '16px 20px',
-        color: 'var(--deep-navy)',
+        color: 'var(--text-main)',
         boxShadow: '0 4px 16px rgba(18, 27, 42, 0.03)',
         position: 'relative',
         overflow: 'hidden',
@@ -67,8 +67,8 @@ const AdBanner: React.FC = () => {
       <div style={{ flex: 1, zIndex: 1, paddingRight: '8px' }}>
         <span style={{ 
           fontSize: '0.65rem', 
-          background: 'var(--mint-green-light)', 
-          color: 'var(--mint-green)',
+          background: 'var(--butter-cream)', 
+          color: 'var(--main-primary)',
           padding: '2px 8px', 
           borderRadius: '12px', 
           fontWeight: 800,
@@ -77,7 +77,7 @@ const AdBanner: React.FC = () => {
           {activeAd.badge}
         </span>
         <h4 style={{ margin: '6px 0 2px 0', fontSize: '0.9rem', fontWeight: 800 }}>{activeAd.title}</h4>
-        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--muted-gray)', lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
           {activeAd.desc}
         </p>
       </div>
@@ -89,7 +89,7 @@ const AdBanner: React.FC = () => {
         width: '80px',
         height: '80px',
         borderRadius: '50%',
-        background: 'var(--mint-green-light)',
+        background: 'var(--butter-cream)',
         top: '-20px',
         right: '-20px',
         filter: 'blur(20px)',

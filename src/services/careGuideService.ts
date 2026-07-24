@@ -64,7 +64,7 @@ export const generateDailyGuides = (activePet: Pet, events: CalendarEvent[]): Gu
   if (snackCount >= 3) {
     tips.push({
       id: 'guide-snack-high',
-      title: '간식 급여량이 많아요 🍖',
+      title: '간식 급여량이 많아요',
       content: `오늘 벌써 간식을 ${snackCount}번이나 먹었어요! 간식은 하루 필요 칼로리의 10% 이내로 제한하는 것이 비만 예방에 좋습니다.`
     });
   }
@@ -77,7 +77,7 @@ export const generateDailyGuides = (activePet: Pet, events: CalendarEvent[]): Gu
     if (totalWater < recommendedWater * 0.5) {
       tips.push({
         id: 'guide-water-low',
-        title: '수분 섭취가 더 필요해요 💧',
+        title: '수분 섭취가 더 필요해요',
         content: `현재 ${totalWater}ml를 마셨어요. ${activePet.name}의 권장 음수량(${recommendedWater}ml)에 비해 아직 부족하니, 물그릇을 갈아주거나 펫밀크를 활용해 보세요.`
       });
     } else if (totalWater >= recommendedWater) {

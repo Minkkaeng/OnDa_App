@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePetStore } from '../store/petStore';
 
-import defaultLogo from '../assets/logo.png';
 import ImageCropper from '../components/common/ImageCropper';
 
 const Onboarding: React.FC = () => {
@@ -17,7 +16,7 @@ const Onboarding: React.FC = () => {
   const [breed, setBreed] = useState('');
   const [birth, setBirth] = useState('');
   const [weight, setWeight] = useState('');
-  const [image, setImage] = useState<string>(defaultLogo);
+  const [image, setImage] = useState<string>('/default_paw.png');
 
   // Cropper states
   const [rawImage, setRawImage] = useState<string>('');
@@ -147,7 +146,7 @@ const Onboarding: React.FC = () => {
   });
 
   return (
-    <div className="onboarding-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--white)' }}>
+    <div className="onboarding-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--card-bg)' }}>
       {/* Unified Global Tour takes care of guides */}
 
       {/* Step Header Indicators */}
@@ -160,12 +159,12 @@ const Onboarding: React.FC = () => {
             width: '24px',
             height: '24px',
             borderRadius: '50%',
-            backgroundColor: step === 1 ? 'var(--mint-green)' : 'var(--steel-gray)',
+            backgroundColor: step === 1 ? 'var(--main-primary)' : 'var(--border-color)',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '0.85rem'
           }}>1</span>
-          <span style={{ fontWeight: step === 1 ? 'bold' : 'normal', color: step === 1 ? 'var(--deep-navy)' : 'var(--muted-gray)' }}>기본 정보</span>
+          <span style={{ fontWeight: step === 1 ? 'bold' : 'normal', color: step === 1 ? 'var(--text-main)' : 'var(--text-muted)' }}>기본 정보</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{
@@ -175,12 +174,12 @@ const Onboarding: React.FC = () => {
             width: '24px',
             height: '24px',
             borderRadius: '50%',
-            backgroundColor: step === 2 ? 'var(--mint-green)' : 'var(--steel-gray)',
+            backgroundColor: step === 2 ? 'var(--main-primary)' : 'var(--border-color)',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '0.85rem'
           }}>2</span>
-          <span style={{ fontWeight: step === 2 ? 'bold' : 'normal', color: step === 2 ? 'var(--deep-navy)' : 'var(--muted-gray)' }}>케어 정보</span>
+          <span style={{ fontWeight: step === 2 ? 'bold' : 'normal', color: step === 2 ? 'var(--text-main)' : 'var(--text-muted)' }}>케어 정보</span>
         </div>
       </div>
 
@@ -200,7 +199,7 @@ const Onboarding: React.FC = () => {
                   width: '110px', 
                   height: '110px', 
                   borderRadius: '50%', 
-                  border: '4px solid var(--mint-green)', 
+                  border: '4px solid var(--main-primary)', 
                   objectFit: 'cover',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                 }} 
@@ -209,12 +208,12 @@ const Onboarding: React.FC = () => {
                 position: 'absolute',
                 bottom: 0,
                 right: 0,
-                backgroundColor: 'var(--mint-green)',
+                backgroundColor: 'var(--main-primary)',
                 color: 'white',
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                border: '3px solid var(--white)',
+                border: '3px solid var(--card-bg)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -295,7 +294,7 @@ const Onboarding: React.FC = () => {
                 className="btn-submit" 
                 disabled={!isStep1Valid}
                 style={{ 
-                  backgroundColor: isStep1Valid ? 'var(--mint-green)' : '#E0E0E0',
+                  backgroundColor: isStep1Valid ? 'var(--main-primary)' : '#E0E0E0',
                   cursor: isStep1Valid ? 'pointer' : 'not-allowed',
                   padding: '10px 24px',
                   fontSize: '0.95rem',
@@ -329,8 +328,8 @@ const Onboarding: React.FC = () => {
                 style={{ 
                   textAlign: 'left', 
                   cursor: 'pointer', 
-                  background: 'var(--white)',
-                  color: medicationTime ? 'var(--deep-navy)' : 'var(--muted-gray)'
+                  background: 'var(--card-bg)',
+                  color: medicationTime ? 'var(--text-main)' : 'var(--text-muted)'
                 }}
                 onClick={() => {
                   if (medicationTime) {
@@ -365,8 +364,8 @@ const Onboarding: React.FC = () => {
                 style={{ 
                   textAlign: 'left', 
                   cursor: 'pointer', 
-                  background: 'var(--white)',
-                  color: walkDepartTime ? 'var(--deep-navy)' : 'var(--muted-gray)'
+                  background: 'var(--card-bg)',
+                  color: walkDepartTime ? 'var(--text-main)' : 'var(--text-muted)'
                 }}
                 onClick={() => {
                   if (walkDepartTime) {
@@ -391,8 +390,8 @@ const Onboarding: React.FC = () => {
                 style={{ 
                   textAlign: 'left', 
                   cursor: 'pointer', 
-                  background: 'var(--white)',
-                  color: walkDuration ? 'var(--deep-navy)' : 'var(--muted-gray)'
+                  background: 'var(--card-bg)',
+                  color: walkDuration ? 'var(--text-main)' : 'var(--text-muted)'
                 }}
                 onClick={() => {
                   if (walkDuration) {
@@ -424,7 +423,7 @@ const Onboarding: React.FC = () => {
                 className="btn-submit" 
                 onClick={() => setStep(1)}
                 style={{ 
-                  backgroundColor: 'var(--muted-gray)', 
+                  backgroundColor: 'var(--text-muted)', 
                   padding: '10px 24px',
                   fontSize: '0.95rem',
                   width: 'auto',
@@ -438,7 +437,7 @@ const Onboarding: React.FC = () => {
                 type="submit" 
                 className="btn-submit" 
                 style={{ 
-                  backgroundColor: 'var(--mint-green)', 
+                  backgroundColor: 'var(--main-primary)', 
                   padding: '10px 24px',
                   fontSize: '0.95rem',
                   width: 'auto',
@@ -474,7 +473,7 @@ const Onboarding: React.FC = () => {
           }}
         >
           <div className="modal-content" style={{ background: 'white', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', gap: '16px' }}>
-            <h4 style={{ margin: 0, color: 'var(--deep-navy)', fontSize: '1rem', fontWeight: 800 }}>
+            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1rem', fontWeight: 800 }}>
               {activePicker === 'medication' ? '투약 시간 설정' : activePicker === 'depart' ? '산책 출발 시간 설정' : '산책 목표 시간 설정'}
             </h4>
             
@@ -536,7 +535,7 @@ const Onboarding: React.FC = () => {
                 type="button" 
                 className="btn-submit"
                 onClick={() => setActivePicker(null)}
-                style={{ backgroundColor: 'var(--muted-gray)', flex: 1, marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
+                style={{ backgroundColor: 'var(--text-muted)', flex: 1, marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
               >
                 취소
               </button>

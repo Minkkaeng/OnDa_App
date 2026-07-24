@@ -1,0 +1,17 @@
+{
+  "name": "OnDa Pet Care",
+  "short_name": "OnDa",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00C7AE",
+  "description": "OnDa Pet Care App",
+  "icons": [
+    {
+      "src": "lgt_mode.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePetStore } from '../store/petStore';
-import defaultLogo from '../assets/logo.png';
 import { 
   User, 
   Stethoscope, 
@@ -22,17 +21,17 @@ const COMMON_BREEDS = [
 ];
 
 const ALLERGY_PRESETS = [
-  { id: 'chicken', label: '닭고기 🍗' },
-  { id: 'beef', label: '소고기 🥩' },
-  { id: 'pork', label: '돼지고기 🥓' },
-  { id: 'egg', label: '계란/유제품 🥚' },
-  { id: 'dust', label: '먼지/꽃가루 🌾' },
-  { id: 'none', label: '없음 ✨' }
+  { id: 'chicken', label: '닭고기' },
+  { id: 'beef', label: '소고기' },
+  { id: 'pork', label: '돼지고기' },
+  { id: 'egg', label: '계란/유제품' },
+  { id: 'dust', label: '먼지/꽃가루' },
+  { id: 'none', label: '없음' }
 ];
 
 const PERSONALITY_TAGS = [
-  '활발함 ⚡', '얌전함 💤', '호기심왕 🔍', '겁쟁이 🙈', 
-  '식탐왕 🍖', '애교쟁이 💕', '사회성만점 🤝', '사람좋아 🥰'
+  '활발함', '얌전함', '호기심왕', '겁쟁이', 
+  '식탐왕', '애교쟁이', '사회성만점', '사람좋아'
 ];
 
 const WALK_GOAL_OPTIONS = ['15분', '30분', '45분', '60분', '90분'];
@@ -55,7 +54,7 @@ const Profile: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [walkTime, setWalkTime] = useState('');
   const [walkGoal, setWalkGoal] = useState('30분');
-  const [image, setImage] = useState(defaultLogo);
+  const [image, setImage] = useState('/default_paw.png');
 
   // Check query params to force new pet add mode or select specific pet
   useEffect(() => {
@@ -85,7 +84,7 @@ const Profile: React.FC = () => {
         setAllergies(pet.allergies || '');
         setMedications(pet.medications || '');
         setNotes(pet.notes || '');
-        setImage(pet.image || defaultLogo);
+        setImage(pet.image || '/default_paw.png');
         setWalkTime(pet.walkTime || '');
         setWalkGoal(pet.walkGoal || pet.walkDuration || '30분');
       }
@@ -99,7 +98,7 @@ const Profile: React.FC = () => {
       setAllergies('');
       setMedications('');
       setNotes('');
-      setImage(defaultLogo);
+      setImage('/default_paw.png');
       setWalkTime('');
       setWalkGoal('30분');
     }
@@ -219,7 +218,7 @@ const Profile: React.FC = () => {
         // Create new pet
         const newPet = await addPet(petData);
         setSelectedPetId(newPet.id);
-        showAlert('✨ 새로운 반려동물 프로필이 생성되었습니다!');
+        showAlert('새로운 반려동물 프로필이 생성되었습니다!');
       }
     } catch (err) {
       console.error(err);
@@ -233,10 +232,10 @@ const Profile: React.FC = () => {
       {/* 1. Pet Switcher Header Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--deep-navy)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            프로필 설정 <Sparkles size={20} color="var(--mint-green)" />
+          <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            프로필 설정 <Sparkles size={20} color="var(--main-primary)" />
           </h2>
-          <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--muted-gray)', fontWeight: 600 }}>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
             {selectedPetId ? '아이의 상세 정보 및 건강 케어 카드' : '새 반려동물 등록하기'}
           </p>
         </div>
@@ -256,8 +255,8 @@ const Profile: React.FC = () => {
                 gap: '8px',
                 padding: '6px 14px 6px 8px',
                 borderRadius: '30px',
-                backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
-                border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
+                backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
+                border: isSelected ? '2px solid var(--main-primary)' : '1px solid var(--border-color)',
                 boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.15)' : 'none',
                 cursor: 'pointer',
                 flexShrink: 0,
@@ -265,15 +264,16 @@ const Profile: React.FC = () => {
               }}
             >
               <img 
-                src={pet.image || defaultLogo} 
+                src={pet.image || '/default_paw.png'} 
                 alt={pet.name} 
                 style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                onError={(e) => { e.currentTarget.src = '/default_paw.png' }}
               />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: isSelected ? 'var(--mint-green)' : 'var(--deep-navy)' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: isSelected ? 'var(--main-primary)' : 'var(--text-main)' }}>
                   {pet.name}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: 'var(--muted-gray)', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                   {pet.breed || '미설정'}
                 </span>
               </div>
@@ -289,9 +289,9 @@ const Profile: React.FC = () => {
             gap: '6px',
             padding: '6px 14px',
             borderRadius: '30px',
-            backgroundColor: selectedPetId === null ? 'var(--mint-green)' : 'var(--white)',
-            color: selectedPetId === null ? 'white' : 'var(--muted-gray)',
-            border: selectedPetId === null ? '2px solid var(--mint-green)' : '1px dashed var(--steel-gray)',
+            backgroundColor: selectedPetId === null ? 'var(--main-primary)' : 'var(--card-bg)',
+            color: selectedPetId === null ? 'white' : 'var(--text-muted)',
+            border: selectedPetId === null ? '2px solid var(--main-primary)' : '1px dashed var(--border-color)',
             cursor: 'pointer',
             flexShrink: 0,
             transition: 'all 0.2s ease',
@@ -308,7 +308,7 @@ const Profile: React.FC = () => {
       <div 
         style={{
           borderRadius: '24px',
-          background: 'linear-gradient(135deg, #0D9488 0%, #115E59 100%)',
+          background: 'linear-gradient(135deg, var(--main-primary) 0%, #115E59 100%)',
           color: 'white',
           padding: '24px 20px',
           boxShadow: '0 12px 28px rgba(13, 148, 136, 0.25)',
@@ -399,7 +399,7 @@ const Profile: React.FC = () => {
       </div>
 
       {/* 4. Segmented Section Tabs */}
-      <div style={{ display: 'flex', backgroundColor: '#F1F5F9', padding: '4px', borderRadius: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', backgroundColor: 'var(--border-color)', padding: '4px', borderRadius: '16px', marginBottom: '20px' }}>
         {[
           { id: 'basic', label: '기본 정보', icon: User },
           { id: 'health', label: '의료 & 건강', icon: Stethoscope },
@@ -422,8 +422,8 @@ const Profile: React.FC = () => {
                 padding: '10px 4px',
                 borderRadius: '12px',
                 border: 'none',
-                backgroundColor: isActive ? 'var(--white)' : 'transparent',
-                color: isActive ? 'var(--mint-green)' : 'var(--muted-gray)',
+                backgroundColor: isActive ? 'var(--card-bg)' : 'transparent',
+                color: isActive ? 'var(--main-primary)' : 'var(--text-muted)',
                 fontWeight: isActive ? 800 : 600,
                 fontSize: '0.8rem',
                 boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
@@ -440,18 +440,18 @@ const Profile: React.FC = () => {
 
       {/* 5. Form Body */}
       <form onSubmit={handleSaveProfile}>
-        <div className="panel" style={{ padding: '20px', borderRadius: '20px', borderTop: '4px solid var(--mint-green)', boxShadow: 'var(--shadow-card)' }}>
+        <div className="panel" style={{ padding: '20px', borderRadius: '20px', borderTop: '4px solid var(--main-primary)', boxShadow: 'var(--shadow-card)' }}>
 
           {/* TAB 1: Basic Information */}
           {activeTab === 'basic' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <User size={18} color="var(--mint-green)" /> 기본 프로필 입력
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <User size={18} color="var(--main-primary)" /> 기본 프로필 입력
               </h4>
 
               {/* Name Input */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>반려동물 이름 *</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>반려동물 이름 *</label>
                 <input 
                   type="text"
                   value={name}
@@ -461,18 +461,18 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.95rem',
                     fontWeight: 700,
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
               </div>
 
               {/* Breed Input + Preset Chips */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>품종</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>품종</label>
                 <input 
                   type="text"
                   value={breed}
@@ -481,10 +481,10 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
                 {/* Breed Chips */}
@@ -499,9 +499,9 @@ const Profile: React.FC = () => {
                         borderRadius: '16px',
                         fontSize: '0.75rem',
                         fontWeight: 700,
-                        border: breed === b ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)',
-                        backgroundColor: breed === b ? 'var(--mint-green-light)' : 'var(--white)',
-                        color: breed === b ? 'var(--mint-green)' : 'var(--muted-gray)',
+                        border: breed === b ? '1.5px solid var(--main-primary)' : '1px solid var(--border-color)',
+                        backgroundColor: breed === b ? 'var(--butter-cream)' : 'var(--card-bg)',
+                        color: breed === b ? 'var(--main-primary)' : 'var(--text-muted)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
                       }}
@@ -515,8 +515,8 @@ const Profile: React.FC = () => {
               {/* Birth Date Input */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>생년월일 (입양일)</label>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--mint-green)', fontWeight: 800 }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>생년월일 (입양일)</label>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800 }}>
                     {calculateAgeStr(birth)}
                   </span>
                 </div>
@@ -527,17 +527,17 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
               </div>
 
               {/* Weight Input with +/- Adjust Buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>현재 체중 (kg)</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>현재 체중 (kg)</label>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input 
                     type="number"
@@ -549,11 +549,11 @@ const Profile: React.FC = () => {
                       flex: 1,
                       padding: '12px 14px',
                       borderRadius: '12px',
-                      border: '1.5px solid var(--steel-gray)',
+                      border: '1.5px solid var(--border-color)',
                       fontSize: '1rem',
                       fontWeight: 800,
                       outline: 'none',
-                      backgroundColor: 'var(--ice-white)'
+                      backgroundColor: 'var(--screen-bg)'
                     }}
                   />
                   {[-0.5, -0.1, +0.1, +0.5].map(delta => (
@@ -564,9 +564,9 @@ const Profile: React.FC = () => {
                       style={{
                         padding: '10px 8px',
                         borderRadius: '10px',
-                        border: '1px solid var(--steel-gray)',
-                        backgroundColor: 'var(--white)',
-                        color: delta > 0 ? 'var(--mint-green)' : '#EF4444',
+                        border: '1px solid var(--border-color)',
+                        backgroundColor: 'var(--card-bg)',
+                        color: delta > 0 ? 'var(--main-primary)' : '#EF4444',
                         fontWeight: 800,
                         fontSize: '0.75rem',
                         cursor: 'pointer',
@@ -584,13 +584,13 @@ const Profile: React.FC = () => {
           {/* TAB 2: Health & Medical */}
           {activeTab === 'health' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Stethoscope size={18} color="var(--mint-green)" /> 의료 및 건강 케어 정보
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Stethoscope size={18} color="var(--main-primary)" /> 의료 및 건강 케어 정보
               </h4>
 
               {/* Hospital Input */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>자주 가는 동물병원</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>자주 가는 동물병원</label>
                 <input 
                   type="text"
                   value={hospitalName}
@@ -599,17 +599,17 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
               </div>
 
               {/* Allergy Information + One-Touch Chips */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>알레르기 식이/환경 요소</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>알레르기 식이/환경 요소</label>
                 <input 
                   type="text"
                   value={allergies}
@@ -618,10 +618,10 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -638,9 +638,9 @@ const Profile: React.FC = () => {
                           borderRadius: '16px',
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          border: isSelected ? '1.5px solid #EF4444' : '1px solid var(--steel-gray)',
-                          backgroundColor: isSelected ? '#FEF2F2' : 'var(--white)',
-                          color: isSelected ? '#EF4444' : 'var(--muted-gray)',
+                          border: isSelected ? '1.5px solid #EF4444' : '1px solid var(--border-color)',
+                          backgroundColor: isSelected ? '#FEF2F2' : 'var(--card-bg)',
+                          color: isSelected ? '#EF4444' : 'var(--text-muted)',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease'
                         }}
@@ -654,7 +654,7 @@ const Profile: React.FC = () => {
 
               {/* Regular Medication / Supplements */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>정기 복용약 및 영양제</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>정기 복용약 및 영양제</label>
                 <input 
                   type="text"
                   value={medications}
@@ -663,10 +663,10 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
               </div>
@@ -676,13 +676,13 @@ const Profile: React.FC = () => {
           {/* TAB 3: Walk & Care Routine */}
           {activeTab === 'routine' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Footprints size={18} color="var(--mint-green)" /> 산책 & 데일리 케어 루틴
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Footprints size={18} color="var(--main-primary)" /> 산책 & 데일리 케어 루틴
               </h4>
 
               {/* Walk Goal Options */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>일일 산책 목표 시간</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>일일 산책 목표 시간</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
                   {WALK_GOAL_OPTIONS.map(opt => {
                     const isSelected = walkGoal === opt;
@@ -696,9 +696,9 @@ const Profile: React.FC = () => {
                           borderRadius: '12px',
                           fontSize: '0.85rem',
                           fontWeight: 800,
-                          border: isSelected ? '2px solid var(--mint-green)' : '1px solid var(--steel-gray)',
-                          backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
-                          color: isSelected ? 'var(--mint-green)' : 'var(--deep-navy)',
+                          border: isSelected ? '2px solid var(--main-primary)' : '1px solid var(--border-color)',
+                          backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
+                          color: isSelected ? 'var(--main-primary)' : 'var(--text-main)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           textAlign: 'center'
@@ -713,7 +713,7 @@ const Profile: React.FC = () => {
 
               {/* Walk Schedule Time */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>주요 산책 선호 시간대</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>주요 산책 선호 시간대</label>
                 <input 
                   type="text"
                   value={walkTime}
@@ -722,10 +722,10 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)'
+                    backgroundColor: 'var(--screen-bg)'
                   }}
                 />
               </div>
@@ -735,13 +735,13 @@ const Profile: React.FC = () => {
           {/* TAB 4: Personality & Notes */}
           {activeTab === 'notes' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--deep-navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FileText size={18} color="var(--mint-green)" /> 성격 태그 & 자유 특이사항
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FileText size={18} color="var(--main-primary)" /> 성격 태그 & 자유 특이사항
               </h4>
 
               {/* Personality Tag Chips */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>우리 아이 성격 키워드</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>우리 아이 성격 키워드</label>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {PERSONALITY_TAGS.map(pt => {
                     const isSelected = notes.includes(pt);
@@ -755,9 +755,9 @@ const Profile: React.FC = () => {
                           borderRadius: '16px',
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          border: isSelected ? '1.5px solid var(--mint-green)' : '1px solid var(--steel-gray)',
-                          backgroundColor: isSelected ? 'var(--mint-green-light)' : 'var(--white)',
-                          color: isSelected ? 'var(--mint-green)' : 'var(--muted-gray)',
+                          border: isSelected ? '1.5px solid var(--main-primary)' : '1px solid var(--border-color)',
+                          backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
+                          color: isSelected ? 'var(--main-primary)' : 'var(--text-muted)',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease'
                         }}
@@ -771,7 +771,7 @@ const Profile: React.FC = () => {
 
               {/* Free Notes Textarea */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--deep-navy)' }}>기타 케어 주의사항 및 메모</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>기타 케어 주의사항 및 메모</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -780,11 +780,11 @@ const Profile: React.FC = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '12px',
-                    border: '1.5px solid var(--steel-gray)',
+                    border: '1.5px solid var(--border-color)',
                     fontSize: '0.9rem',
                     lineHeight: 1.5,
                     outline: 'none',
-                    backgroundColor: 'var(--ice-white)',
+                    backgroundColor: 'var(--screen-bg)',
                     resize: 'none'
                   }}
                 />
@@ -825,7 +825,7 @@ const Profile: React.FC = () => {
                 flex: 1,
                 padding: '14px',
                 borderRadius: '16px',
-                backgroundColor: 'var(--mint-green)',
+                backgroundColor: 'var(--main-primary)',
                 color: 'white',
                 border: 'none',
                 fontWeight: 800,
