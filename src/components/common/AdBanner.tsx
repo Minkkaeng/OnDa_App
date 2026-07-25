@@ -8,6 +8,10 @@ interface AdPreset {
   link?: string;
 }
 
+interface AdBannerProps {
+  style?: React.CSSProperties;
+}
+
 const AD_PRESETS: AdPreset[] = [
   {
     badge: '마이도기',
@@ -29,7 +33,7 @@ const AD_PRESETS: AdPreset[] = [
   }
 ];
 
-const AdBanner: React.FC = () => {
+const AdBanner: React.FC<AdBannerProps> = ({ style }) => {
   const [adIdx, setAdIdx] = useState(0);
 
   useEffect(() => {
@@ -44,6 +48,7 @@ const AdBanner: React.FC = () => {
   return (
     <div 
       style={{
+        ...style,
         borderRadius: '16px',
         background: 'linear-gradient(135deg, var(--screen-bg) 0%, var(--card-bg) 100%)',
         border: '1.5px solid var(--border-color)',
@@ -57,7 +62,10 @@ const AdBanner: React.FC = () => {
         alignItems: 'center',
         cursor: 'pointer',
         transition: 'transform 0.2s',
-        marginTop: 0
+        marginTop: 0,
+        height: '90px',
+        minHeight: '90px',
+        boxSizing: 'border-box'
       }}
       onClick={() => {
         // If native capacitor implementation, this could trigger AdMob SDK click tracker

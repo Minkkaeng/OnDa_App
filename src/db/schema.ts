@@ -21,7 +21,7 @@ export interface Pet {
   walkRepeat?: boolean;
 }
 
-export type EventType = 'diary' | 'hospital' | 'schedule' | 'poop';
+export type EventType = 'diary' | 'hospital' | 'schedule' | 'poop' | 'walk';
 
 export interface CalendarEvent {
   id: string;
@@ -33,6 +33,8 @@ export interface CalendarEvent {
   imageUrl?: string;
   poopStatus?: 'good' | 'loose' | 'hard' | 'bloody';
   category?: string;
+  time?: string;
+  hasAlarm?: boolean;
 }
 
 export interface AppSettings {

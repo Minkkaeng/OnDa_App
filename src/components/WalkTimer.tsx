@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePetStore } from '../store/petStore';
+import { App as CapacitorApp } from '@capacitor/app';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 interface WalkTimerProps {
   onClose: () => void;
@@ -10,13 +12,88 @@ export const WalkTimer: React.FC<WalkTimerProps> = ({ onClose }) => {
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastTickRef = useRef<number>(0);
 
+  // 로컬 알림 권한 및 백그라운드 전환 감지
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    const requestPermissions = async () => {
+      try {
+        const perm = await LocalNotifications.checkPermissions();
+        if (perm.display !== 'granted') {
+          await LocalNotifications.requestPermissions();
+        }
+      } catch (e) {
+        console.log('Local Notifications not available (Web)', e);
+      }
+    };
+    requestPermissions();
+
+    const handleAppStateChange = async ({ isActive }: { isActive: boolean }) => {
+      if (!isActive && isRunning) {
+        try {
+          await LocalNotifications.schedule({
+            notifications: [
+              {
+                title: '산책 진행 중 🐾',
+                body: `${activePet.name}와(과)의 산책 시간이 기록되고 있습니다!`,
+                id: 101,
+                schedule: { at: new Date(Date.now() + 500) }
+              }
+            ]
+          });
+        } catch (e) {
+          console.log(e);
+        }
+      } else if (isActive) {
+        try {
+          await LocalNotifications.cancel({ notifications: [{ id: 101 }] });
+        } catch (e) {
+          console.log(e);
+        }
+        
+        // 포그라운드 복귀 시 시간 점프 계산
+        if (isRunning && lastTickRef.current > 0) {
+          const now = Date.now();
+          const delta = Math.floor((now - lastTickRef.current) / 1000);
+          if (delta > 0) {
+            setSeconds(prev => prev + delta);
+            lastTickRef.current = now;
+          }
+        }
+      }
+    };
+
+    const listenerPromise = CapacitorApp.addListener('appStateChange', handleAppStateChange);
+
+    return () => {
+      listenerPromise.then(listener => listener.remove()).catch(() => {});
+    };
+  }, [isRunning, activePet.name]);
+
+  // Delta(절대 시간) 기반 타이머 틱
+  useEffect(() => {
     if (isRunning) {
-      interval = setInterval(() => setSeconds(s => s + 1), 1000);
+      lastTickRef.current = Date.now();
+      timerRef.current = setInterval(() => {
+        const now = Date.now();
+        const delta = Math.floor((now - lastTickRef.current) / 1000);
+        if (delta >= 1) {
+          setSeconds(prev => prev + delta);
+          lastTickRef.current = now;
+        }
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+      try {
+        LocalNotifications.cancel({ notifications: [{ id: 101 }] });
+      } catch (e) {}
     }
-    return () => clearInterval(interval);
+    
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [isRunning]);
 
   const formatTime = (totalSeconds: number) => {

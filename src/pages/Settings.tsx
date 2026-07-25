@@ -405,12 +405,12 @@ const Settings: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         
         {/* MENU 1: Theme Settings Accordion */}
-        <div className="panel" style={{ 
+          <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'theme' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
+          border: expandedMenu === 'theme' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
           borderRadius: '16px',
-          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          boxShadow: expandedMenu === 'theme' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
           marginBottom: '16px',
           transition: 'all 0.25s ease'
         }}>
@@ -489,9 +489,10 @@ const Settings: React.FC = () => {
                         justifyContent: 'space-between', 
                         alignItems: 'center', 
                         padding: '10px 14px', 
-                        borderRadius: '8px', 
-                        border: activeThemeId === t.id ? '2px solid var(--main-primary)' : '1px solid var(--border-color)',
-                        backgroundColor: 'var(--card-bg)'
+                        borderRadius: '16px', 
+                        border: activeThemeId === t.id ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)',
+                        backgroundColor: 'var(--card-bg)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
                       }}
                     >
                       <div 
@@ -515,7 +516,7 @@ const Settings: React.FC = () => {
 
                 {/* Theme Edit Form */}
                 {showThemeForm && (
-                  <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--screen-bg)' }}>
+                  <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '16px', marginTop: '16px', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                     <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
                       {editingThemeId ? '테마 정보 수정' : '새 커스텀 테마 등록'}
                     </h4>
@@ -549,7 +550,7 @@ const Settings: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '16px' }}>
-                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '8px' }}>취소</button>
                       <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                     </div>
                   </form>
@@ -560,12 +561,12 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 2: Notification Settings Accordion */}
-        <div className="panel" style={{ 
+          <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'notification' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
+          border: expandedMenu === 'notification' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
           borderRadius: '16px',
-          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          boxShadow: expandedMenu === 'notification' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
           marginBottom: '16px',
           transition: 'all 0.25s ease'
         }}>
@@ -666,9 +667,10 @@ const Settings: React.FC = () => {
                           justifyContent: 'space-between', 
                           alignItems: 'center', 
                           padding: '10px 12px', 
-                          borderRadius: '8px', 
-                          border: '1px solid var(--border-color)',
+                          borderRadius: '16px', 
+                          border: '1.5px solid var(--border-color)',
                           backgroundColor: rem.enabled ? 'var(--card-bg)' : 'var(--screen-bg)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                           fontSize: '0.85rem'
                         }}
                       >
@@ -700,7 +702,7 @@ const Settings: React.FC = () => {
                 </div>
 
                 {showReminderForm && (
-                  <form onSubmit={handleSaveReminder} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', marginTop: '16px', backgroundColor: 'var(--screen-bg)' }}>
+                  <form onSubmit={handleSaveReminder} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '16px', marginTop: '16px', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                     <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
                       {editingReminderId ? '알람 일정 수정' : '새 알람 예약 등록'}
                     </h4>
@@ -746,7 +748,7 @@ const Settings: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button type="button" onClick={() => setShowReminderForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="button" onClick={() => setShowReminderForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '8px' }}>취소</button>
                       <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                     </div>
                   </form>
@@ -757,12 +759,12 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 3: System Settings Accordion */}
-        <div className="panel" style={{ 
+          <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedMenu === 'system' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
+          border: expandedMenu === 'system' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
           borderRadius: '16px',
-          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          boxShadow: expandedMenu === 'system' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
           marginBottom: '16px',
           transition: 'all 0.25s ease'
         }}>
@@ -876,9 +878,10 @@ const Settings: React.FC = () => {
                           justifyContent: 'space-between', 
                           alignItems: 'center', 
                           padding: '10px 12px', 
-                          borderRadius: '8px', 
-                          border: '1px solid var(--border-color)',
+                          borderRadius: '16px', 
+                          border: '1.5px solid var(--border-color)',
                           backgroundColor: 'var(--card-bg)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                           fontSize: '0.8rem'
                         }}
                       >
@@ -897,7 +900,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   {showSnapshotForm && (
-                    <form onSubmit={handleSaveSnapshot} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--screen-bg)' }}>
+                    <form onSubmit={handleSaveSnapshot} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '16px', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                       <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
                         {editingSnapshotId ? '스냅샷 수정' : '현재 백업 스냅샷 저장'}
                       </h4>
@@ -913,7 +916,7 @@ const Settings: React.FC = () => {
                         />
                       </div>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button type="button" onClick={() => setShowSnapshotForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
+                        <button type="button" onClick={() => setShowSnapshotForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '8px' }}>취소</button>
                         <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
                       </div>
                     </form>
@@ -981,9 +984,10 @@ const Settings: React.FC = () => {
                       key={idx} 
                       style={{ 
                         padding: '10px 12px', 
-                        borderRadius: '8px', 
-                        border: '1px solid var(--border-color)', 
+                        borderRadius: '16px', 
+                        border: '1.5px solid var(--border-color)', 
                         background: 'var(--card-bg)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                         cursor: 'pointer',
                         fontSize: '0.85rem'
                       }}
@@ -1024,7 +1028,7 @@ const Settings: React.FC = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
                   {inquiries.map(inq => (
-                    <div key={inq.id} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)', overflow: 'hidden', fontSize: '0.85rem' }}>
+                    <div key={inq.id} style={{ borderRadius: '16px', border: '1.5px solid var(--border-color)', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', overflow: 'hidden', fontSize: '0.85rem' }}>
                       <div 
                         onClick={() => setExpandedInquiryId(expandedInquiryId === inq.id ? null : inq.id)}
                         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', cursor: 'pointer', backgroundColor: expandedInquiryId === inq.id ? 'var(--butter-cream)' : 'transparent' }}
@@ -1052,7 +1056,7 @@ const Settings: React.FC = () => {
                 </div>
 
                 {showInquiryForm && (
-                  <form onSubmit={handleSaveInquiry} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--screen-bg)' }}>
+                  <form onSubmit={handleSaveInquiry} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '16px', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                     <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>{editingInquiryId ? '1:1 문의사항 수정' : '새로운 문의 등록'}</h4>
                     <div className="form-group" style={{ marginBottom: '10px' }}>
                       <label className="form-label" style={{ fontSize: '0.8rem' }}>문의 유형</label>
@@ -1072,7 +1076,7 @@ const Settings: React.FC = () => {
                       <textarea className="form-input" value={inquiryContent} onChange={(e) => setInquiryContent(e.target.value)} style={{ minHeight: '80px', resize: 'none' }} required />
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button type="button" onClick={() => setShowInquiryForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '8px' }}>취소</button>
+                      <button type="button" onClick={() => setShowInquiryForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '8px' }}>취소</button>
                       <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>보내기</button>
                     </div>
                   </form>

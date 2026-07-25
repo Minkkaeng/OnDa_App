@@ -3,7 +3,7 @@ import { usePetStore } from '../store/petStore';
 import { useOnboarding } from '../hooks/useOnboarding';
 import ImageCropper from '../components/common/ImageCropper';
 import BottomSheet from '../components/common/BottomSheet';
-import { Camera, Edit2, Trash2, Activity, FileText, Hospital } from 'lucide-react';
+import { Camera, Edit2, Trash2, Activity, FileText, Hospital, Search } from 'lucide-react';
 
 const Diary: React.FC = () => {
   const { pets, activePetId, events, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, showAlert, showConfirm } = usePetStore();
@@ -16,7 +16,7 @@ const Diary: React.FC = () => {
   const modalContentRef = React.useRef<HTMLDivElement>(null);
 
   const [category, setCategory] = useState<string>('일상');
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
   const [selectedDetailEvent, setSelectedDetailEvent] = useState<any | null>(null);
 
@@ -48,9 +48,12 @@ const Diary: React.FC = () => {
   const diaryEvents = events
     .filter(e => e.petId === activePet?.id && (e.type === 'diary' || e.type === 'poop' || e.imageUrl))
     .filter(e => {
-      if (selectedFilter === 'all') return true;
-      if (selectedFilter === '건강' && e.type === 'poop') return true;
-      return e.category === selectedFilter;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      const matchTitle = e.title?.toLowerCase().includes(q);
+      const matchContent = e.content?.toLowerCase().includes(q);
+      const matchDate = e.date?.includes(q);
+      return matchTitle || matchContent || matchDate;
     })
     .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -325,7 +328,7 @@ const Diary: React.FC = () => {
                       type="button" 
                       onClick={handleCloseModal} 
                       className="btn-submit" 
-                      style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '10px' }}
+                      style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '10px' }}
                     >
                       닫기
                     </button>
@@ -463,7 +466,7 @@ const Diary: React.FC = () => {
                       type="button" 
                       onClick={() => setFormStep(1)} 
                       className="btn-submit" 
-                      style={{ flex: 1, backgroundColor: 'var(--text-muted)', marginTop: 0, padding: '10px' }}
+                      style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '10px' }}
                     >
                       이전 단계
                     </button>
@@ -494,39 +497,35 @@ const Diary: React.FC = () => {
         />
       )}
 
-      {/* Filter Chip Bar */}
-      <div style={{
-        display: 'flex', gap: '8px', overflowX: 'auto', padding: '12px 4px',
-        margin: '0 0 16px 0', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch'
-      }}>
-        {[
-          { value: 'all', label: '전체' },
-          { value: '일상', label: '일상' },
-          { value: '건강', label: '건강' },
-          { value: '산책', label: '산책' },
-          { value: '훈련', label: '훈련' },
-          { value: '기타', label: '기타' }
-        ].map(f => {
-          const isActive = selectedFilter === f.value;
-          return (
-            <button
-              key={f.value}
-              type="button"
-              onClick={() => setSelectedFilter(f.value)}
-              style={{
-                flexShrink: 0, padding: '8px 16px', borderRadius: '20px',
-                fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
-                border: isActive ? '1.5px solid var(--main-primary)' : '1px solid var(--border-color)',
-                backgroundColor: isActive ? 'var(--butter-cream)' : 'var(--card-bg)',
-                color: isActive ? 'var(--main-primary)' : 'var(--text-main)',
-                transition: 'all 0.2s',
-                marginTop: 0
-              }}
-            >
-              {f.label}
-            </button>
-          );
-        })}
+      {/* Search Bar */}
+      <div style={{ padding: '0 4px', marginBottom: '16px' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          backgroundColor: 'var(--card-bg)',
+          borderRadius: '16px',
+          padding: '8px 12px',
+          border: '1.5px solid var(--border-color)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+          gap: '8px'
+        }}>
+          <Search size={20} color="var(--text-muted)" />
+          <input
+            type="text"
+            placeholder="제목, 내용 또는 날짜(예: 2024-05) 검색"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              flex: 1,
+              border: 'none',
+              background: 'transparent',
+              fontSize: '0.9rem',
+              color: 'var(--text-main)',
+              outline: 'none',
+              margin: 0
+            }}
+          />
+        </div>
       </div>
 
       {/* Feed List */}
@@ -567,8 +566,9 @@ const Diary: React.FC = () => {
                       justifyContent: 'center',
                       overflow: 'hidden',
                       position: 'relative',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                      borderRadius: '16px',
+                      border: '1.5px solid var(--border-color)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
                     }}
                   >
                     {ev.imageUrl ? (
@@ -623,8 +623,9 @@ const Diary: React.FC = () => {
               }}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                padding: '16px', borderRadius: '12px', 
-                border: isSelected ? '2px solid var(--main-primary)' : '1px solid var(--border-color)',
+                padding: '16px', borderRadius: '16px', 
+                border: isSelected ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)',
+                boxShadow: isSelected ? '0 2px 8px rgba(74, 59, 50, 0.1), inset 0 0 0 1px var(--main-primary)' : '0 2px 8px rgba(0,0,0,0.03)',
                 backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
                 cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s',
                 marginTop: 0
@@ -653,8 +654,9 @@ const Diary: React.FC = () => {
             maxWidth: '500px', 
             maxHeight: '90vh', 
             overflowY: 'auto',
-            background: 'white', 
-            borderRadius: '20px', 
+            background: 'var(--card-bg)', 
+            borderRadius: '16px', 
+            border: '1.5px solid var(--border-color)',
             position: 'relative',
             boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
             display: 'flex',
@@ -729,7 +731,7 @@ const Diary: React.FC = () => {
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '12px' }}>이날의 다른 기록</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {sameDayEvents.map(ev => (
-                      <div key={ev.id} onClick={() => setSelectedDetailEvent(ev)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: 'var(--screen-bg)', borderRadius: '12px', transition: 'all 0.2s' }}>
+                      <div key={ev.id} onClick={() => setSelectedDetailEvent(ev)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', transition: 'all 0.2s' }}>
                         <div style={{ color: 'var(--text-main)' }}>
                           {ev.type === 'poop' ? <Activity size={24} /> : ev.type === 'hospital' ? <Hospital size={24} /> : <FileText size={24} />}
                         </div>

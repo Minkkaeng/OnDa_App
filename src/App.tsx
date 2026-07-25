@@ -512,6 +512,28 @@ const AppContent: React.FC = () => {
 
       {renderAppLayout()}
       {isGlobalTourActive && <GlobalTour />}
+      <button 
+        onClick={() => {
+          localStorage.clear();
+          window.location.reload();
+        }}
+        style={{
+          position: 'fixed',
+          bottom: '80px',
+          left: '16px',
+          zIndex: 9999,
+          backgroundColor: '#EF4444',
+          color: 'white',
+          border: 'none',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          fontSize: '0.8rem',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        }}
+      >
+        초기화
+      </button>
     </>
   );
 };
