@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePetStore, type CustomTheme, type CustomReminder, type BackupSnapshot, type Inquiry } from '../store/petStore';
 import { db } from '../db';
 import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp, Bone, Lock, PawPrint, MessageSquare, ShieldCheck } from 'lucide-react';
@@ -33,6 +33,17 @@ const Settings: React.FC = () => {
   const [expandedMenu, setExpandedMenu] = useState<'theme' | 'notification' | 'system' | 'support' | 'faq' | null>('theme');
   const [isPushActive, setIsPushActive] = useState(true);
   const [lastBackupDate, setLastBackupDate] = useState(localStorage.getItem('last_backup_date') || '');
+
+  useEffect(() => {
+    if (expandedMenu) {
+      setTimeout(() => {
+        const element = document.getElementById(`menu-panel-${expandedMenu}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
+  }, [expandedMenu]);
 
   // Forms Visibility States
   const [showThemeForm, setShowThemeForm] = useState(false);
@@ -409,7 +420,7 @@ const Settings: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         
         {/* MENU 1: Theme Settings Accordion */}
-          <div className="panel" style={{ 
+          <div id="menu-panel-theme" className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
           border: expandedMenu === 'theme' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
@@ -565,7 +576,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 2: Notification Settings Accordion */}
-          <div className="panel" style={{ 
+          <div id="menu-panel-notification" className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
           border: expandedMenu === 'notification' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
@@ -763,7 +774,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 3: System Settings Accordion */}
-          <div className="panel" style={{ 
+          <div id="menu-panel-system" className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
           border: expandedMenu === 'system' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
@@ -932,7 +943,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 4: Customer Center (Support) Accordion */}
-        <div className="panel" style={{ 
+        <div id="menu-panel-support" className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
           border: expandedMenu === 'support' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
@@ -983,21 +994,24 @@ const Settings: React.FC = () => {
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>1:1 문의 내역 ({inquiries.length})</p>
-                  {!showInquiryForm && (
-                    <button 
-                      onClick={() => {
+                  <button 
+                    onClick={() => {
+                      if (showInquiryForm) {
+                        setShowInquiryForm(false);
+                        setEditingInquiryId(null);
+                      } else {
                         setEditingInquiryId(null);
                         setInquiryTitle('');
                         setInquiryCategory('서비스 이용');
                         setInquiryContent('');
                         setShowInquiryForm(true);
-                      }}
-                      className="premium-btn"
-                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                    >
-                      + 1:1 문의하기
-                    </button>
-                  )}
+                      }
+                    }}
+                    className={showInquiryForm ? "set-btn secondary" : "premium-btn"}
+                    style={{ padding: '6px 12px', fontSize: '0.8rem', margin: 0, height: 'auto', border: showInquiryForm ? '1.5px solid var(--border-color)' : 'none' }}
+                  >
+                    {showInquiryForm ? '닫기' : '문의하기'}
+                  </button>
                 </div>
 
                 {inquiries.length === 0 && !showInquiryForm && (
@@ -1128,7 +1142,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* MENU 5: FAQ Accordion (Moved to very bottom) */}
-        <div className="panel" style={{ 
+        <div id="menu-panel-faq" className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
           border: expandedMenu === 'faq' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
