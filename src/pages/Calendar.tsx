@@ -3,6 +3,40 @@ import { usePetStore, type CalendarEvent } from '../store/petStore';
 import { type EventType } from '../db';
 import { Bell, Syringe, Calendar as CalendarIcon, BookOpen, Activity, Heart } from 'lucide-react';
 
+const getEventBadgeInfo = (ev: CalendarEvent) => {
+  let text = '일정';
+  let color = '#8B5CF6';
+  let bg = '#F3E8FF';
+  
+  if (ev.type === 'diary') {
+    text = '일기';
+    color = 'var(--main-primary)';
+    bg = 'rgba(20, 195, 163, 0.1)';
+  } else if (ev.type === 'poop') {
+    text = '배변';
+    color = '#D97706';
+    bg = 'rgba(217, 119, 6, 0.1)';
+  } else if (ev.type === 'walk') {
+    text = '산책';
+    color = '#10B981';
+    bg = 'rgba(16, 185, 129, 0.1)';
+  } else if (ev.type === 'hospital' || ev.category === '병원') {
+    text = '병원';
+    color = '#EF4444';
+    bg = '#FEE2E2';
+  } else if (ev.category === '카페') {
+    text = '카페';
+    color = '#D97706';
+    bg = '#FEF3C7';
+  } else if (ev.category === '유치원' || ev.category === '어린이집') {
+    text = '유치원';
+    color = '#10B981';
+    bg = '#ECFDF5';
+  }
+  
+  return { text, color, bg };
+};
+
 const Calendar: React.FC = () => {
   const { pets, activePetId, events, addCalendarEvent, showAlert } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
@@ -467,24 +501,7 @@ const Calendar: React.FC = () => {
                         return (
                           <>
                             {scheduleEvents.slice(0, 2).map((ev, eIdx) => {
-                              let badgeText = '일정';
-                              let bg = '#F3E8FF';
-                              let color = '#8B5CF6';
-
-                              if (ev.type === 'hospital' || ev.category === '병원') {
-                                badgeText = '병원';
-                                bg = '#FEE2E2';
-                                color = '#EF4444';
-                              } else if (ev.category === '카페') {
-                                badgeText = '카페';
-                                bg = '#FEF3C7';
-                                color = '#D97706';
-                              } else if (ev.category === '유치원' || ev.category === '어린이집') {
-                                badgeText = '유치원';
-                                bg = '#ECFDF5';
-                                color = '#10B981';
-                              }
-
+                              const badge = getEventBadgeInfo(ev);
                               return (
                                 <div 
                                   key={eIdx} 
@@ -492,8 +509,8 @@ const Calendar: React.FC = () => {
                                     fontSize: '0.62rem', 
                                     padding: '1px 3px', 
                                     borderRadius: '4px', 
-                                    backgroundColor: bg, 
-                                    color: color, 
+                                    backgroundColor: badge.bg, 
+                                    color: badge.color, 
                                     fontWeight: 800,
                                     textAlign: 'center',
                                     whiteSpace: 'nowrap',
@@ -504,7 +521,7 @@ const Calendar: React.FC = () => {
                                   }}
                                   title={ev.title}
                                 >
-                                  {badgeText}
+                                  {badge.text}
                                 </div>
                               );
                             })}
@@ -637,8 +654,7 @@ const Calendar: React.FC = () => {
                       const titleStr = `${dObj.getMonth() + 1}/${dObj.getDate()}`;
                       
                       return groupedEvents[dateStr].map((ev, idx) => {
-                        const typeText = ev.type === 'poop' ? '배변' : (ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정'));
-                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : (ev.type === 'poop' ? '#8B5A2B' : 'var(--main-primary)');
+                        const badge = getEventBadgeInfo(ev);
                         const isLastInDate = idx === groupedEvents[dateStr].length - 1;
                         
                         return (
@@ -649,8 +665,8 @@ const Calendar: React.FC = () => {
                             <td style={{ padding: '12px 10px', verticalAlign: 'top', color: 'var(--text-muted)' }}>
                               {ev.time || '-'}
                             </td>
-                            <td style={{ padding: '12px 10px', verticalAlign: 'top', color: typeColor, fontWeight: 700 }}>
-                              {typeText}
+                            <td style={{ padding: '12px 10px', verticalAlign: 'top', color: badge.color, fontWeight: 700 }}>
+                              {badge.text}
                               {ev.hasAlarm && <Bell size={12} style={{ marginLeft: '4px', color: 'var(--main-primary)', verticalAlign: 'middle' }} />}
                             </td>
                             <td style={{ padding: '12px 10px', verticalAlign: 'top' }}>
@@ -699,11 +715,11 @@ const Calendar: React.FC = () => {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>{formattedSelectedDate} 기록</h3>
               {selectedDateEvents.length > 0 ? (
                 selectedDateEvents.map(ev => {
-                  const typeText = ev.type === 'poop' ? '배변' : (ev.type === 'diary' ? '일기' : (ev.type === 'hospital' ? '병원' : '일정'));
+                  const badge = getEventBadgeInfo(ev);
                   return (
                     <div key={ev.id} style={{ background: 'var(--card-bg)', padding: '16px', borderRadius: '16px', marginBottom: '10px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, backgroundColor: 'var(--butter-cream)', padding: '2px 6px', borderRadius: '8px' }}>{typeText}</span>
+                        <span style={{ fontSize: '0.75rem', color: badge.color, fontWeight: 800, backgroundColor: badge.bg, padding: '2px 6px', borderRadius: '8px' }}>{badge.text}</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                           {ev.time} {ev.hasAlarm && <Bell size={12} />}
                         </span>
