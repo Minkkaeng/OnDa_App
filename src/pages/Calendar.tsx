@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePetStore, type CalendarEvent } from '../store/petStore';
 import { type EventType } from '../db';
-import { Bell, Syringe, Calendar as CalendarIcon, BookOpen, Activity } from 'lucide-react';
+import { Bell, Syringe, Calendar as CalendarIcon, BookOpen, Activity, Heart } from 'lucide-react';
 
 const Calendar: React.FC = () => {
   const { pets, activePetId, events, addCalendarEvent, showAlert } = usePetStore();
@@ -33,6 +33,7 @@ const Calendar: React.FC = () => {
   // List View Filter State
   const [searchYear, setSearchYear] = useState<string>('');
   const [searchMonth, setSearchMonth] = useState<string>('');
+  const lastClickRef = useRef<{ dateStr: string; timestamp: number } | null>(null);
 
   // Local Page Guide disabled for unified global tour
 
@@ -200,6 +201,11 @@ const Calendar: React.FC = () => {
   }
 
   const handleDayClick = (dateStr: string) => {
+    const now = Date.now();
+    const isDoubleTap = lastClickRef.current && 
+                        lastClickRef.current.dateStr === dateStr && 
+                        (now - lastClickRef.current.timestamp) < 300;
+    
     setSelectedDateStr(dateStr);
     
     // Auto shift month if clicking adjacent month day
@@ -207,7 +213,13 @@ const Calendar: React.FC = () => {
     if (clickedDate.getMonth() !== month || clickedDate.getFullYear() !== year) {
       setCurrentMonth(clickedDate);
     }
-    setShowDetailsModal(true);
+    
+    if (isDoubleTap) {
+      setShowDetailsModal(true);
+      lastClickRef.current = null;
+    } else {
+      lastClickRef.current = { dateStr, timestamp: now };
+    }
   };
 
   const handleAddEventOpen = () => {
@@ -291,78 +303,94 @@ const Calendar: React.FC = () => {
 
       <div style={{ paddingBottom: '0' }}>
 
-      <div style={{ display: 'flex', padding: '12px 16px', gap: '8px', overflowX: 'auto', flexShrink: 0, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', borderBottom: '1px solid var(--border-color)', margin: '8px 0 16px 0' }}>
-        {[
-          { id: 'calendar', label: '달력' },
-          { id: 'list', label: '목록' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--card-bg)',
-              color: activeTab === tab.id ? 'var(--main-primary)' : 'var(--text-muted)',
-              fontWeight: 800,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              border: activeTab === tab.id ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)',
-              boxShadow: activeTab === tab.id ? 'inset 0 2px 4px rgba(74, 59, 50, 0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Unified Top Control Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 8px 16px', borderBottom: '1px solid var(--border-color)', margin: '8px 0 16px 0' }}>
+        {/* Left Side: Month navigation / Page Title */}
+        {activeTab === 'calendar' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button 
+              onClick={handlePrevMonth} 
+              style={{ background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', color: 'var(--text-main)', padding: '4px', display: 'flex', alignItems: 'center' }}
+            >
+              ◀
+            </button>
+            <div 
+              className="cal-month-title" 
+              onClick={() => setShowMonthNavModal(true)} 
+              style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}
+            >
+              {year}.{String(month + 1).padStart(2, '0')}
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>▼</span>
+            </div>
+            <button 
+              onClick={handleNextMonth} 
+              style={{ background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', color: 'var(--text-main)', padding: '4px', display: 'flex', alignItems: 'center' }}
+            >
+              ▶
+            </button>
+            <button 
+              onClick={handleGoToToday} 
+              style={{
+                marginLeft: '4px',
+                backgroundColor: 'var(--butter-cream)',
+                border: '1px solid var(--main-primary)',
+                borderRadius: '12px',
+                padding: '3px 8px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                color: 'var(--main-primary)',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              오늘
+            </button>
+          </div>
+        ) : (
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>기록 목록</h2>
+        )}
+
+        {/* Right Side: Tab Toggle Segmented Control */}
+        <div style={{ 
+          display: 'flex', 
+          backgroundColor: 'var(--screen-bg)', 
+          padding: '3px', 
+          borderRadius: '20px', 
+          border: '1px solid var(--border-color)',
+          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
+        }}>
+          {[
+            { id: 'calendar', label: '달력' },
+            { id: 'list', label: '목록' }
+          ].map(tab => {
+            const isSelected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  backgroundColor: isSelected ? 'var(--card-bg)' : 'transparent',
+                  color: isSelected ? 'var(--main-primary)' : 'var(--text-muted)',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  border: 'none',
+                  boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {activeTab === 'calendar' ? (
         <div id="view-calendar" className="cal-wrapper" style={{ marginTop: '8px' }}>
           <div className="cal-panel">
-            
-            {/* Header row with navigation & Today button */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button 
-                  onClick={handlePrevMonth} 
-                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--text-main)', padding: '4px' }}
-                >
-                  ◀
-                </button>
-                <div 
-                  className="cal-month-title" 
-                  onClick={() => setShowMonthNavModal(true)} 
-                  style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}
-                >
-                  {year}.{String(month + 1).padStart(2, '0')}
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>▼</span>
-                </div>
-                <button 
-                  onClick={handleNextMonth} 
-                  style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--text-main)', padding: '4px' }}
-                >
-                  ▶
-                </button>
-              </div>
-              <button 
-                onClick={handleGoToToday} 
-                style={{
-                  backgroundColor: 'var(--card-bg)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '20px',
-                  padding: '5px 12px',
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold',
-                  color: 'var(--text-main)',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                오늘
-              </button>
-            </div>
 
             <div className="cal-header-row" style={{ backgroundColor: 'var(--butter-cream)', borderRadius: '16px', padding: '8px 0', marginBottom: '8px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
               <div style={{ color: 'var(--error-red)', fontWeight: 800 }}>일</div>
@@ -397,27 +425,8 @@ const Calendar: React.FC = () => {
                     {/* Date Header Row */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
                       <span style={{ fontWeight: isActive ? '800' : '600', fontSize: '0.85rem' }}>{gridItem.dayNum}</span>
-                      {isActive && activePet && (
-                        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-                          {activePet.weight}kg
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Events List inside Day Cell */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                      {dayEvents.slice(0, 4).map((ev, eIdx) => {
-                        const typeColor = ev.type === 'hospital' ? 'var(--error-red)' : (ev.type === 'poop' ? '#D97706' : (ev.type === 'diary' ? 'var(--main-primary)' : (ev.type === 'walk' ? '#10B981' : '#8B5CF6')));
-                        return (
-                          <div 
-                            key={eIdx} 
-                            style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: typeColor }}
-                            title={ev.title}
-                          />
-                        );
-                      })}
-                      {dayEvents.length > 4 && (
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--text-muted)' }} title="더보기" />
+                      {dayEvents.length > 0 && (
+                        <Heart size={11} fill="var(--blood-coral)" stroke="var(--blood-coral)" />
                       )}
                     </div>
                   </div>
