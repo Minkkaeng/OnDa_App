@@ -21,7 +21,7 @@ const Calendar: React.FC = () => {
   const [newEventType, setNewEventType] = useState<string>('diary');
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventContent, setNewEventContent] = useState('');
-  const [newEventTime, setNewEventTime] = useState('');
+  const [newEventTime, setNewEventTime] = useState('10:00');
   const [newEventAlarm, setNewEventAlarm] = useState(false);
 
 
@@ -235,17 +235,13 @@ const Calendar: React.FC = () => {
     
     setNewEventTitle('');
     setNewEventContent('');
-    setNewEventTime('');
+    setNewEventTime('10:00');
     setNewEventAlarm(false);
     setShowAddModal(true);
   };
 
   const handleAddEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEventTitle.trim()) {
-      showAlert('제목을 입력해주세요.');
-      return;
-    }
 
     let type = newEventType;
     let category = '';
@@ -267,12 +263,22 @@ const Calendar: React.FC = () => {
       category = '일상';
     }
 
+    // Title fallback if empty
+    let finalTitle = newEventTitle.trim();
+    if (!finalTitle) {
+      if (newEventType === 'diary') finalTitle = '일상 기록';
+      else if (newEventType === 'hospital') finalTitle = '병원 방문';
+      else if (newEventType === 'schedule_cafe') finalTitle = '카페 방문';
+      else if (newEventType === 'schedule_kinder') finalTitle = '유치원/어린이집 방문';
+      else finalTitle = '기타 일정';
+    }
+
     try {
       await addCalendarEvent({
         petId: activePet.id,
         date: selectedDateStr,
         type: type as EventType,
-        title: newEventTitle,
+        title: finalTitle,
         content: newEventContent,
         time: newEventTime,
         hasAlarm: newEventAlarm,
@@ -283,7 +289,7 @@ const Calendar: React.FC = () => {
       setShowAddModal(false);
       setNewEventTitle('');
       setNewEventContent('');
-      setNewEventTime('');
+      setNewEventTime('10:00');
       setNewEventAlarm(false);
     } catch (err) {
       console.error(err);
@@ -775,9 +781,8 @@ const Calendar: React.FC = () => {
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
                   className="form-input" 
-                  placeholder="예: 심장사상충 예방접종" 
+                  placeholder="예: 심장사상충 예방접종 (선택)" 
                   style={{ padding: '8px 10px', fontSize: '0.9rem' }}
-                  required
                 />
               </div>
 
@@ -808,8 +813,7 @@ const Calendar: React.FC = () => {
                   onChange={(e) => setNewEventContent(e.target.value)}
                   className="cal-editor-textarea" 
                   style={{ minHeight: '80px', fontSize: '0.9rem', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '8px' }} 
-                  placeholder="상세 내용을 입력해주세요..."
-                  required
+                  placeholder="상세 내용을 입력해주세요... (선택)" 
                 ></textarea>
               </div>
               
