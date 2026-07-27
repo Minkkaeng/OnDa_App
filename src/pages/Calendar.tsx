@@ -18,7 +18,7 @@ const Calendar: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
 
   // New Event Form State
-  const [newEventType, setNewEventType] = useState<EventType>('diary');
+  const [newEventType, setNewEventType] = useState<string>('diary');
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventContent, setNewEventContent] = useState('');
   const [newEventTime, setNewEventTime] = useState('');
@@ -247,15 +247,36 @@ const Calendar: React.FC = () => {
       return;
     }
 
+    let type = newEventType;
+    let category = '';
+
+    if (newEventType === 'schedule_cafe') {
+      type = 'schedule';
+      category = '카페';
+    } else if (newEventType === 'schedule_kinder') {
+      type = 'schedule';
+      category = '유치원';
+    } else if (newEventType === 'schedule_other') {
+      type = 'schedule';
+      category = '기타';
+    } else if (newEventType === 'hospital') {
+      type = 'hospital';
+      category = '병원';
+    } else if (newEventType === 'diary') {
+      type = 'diary';
+      category = '일상';
+    }
+
     try {
       await addCalendarEvent({
         petId: activePet.id,
         date: selectedDateStr,
-        type: newEventType,
+        type: type as EventType,
         title: newEventTitle,
         content: newEventContent,
         time: newEventTime,
-        hasAlarm: newEventAlarm
+        hasAlarm: newEventAlarm,
+        category: category
       });
 
       showAlert('기록이 추가되었습니다!');
@@ -425,9 +446,70 @@ const Calendar: React.FC = () => {
                     {/* Date Header Row */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
                       <span style={{ fontWeight: isActive ? '800' : '600', fontSize: '0.85rem' }}>{gridItem.dayNum}</span>
-                      {dayEvents.length > 0 && (
-                        <Heart size={11} fill="var(--blood-coral)" stroke="var(--blood-coral)" />
-                      )}
+                      {(() => {
+                        const recordEvents = dayEvents.filter(e => e.type === 'diary' || e.type === 'poop' || e.type === 'walk');
+                        return recordEvents.length > 0 && (
+                          <Heart size={11} fill="var(--blood-coral)" stroke="var(--blood-coral)" />
+                        );
+                      })()}
+                    </div>
+
+                    {/* Schedules List inside Day Cell */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%', marginTop: 'auto', alignItems: 'stretch' }}>
+                      {(() => {
+                        const scheduleEvents = dayEvents.filter(e => e.type === 'hospital' || e.type === 'schedule');
+                        return (
+                          <>
+                            {scheduleEvents.slice(0, 2).map((ev, eIdx) => {
+                              let badgeText = '일정';
+                              let bg = '#F3E8FF';
+                              let color = '#8B5CF6';
+
+                              if (ev.type === 'hospital' || ev.category === '병원') {
+                                badgeText = '병원';
+                                bg = '#FEE2E2';
+                                color = '#EF4444';
+                              } else if (ev.category === '카페') {
+                                badgeText = '카페';
+                                bg = '#FEF3C7';
+                                color = '#D97706';
+                              } else if (ev.category === '유치원' || ev.category === '어린이집') {
+                                badgeText = '유치원';
+                                bg = '#ECFDF5';
+                                color = '#10B981';
+                              }
+
+                              return (
+                                <div 
+                                  key={eIdx} 
+                                  style={{ 
+                                    fontSize: '0.62rem', 
+                                    padding: '1px 3px', 
+                                    borderRadius: '4px', 
+                                    backgroundColor: bg, 
+                                    color: color, 
+                                    fontWeight: 800,
+                                    textAlign: 'center',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    width: '100%',
+                                    lineHeight: 1.2
+                                  }}
+                                  title={ev.title}
+                                >
+                                  {badgeText}
+                                </div>
+                              );
+                            })}
+                            {scheduleEvents.length > 2 && (
+                              <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 700 }}>
+                                +{scheduleEvents.length - 2}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -674,13 +756,15 @@ const Calendar: React.FC = () => {
                 <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 700 }}>기록 유형</label>
                 <select 
                   value={newEventType} 
-                  onChange={(e) => setNewEventType(e.target.value as EventType)}
+                  onChange={(e) => setNewEventType(e.target.value)}
                   className="form-input" 
                   style={{ padding: '8px 10px', fontSize: '0.9rem' }}
                 >
                   {!isFutureDate && <option value="diary">일상 기록 (일기)</option>}
                   <option value="hospital">병원 예약 / 방문</option>
-                  <option value="schedule">기타 일정</option>
+                  <option value="schedule_cafe">카페 방문</option>
+                  <option value="schedule_kinder">유치원 / 어린이집</option>
+                  <option value="schedule_other">기타 일정</option>
                 </select>
               </div>
 
