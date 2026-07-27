@@ -435,6 +435,38 @@ export const usePetStore = create<PetState>((set, get) => ({
   },
 
   addCalendarEvent: async (eventData) => {
+    // Merge walk events for the same pet and day, summing up their durations
+    if (eventData.type === 'walk') {
+      const existingWalk = get().events.find(
+        e => e.petId === eventData.petId && e.date === eventData.date && e.type === 'walk'
+      );
+
+      if (existingWalk) {
+        const parseMinutes = (title: string, content: string) => {
+          const matchTitle = title.match(/(\d+)분/);
+          if (matchTitle) return parseInt(matchTitle[1], 10);
+          const matchContent = content.match(/(\d+)분/);
+          if (matchContent) return parseInt(matchContent[1], 10);
+          return 0;
+        };
+
+        const existingMins = parseMinutes(existingWalk.title, existingWalk.content);
+        const newMins = parseMinutes(eventData.title, eventData.content);
+        const totalMins = existingMins + newMins;
+
+        const updatedEvent: CalendarEvent = {
+          ...existingWalk,
+          title: `산책 ${totalMins}분 완료!`,
+          content: `오늘 총 ${totalMins}분 동안 산책을 다녀왔습니다. 너무 즐거운 시간이었어요!`
+        };
+
+        await db.calendarEvents.put(updatedEvent);
+        const events = await db.calendarEvents.toArray();
+        set({ events });
+        return updatedEvent;
+      }
+    }
+
     const newId = 'evt-' + Date.now();
     const newEvent: CalendarEvent = { ...eventData, id: newId };
     await db.calendarEvents.add(newEvent);
