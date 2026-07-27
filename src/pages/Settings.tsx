@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { usePetStore, type CustomTheme, type CustomReminder, type BackupSnapshot, type Inquiry } from '../store/petStore';
 import { db } from '../db';
-import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp, Bone, Lock, PawPrint } from 'lucide-react';
+import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp, Bone, Lock, PawPrint, MessageSquare, ShieldCheck } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const {
@@ -30,7 +30,7 @@ const Settings: React.FC = () => {
     deleteInquiry
   } = usePetStore();
 
-  const [expandedMenu, setExpandedMenu] = useState<'theme' | 'notification' | 'system' | 'support' | null>('theme');
+  const [expandedMenu, setExpandedMenu] = useState<'theme' | 'notification' | 'system' | 'support' | 'faq' | null>('theme');
   const [isPushActive, setIsPushActive] = useState(true);
   const [lastBackupDate, setLastBackupDate] = useState(localStorage.getItem('last_backup_date') || '');
 
@@ -931,7 +931,7 @@ const Settings: React.FC = () => {
           )}
         </div>
 
-        {/* MENU 4: Support Accordion */}
+        {/* MENU 4: Customer Center (Support) Accordion */}
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
@@ -965,11 +965,11 @@ const Settings: React.FC = () => {
                 color: 'var(--main-primary)',
                 flexShrink: 0
               }}>
-                <HelpCircle size={20} />
+                <MessageSquare size={20} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>자주 묻는 질문 & 고객센터</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>1:1 문의 접수와 자주 하는 질문 모음</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>고객센터</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>1:1 문의 접수 및 이용 약관 / 처리방침</p>
               </div>
             </div>
             <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
@@ -979,34 +979,8 @@ const Settings: React.FC = () => {
           {expandedMenu === 'support' && (
             <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               
-              {/* FAQ Section */}
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem' }}>자주 묻는 질문 (FAQ)</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {faqList.map((faq, idx) => (
-                    <details 
-                      key={idx} 
-                      style={{ 
-                        padding: '10px 12px', 
-                        borderRadius: '16px', 
-                        border: '1.5px solid var(--border-color)', 
-                        background: 'var(--card-bg)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                        cursor: 'pointer',
-                        fontSize: '0.85rem'
-                      }}
-                    >
-                      <summary style={{ fontWeight: 'bold', outline: 'none' }}>Q. {faq.q}</summary>
-                      <p style={{ marginTop: '8px', fontSize: '0.75rem', color: '#555', lineHeight: 1.4 }}>{faq.a}</p>
-                    </details>
-                  ))}
-                </div>
-              </div>
-
-              <div className="google-profile-divider" style={{ margin: '16px 0' }}></div>
-
               {/* 1:1 Inquiries */}
-              <div>
+              <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>1:1 문의 내역 ({inquiries.length})</p>
                   {!showInquiryForm && (
@@ -1085,6 +1059,139 @@ const Settings: React.FC = () => {
                     </div>
                   </form>
                 )}
+              </div>
+
+              <div className="google-profile-divider" style={{ margin: '16px 0' }}></div>
+
+              {/* Legal & Policies Section */}
+              <div>
+                <p style={{ fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem' }}>법적 고지 및 약관</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <details style={{ padding: '10px 12px', borderRadius: '16px', border: '1.5px solid var(--border-color)', background: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <summary style={{ fontWeight: 'bold', outline: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldCheck size={14} style={{ color: 'var(--main-primary)' }} />
+                      개인정보 처리방침
+                    </summary>
+                    <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4, whiteSpace: 'pre-wrap', paddingLeft: '20px' }}>
+                      {`[개인정보 처리방침]
+온다(OnDa)는 이용자의 개인정보를 매우 소중히 취급하며, '개인정보 보호법'을 철저히 준수합니다.
+
+1. 수집하는 개인정보 항목: 
+   반려동물 프로필 정보(이름, 생일, 몸무게 등) 및 사용자가 캘린더/다이어리에 직접 입력한 케어 로그 데이터.
+2. 수집 및 이용 목적: 
+   맞춤형 반려동물 스케줄 관리 및 상태 모니터링 서비스 제공.
+3. 보유 및 이용 기간: 
+   수집된 모든 데이터는 브라우저의 로컬 스토리지(IndexDB)에 저장되며 회원 탈퇴 시 또는 앱 삭제 시 영구 파기됩니다.`}
+                    </p>
+                  </details>
+
+                  <details style={{ padding: '10px 12px', borderRadius: '16px', border: '1.5px solid var(--border-color)', background: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <summary style={{ fontWeight: 'bold', outline: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldCheck size={14} style={{ color: 'var(--main-primary)' }} />
+                      서비스 이용약관
+                    </summary>
+                    <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4, whiteSpace: 'pre-wrap', paddingLeft: '20px' }}>
+                      {`[서비스 이용약관]
+제1조 (목적) 
+본 약관은 온다(OnDa) 앱이 무상으로 제공하는 반려동물 다이어리 및 케어 관리 서비스의 사용 조건과 절차를 규정합니다.
+
+제2조 (서비스의 범위)
+온다는 이용자에게 반려동물 건강 기록, 스케줄 캘린더 등록, 산책 트래킹, 케어 리포트 요약 등 다양한 편의 기능을 제공합니다.
+
+제3조 (회원의 책임)
+이용자는 앱에 타인의 명예를 훼손하거나 유해한 정보, 허위 데이터를 기록해서는 안 되며 그에 따른 책임은 본인에게 귀속됩니다.`}
+                    </p>
+                  </details>
+
+                  <details style={{ padding: '10px 12px', borderRadius: '16px', border: '1.5px solid var(--border-color)', background: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <summary style={{ fontWeight: 'bold', outline: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldCheck size={14} style={{ color: 'var(--main-primary)' }} />
+                      위치정보 이용약관
+                    </summary>
+                    <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4, whiteSpace: 'pre-wrap', paddingLeft: '20px' }}>
+                      {`[위치정보 이용약관]
+제1조 (목적)
+본 약관은 사용자가 온다(OnDa)의 '산책 트래커' 기능을 활성화하여 산책 동선과 시간을 기록할 때 사용되는 위치정보 서비스 이용 규칙을 정합니다.
+
+제2조 (위치정보의 수집)
+이용자가 산책 기능을 시작하는 경우에 한해, 단말기의 GPS 등 위치 수집 방식을 통해 동선 분석 용도로 경로 데이터를 일시 수집합니다.
+
+제3조 (개인위치정보의 보존)
+수집된 실시간 경로 데이터는 이용자의 기기 내부 로컬 저장소에 보존되며 본인의 명시적 동의 없이 외부 서버로 유출 및 보존되지 않습니다.`}
+                    </p>
+                  </details>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+
+        {/* MENU 5: FAQ Accordion (Moved to very bottom) */}
+        <div className="panel" style={{ 
+          padding: '0', 
+          overflow: 'hidden', 
+          border: expandedMenu === 'faq' ? '2px solid var(--main-primary)' : '1px solid var(--border-color)', 
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(18, 27, 42, 0.05)',
+          marginBottom: '16px',
+          transition: 'all 0.25s ease'
+        }}>
+          <div 
+            onClick={() => setExpandedMenu(expandedMenu === 'faq' ? null : 'faq')}
+            style={{ 
+              padding: '18px 20px', 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'space-between', 
+              cursor: 'pointer',
+              backgroundColor: expandedMenu === 'faq' ? 'var(--butter-cream)' : 'transparent',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                backgroundColor: expandedMenu === 'faq' ? 'var(--card-bg)' : 'var(--butter-cream)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--main-primary)',
+                flexShrink: 0
+              }}>
+                <HelpCircle size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>자주 묻는 질문</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>온다 앱 이용에 자주 묻는 질문들 모음</p>
+              </div>
+            </div>
+            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+              {expandedMenu === 'faq' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </div>
+          </div>
+          {expandedMenu === 'faq' && (
+            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {faqList.map((faq, idx) => (
+                  <details 
+                    key={idx} 
+                    style={{ 
+                      padding: '10px 12px', 
+                      borderRadius: '16px', 
+                      border: '1.5px solid var(--border-color)', 
+                      background: 'var(--card-bg)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <summary style={{ fontWeight: 'bold', outline: 'none' }}>Q. {faq.q}</summary>
+                    <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{faq.a}</p>
+                  </details>
+                ))}
               </div>
             </div>
           )}
