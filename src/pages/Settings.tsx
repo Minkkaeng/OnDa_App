@@ -41,7 +41,7 @@ const Settings: React.FC = () => {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 150);
+      }, 80);
     }
   }, [expandedMenu]);
 
@@ -464,8 +464,15 @@ const Settings: React.FC = () => {
               {expandedMenu === 'theme' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
-          {expandedMenu === 'theme' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateRows: expandedMenu === 'theme' ? '1fr' : '0fr',
+            transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
+            opacity: expandedMenu === 'theme' ? 1 : 0,
+            visibility: expandedMenu === 'theme' ? 'visible' : 'hidden'
+          }}>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               {/* Custom Themes List */}
               <div style={{ marginBottom: '0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -571,8 +578,9 @@ const Settings: React.FC = () => {
                   </form>
                 )}
               </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* MENU 2: Notification Settings Accordion */}
@@ -620,8 +628,15 @@ const Settings: React.FC = () => {
               {expandedMenu === 'notification' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
-          {expandedMenu === 'notification' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateRows: expandedMenu === 'notification' ? '1fr' : '0fr',
+            transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
+            opacity: expandedMenu === 'notification' ? 1 : 0,
+            visibility: expandedMenu === 'notification' ? 'visible' : 'hidden'
+          }}>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               <div className="set-item" style={{ padding: '0 0 12px 0', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="set-info" style={{ flex: 1 }}>
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>로컬 실시간 푸시 알림</h4>
@@ -769,8 +784,9 @@ const Settings: React.FC = () => {
                   </form>
                 )}
               </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* MENU 3: System Settings Accordion */}
@@ -818,8 +834,15 @@ const Settings: React.FC = () => {
               {expandedMenu === 'system' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
-          {expandedMenu === 'system' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateRows: expandedMenu === 'system' ? '1fr' : '0fr',
+            transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
+            opacity: expandedMenu === 'system' ? 1 : 0,
+            visibility: expandedMenu === 'system' ? 'visible' : 'hidden'
+          }}>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
@@ -938,8 +961,9 @@ const Settings: React.FC = () => {
                   )}
                 </div>
               </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* MENU 4: Customer Center (Support) Accordion */}
@@ -987,8 +1011,15 @@ const Settings: React.FC = () => {
               {expandedMenu === 'support' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
-          {expandedMenu === 'support' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateRows: expandedMenu === 'support' ? '1fr' : '0fr',
+            transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
+            opacity: expandedMenu === 'support' ? 1 : 0,
+            visibility: expandedMenu === 'support' ? 'visible' : 'hidden'
+          }}>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               
               {/* 1:1 Inquiries */}
               <div style={{ marginBottom: '20px' }}>
@@ -1137,8 +1168,9 @@ const Settings: React.FC = () => {
                 </div>
               </div>
 
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* MENU 5: FAQ Accordion (Moved to very bottom) */}
@@ -1186,8 +1218,15 @@ const Settings: React.FC = () => {
               {expandedMenu === 'faq' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
-          {expandedMenu === 'faq' && (
-            <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateRows: expandedMenu === 'faq' ? '1fr' : '0fr',
+            transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
+            opacity: expandedMenu === 'faq' ? 1 : 0,
+            visibility: expandedMenu === 'faq' ? 'visible' : 'hidden'
+          }}>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {faqList.map((faq, idx) => (
                   <details 
@@ -1207,8 +1246,9 @@ const Settings: React.FC = () => {
                   </details>
                 ))}
               </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
       </div>
