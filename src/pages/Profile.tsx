@@ -213,7 +213,7 @@ const Profile: React.FC = () => {
           ...petData,
           id: selectedPetId
         });
-        showAlert('🎉 프로필 정보가 성공적으로 업데이트되었습니다!');
+        showAlert('프로필 정보가 성공적으로 업데이트되었습니다!');
       } else {
         // Create new pet
         const newPet = await addPet(petData);

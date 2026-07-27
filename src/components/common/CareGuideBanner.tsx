@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { Sparkles, Droplet, Dog } from 'lucide-react';
 
 const GUIDE_PRESETS = [
   {
     badge: '초보 가이드',
     title: '강아지 양치질 완벽 가이드',
     desc: '치석 예방을 위한 올바른 양치 방법과 치약 선택 팁을 알아봐요.',
-    emoji: '🪥'
+    icon: Sparkles
   },
   {
     badge: '건강 상식',
     title: '우리 아이 적정 음수량은?',
     desc: '몸무게 1kg당 50~60ml가 적당해요. 부족하면 방광염 원인이 될 수 있어요.',
-    emoji: '💧'
+    icon: Droplet
   },
   {
     badge: '행동학 가이드',
     title: '산책 중 자꾸 냄새만 맡아요',
     desc: '노즈워크는 스트레스 해소에 필수! 여유를 갖고 기다려주는 것이 좋습니다.',
-    emoji: '🐕'
+    icon: Dog
   }
 ];
 
@@ -71,7 +72,9 @@ const CareGuideBanner: React.FC<{ style?: React.CSSProperties }> = ({ style }) =
           {activeGuide.desc}
         </p>
       </div>
-      <div style={{ fontSize: '2rem', zIndex: 1 }}>{activeGuide.emoji}</div>
+      <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', color: '#14532D', paddingLeft: '8px' }}>
+        {React.createElement(activeGuide.icon, { size: 32 })}
+      </div>
       
       <div style={{
         position: 'absolute',

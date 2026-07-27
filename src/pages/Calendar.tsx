@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { usePetStore, type CalendarEvent } from '../store/petStore';
 import { type EventType } from '../db';
+import { Bell, Syringe, Calendar as CalendarIcon, BookOpen, Activity } from 'lucide-react';
 
 const Calendar: React.FC = () => {
-  const { pets, activePetId, events, addCalendarEvent, showAlert, updatePet } = usePetStore();
+  const { pets, activePetId, events, addCalendarEvent, showAlert } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -79,7 +80,7 @@ const Calendar: React.FC = () => {
               petId: activePet.id,
               date: dateStr,
               type: 'schedule',
-              title: `💉 [완료] ${vac.label}`,
+              title: `[완료] ${vac.label}`,
               content: `케어 탭에서 기록된 예방의학 접종 완료 기록입니다. (${dateStr} 접종)`
             });
 
@@ -98,7 +99,7 @@ const Calendar: React.FC = () => {
               petId: activePet.id,
               date: nextStr,
               type: 'hospital',
-              title: `📅 [예정] ${vac.label} 접종일`,
+              title: `[예정] ${vac.label} 접종일`,
               content: `이전 접종일(${dateStr}) 기준 다음 권장 예방의학 스케줄 일자입니다.`
             });
           }
@@ -553,10 +554,17 @@ const Calendar: React.FC = () => {
                             </td>
                             <td style={{ padding: '12px 10px', verticalAlign: 'top', color: typeColor, fontWeight: 700 }}>
                               {typeText}
-                              {ev.hasAlarm && <span style={{ marginLeft: '4px', fontSize: '0.8rem' }} title="알림">🔔</span>}
+                              {ev.hasAlarm && <Bell size={12} style={{ marginLeft: '4px', color: 'var(--main-primary)', verticalAlign: 'middle' }} />}
                             </td>
                             <td style={{ padding: '12px 10px', verticalAlign: 'top' }}>
-                              <div style={{ fontWeight: 700, marginBottom: '2px', color: 'var(--text-main)' }}>{ev.title}</div>
+                              <div style={{ fontWeight: 700, marginBottom: '2px', color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                {ev.type === 'hospital' && <Syringe size={14} style={{ color: 'var(--error-red)' }} />}
+                                {ev.type === 'walk' && <Activity size={14} style={{ color: '#10B981' }} />}
+                                {ev.type === 'diary' && <BookOpen size={14} style={{ color: 'var(--main-primary)' }} />}
+                                {ev.type === 'poop' && <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#8B5A2B' }} />}
+                                {ev.type === 'schedule' && <CalendarIcon size={14} style={{ color: '#8B5CF6' }} />}
+                                {ev.title}
+                              </div>
                               <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>
                                 {ev.content}
                               </div>
@@ -599,11 +607,18 @@ const Calendar: React.FC = () => {
                     <div key={ev.id} style={{ background: 'var(--card-bg)', padding: '16px', borderRadius: '16px', marginBottom: '10px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, backgroundColor: 'var(--butter-cream)', padding: '2px 6px', borderRadius: '8px' }}>{typeText}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800 }}>
-                          {ev.time} {ev.hasAlarm && '🔔'}
+                        <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {ev.time} {ev.hasAlarm && <Bell size={12} />}
                         </span>
                       </div>
-                      <h3 style={{ fontSize: '1rem', marginBottom: '6px', color: 'var(--text-main)', margin: 0, fontWeight: 800 }}>{ev.title}</h3>
+                      <h3 style={{ fontSize: '1rem', marginBottom: '6px', color: 'var(--text-main)', margin: 0, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        {ev.type === 'hospital' && <Syringe size={16} style={{ color: 'var(--error-red)' }} />}
+                        {ev.type === 'walk' && <Activity size={16} style={{ color: '#10B981' }} />}
+                        {ev.type === 'diary' && <BookOpen size={16} style={{ color: 'var(--main-primary)' }} />}
+                        {ev.type === 'poop' && <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#8B5A2B' }} />}
+                        {ev.type === 'schedule' && <CalendarIcon size={16} style={{ color: '#8B5CF6' }} />}
+                        {ev.title}
+                      </h3>
                       <p style={{ fontSize: '0.85rem', lineHeight: 1.5, whiteSpace: 'pre-wrap', margin: 0, color: 'var(--text-muted)' }}>{ev.content}</p>
                     </div>
                   );

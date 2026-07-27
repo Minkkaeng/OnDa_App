@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { usePetStore } from '../store/petStore';
+import { Camera, Activity, Calendar, BookOpen, Dog } from 'lucide-react';
 
 const TOUR_STEPS = [
-  { path: '/onboarding', selector: '.avatar-upload', text: '📷 프로필 생성\n사진과 기본 정보, 맞춤 케어 정보를 입력하세요.' },
-  { path: '/dashboard', selector: '#home-guide-step3', text: '🏃 스마트 대시보드\n원터치 산책 기록과 케어 체크리스트를 한눈에 관리해요.' },
-  { path: '/care', selector: '#care-guide-step1', text: '실시간 케어 스케줄러\n투약과 산책 일정을 연동해 데일리 루틴을 자동 생성합니다.' },
-  { path: '/calendar', selector: '#view-calendar', text: '📅 통합 캘린더 뷰\n산책, 다이어리, 접종 일정을 날짜별로 모아보세요.' },
-  { path: '/diary', selector: '#diary-guide-step1', text: '소중한 일상 다이어리\n사진과 글로 매일의 추억을 예쁘게 기록해 보세요.' }
+  { path: '/onboarding', selector: '.avatar-upload', text: '프로필 생성\n사진과 기본 정보, 맞춤 케어 정보를 입력하세요.', icon: Camera },
+  { path: '/dashboard', selector: '#home-guide-step3', text: '스마트 대시보드\n원터치 산책 기록과 케어 체크리스트를 한눈에 관리해요.', icon: Activity },
+  { path: '/care', selector: '#care-guide-step1', text: '실시간 케어 스케줄러\n투약과 산책 일정을 연동해 데일리 루틴을 자동 생성합니다.', icon: Dog },
+  { path: '/calendar', selector: '#view-calendar', text: '통합 캘린더 뷰\n산책, 다이어리, 접종 일정을 날짜별로 모아보세요.', icon: Calendar },
+  { path: '/diary', selector: '#diary-guide-step1', text: '소중한 일상 다이어리\n사진과 글로 매일의 추억을 예쁘게 기록해 보세요.', icon: BookOpen }
 ];
 
 const GlobalTour: React.FC = () => {
@@ -124,6 +125,11 @@ const GlobalTour: React.FC = () => {
           pointerEvents: 'auto'
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', color: '#334155' }}>
+            {TOUR_STEPS[currentStep]?.icon && (
+              <span style={{ marginRight: '8px', color: 'var(--main-primary)', display: 'inline-flex', alignItems: 'center', height: '1.4em' }}>
+                {React.createElement(TOUR_STEPS[currentStep].icon, { size: 18 })}
+              </span>
+            )}
             <span style={{ fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'pre-line' }}>
               {TOUR_STEPS[currentStep] ? TOUR_STEPS[currentStep].text : ''}
             </span>

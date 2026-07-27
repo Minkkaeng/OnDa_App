@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePetStore } from '../store/petStore';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchHospitalsOrPharmacies, type HospitalOrPharmacy } from '../services/hospitalService';
-import { Utensils, Droplet, Cookie, Activity, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Utensils, Droplet, Cookie, Activity, RefreshCw, Phone, AlertTriangle } from 'lucide-react';
 import BottomSheet from '../components/common/BottomSheet';
 
 const REGION_MAP: Record<string, string[]> = {
@@ -20,7 +20,7 @@ const Care: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'daily' | 'health' | 'hospital'>('dashboard');
 
   // Dashboard Checklist
-  const [careTips, setCareTips] = useState<{ id: string; title: string; content: string }[]>([]);
+  const [careTips, setCareTips] = useState<{ id: string; title: string; content: string; status?: 'hard' | 'loose' | 'bloody' | 'good' | 'water-good' }[]>([]);
   const [isTipsLoading, setIsTipsLoading] = useState(false);
 
   // Daily Routine States
@@ -204,7 +204,7 @@ const Care: React.FC = () => {
   const handleCompleteVaccineToday = async (key: 'dhppi' | 'corona' | 'rabies' | 'parasite', label: string) => {
     if (!activePet) return;
     handleUpdateVaccine(key, todayStr);
-    await addCalendarEvent({ petId: activePet.id, date: todayStr, type: 'hospital', title: `💉 [접종완료] ${label}`, content: `케어 탭에서 ${label} 접종 완료가 기록되었습니다.` });
+    await addCalendarEvent({ petId: activePet.id, date: todayStr, type: 'hospital', title: `[접종완료] ${label}`, content: `케어 탭에서 ${label} 접종 완료가 기록되었습니다.` });
     showAlert(`'${label}' 오늘 접종 완료가 기록되었으며 캘린더에 연동 완료되었습니다!`);
   };
 
@@ -270,14 +270,33 @@ const Care: React.FC = () => {
                 {isTipsLoading ? (
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>가이드를 분석 중입니다...</div>
                 ) : careTips.length > 0 ? (
-                  careTips.map((tip, idx) => (
-                    <details key={idx} style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)', cursor: 'pointer' }}>
-                      <summary style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', listStyle: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                        {tip.title} <span style={{fontSize:'0.8rem', opacity: 0.6}}>▼</span>
-                      </summary>
-                      <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>{tip.content}</p>
-                    </details>
-                  ))
+                  careTips.map((tip, idx) => {
+                    let statusElement = null;
+                    if (tip.status === 'hard') {
+                      statusElement = <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#8B5A2B', marginRight: '8px' }} />;
+                    } else if (tip.status === 'loose') {
+                      statusElement = <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FBBF24', marginRight: '8px' }} />;
+                    } else if (tip.status === 'bloody') {
+                      statusElement = <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', color: '#EF4444', verticalAlign: 'middle' }}><AlertTriangle size={14} /></span>;
+                    } else if (tip.status === 'good') {
+                      statusElement = <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10B981', marginRight: '8px' }} />;
+                    } else if (tip.status === 'water-good') {
+                      statusElement = <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', color: '#0284C7', verticalAlign: 'middle' }}><Droplet size={14} fill="#0284C7" /></span>;
+                    }
+
+                    return (
+                      <details key={idx} style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)', cursor: 'pointer' }}>
+                        <summary style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ display: 'flex', alignItems: 'center' }}>
+                            {statusElement}
+                            {tip.title}
+                          </span>
+                          <span style={{fontSize:'0.8rem', opacity: 0.6}}>▼</span>
+                        </summary>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#555', lineHeight: 1.5, paddingLeft: tip.status ? '18px' : '0' }}>{tip.content}</p>
+                      </details>
+                    );
+                  })
                 ) : (
                   <div style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)' }}>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5, textAlign: 'center' }}>데이터를 기반으로 가이드를 준비중입니다.</p>
@@ -461,7 +480,7 @@ const Care: React.FC = () => {
               <div style={{ textAlign: 'center', padding: '32px 16px', background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                 <h4 style={{ color: 'var(--text-main)', fontSize: '0.95rem', margin: '0 0 6px 0', fontWeight: 800 }}>서버 점검 중</h4>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 16px 0', lineHeight: 1.4 }}>데이터를 불러올 수 없습니다.</p>
-                <button onClick={() => { setLocatorError(false); const prev = locatorSearchType; setLocatorSearchType('grooming'); setTimeout(() => setLocatorSearchType(prev), 10); }} style={{ backgroundColor: 'var(--main-primary)', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>다시 시도 🔄</button>
+                <button onClick={() => { setLocatorError(false); const prev = locatorSearchType; setLocatorSearchType('grooming'); setTimeout(() => setLocatorSearchType(prev), 10); }} style={{ backgroundColor: 'var(--main-primary)', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>다시 시도 <RefreshCw size={14} /></button>
               </div>
             ) : locatorResults.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>검색 결과가 없습니다.</div>
@@ -474,7 +493,7 @@ const Care: React.FC = () => {
                       <span style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.3 }}>{item.address}</span>
                     </div>
                     {item.tel && item.tel !== '전화번호 없음' && (
-                      <a href={`tel:${item.tel}`} style={{ backgroundColor: 'var(--card-bg)', border: '1.5px solid var(--border-color)', color: 'var(--text-main)', textDecoration: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap' }}>📞 전화</a>
+                      <a href={`tel:${item.tel}`} style={{ backgroundColor: 'var(--card-bg)', border: '1.5px solid var(--border-color)', color: 'var(--text-main)', textDecoration: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> 전화</a>
                     )}
                   </div>
                 ))}

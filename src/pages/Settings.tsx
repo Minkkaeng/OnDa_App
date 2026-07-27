@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { usePetStore, type CustomTheme, type CustomReminder, type BackupSnapshot, type Inquiry } from '../store/petStore';
 import { db } from '../db';
-import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp, Bone, Lock, PawPrint } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const {
@@ -372,12 +372,14 @@ const Settings: React.FC = () => {
           }}>
             PARTNER AD
           </span>
-          <h4 style={{ margin: '8px 0 4px 0', fontSize: '0.95rem', fontWeight: 800 }}>🐾 유기농 수제 케어 푸드 [마이도기] 출시!</h4>
+          <h4 style={{ margin: '8px 0 4px 0', fontSize: '0.95rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}><PawPrint size={16} /> 유기농 수제 케어 푸드 [마이도기] 출시!</h4>
           <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
             가입 보호자님 대상 전상품 15% 런칭 감사 쿠폰 지급 중. 우리 아이 건강을 위한 자연식 간식을 만나보세요.
           </p>
         </div>
-        <div style={{ fontSize: '2.2rem', opacity: 0.85, zIndex: 1, marginLeft: '12px' }}>🦴</div>
+        <div style={{ opacity: 0.85, zIndex: 1, marginLeft: '12px', display: 'flex', alignItems: 'center' }}>
+          <Bone size={36} color="white" />
+        </div>
         
         {/* Subtle background glow circle */}
         <div style={{
@@ -394,7 +396,9 @@ const Settings: React.FC = () => {
 
       {/* 1.5. Data Safety Trust Badge */}
       <div style={{ backgroundColor: 'var(--butter-cream)', border: '1px solid var(--main-primary)', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(20, 195, 163, 0.1)' }}>
-        <div style={{ fontSize: '1.5rem' }}>🔒</div>
+        <div style={{ display: 'flex', alignItems: 'center', color: 'var(--main-primary)' }}>
+          <Lock size={24} />
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>안전한 로컬 데이터 저장소</span>
           <span style={{ fontSize: '0.75rem', color: '#065F46', lineHeight: 1.4 }}>모든 소중한 데이터는 서버가 아닌 기기에 오프라인으로 안전하게 보관됩니다.</span>

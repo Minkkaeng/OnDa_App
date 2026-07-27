@@ -7,12 +7,12 @@ import { WalkTimer } from '../components/WalkTimer';
 import AdBanner from '../components/common/AdBanner';
 import CareGuideBanner from '../components/common/CareGuideBanner';
 import { DashboardManageModal } from '../components/DashboardManageModal';
-import { Calendar as CalendarIcon, ChevronDown, FileText, Footprints, Stethoscope, Sparkles, Pill, Utensils, Droplet, Cookie, Activity, Settings } from 'lucide-react';
+import { Calendar as CalendarIcon, FileText, Footprints, Stethoscope, Sparkles, Pill, Settings, BookOpen } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { 
-    addCalendarEvent, pets, activePetId, events, showAlert
+    pets, activePetId, events
   } = usePetStore();
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
   
@@ -208,7 +208,9 @@ const Dashboard: React.FC = () => {
                 {recentDiary.imageUrl ? (
                   <img src={recentDiary.imageUrl} alt="Diary" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: '48px', height: '48px', borderRadius: '8px', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📖</div>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '8px', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--main-primary)' }}>
+                    <BookOpen size={24} />
+                  </div>
                 )}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -237,7 +239,7 @@ const Dashboard: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ECFDF5', padding: '10px 14px', borderRadius: '12px', border: '1px solid #A7F3D0' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#065F46' }}>오늘 산책 목표: {activePet.walkDuration || activePet.walkGoal || '30분'}</span>
-                <span style={{ fontSize: '0.75rem', color: '#047857' }}>하루 권장 운동량을 채워 아이의 건강을 지켜주세요! 🏃</span>
+                <span style={{ fontSize: '0.75rem', color: '#047857', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>하루 권장 운동량을 채워 아이의 건강을 지켜주세요! <Footprints size={12} /></span>
               </div>
               <button onClick={() => setShowWalkTimer(true)} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>산책 시작</button>
             </div>

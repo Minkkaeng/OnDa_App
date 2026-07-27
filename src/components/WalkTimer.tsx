@@ -36,7 +36,7 @@ export const WalkTimer: React.FC<WalkTimerProps> = ({ onClose }) => {
           await LocalNotifications.schedule({
             notifications: [
               {
-                title: '산책 진행 중 🐾',
+                title: '산책 진행 중',
                 body: `${activePet.name}와(과)의 산책 시간이 기록되고 있습니다!`,
                 id: 101,
                 schedule: { at: new Date(Date.now() + 500) }

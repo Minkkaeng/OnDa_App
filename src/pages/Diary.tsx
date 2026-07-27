@@ -665,7 +665,7 @@ const Diary: React.FC = () => {
         >
           {/* Header Actions */}
           <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 10 }}>
-            {!(selectedDetailEvent.title.includes('💧') || selectedDetailEvent.title.includes('🍪') || selectedDetailEvent.type === 'poop') && (
+            {!(selectedDetailEvent.title.includes('\uD83D\uDCA6') || selectedDetailEvent.title.includes('\uD83C\uDF6A') || selectedDetailEvent.title === '오늘의 종합 건강 리포트' || selectedDetailEvent.type === 'poop') && (
               <button
                 onClick={() => {
                   setSelectedDetailEvent(null);

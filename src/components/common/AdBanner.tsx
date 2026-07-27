@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Bone, Stethoscope, Dog } from 'lucide-react';
 
 interface AdPreset {
   badge: string;
   title: string;
   desc: string;
-  emoji: string;
+  icon: React.ComponentType<{ size?: number; color?: string; style?: React.CSSProperties }>;
   link?: string;
 }
 
@@ -15,21 +16,21 @@ interface AdBannerProps {
 const AD_PRESETS: AdPreset[] = [
   {
     badge: '마이도기',
-    title: '🌾 유기농 수제 케어 푸드 출시!',
+    title: '유기농 수제 케어 푸드 출시!',
     desc: '온다 회원 대상 전상품 15% 런칭 감사 쿠폰 지급 중. 신선한 자연식 사료를 만나보세요.',
-    emoji: '🦴'
+    icon: Bone
   },
   {
     badge: '온다 케어',
-    title: '🩺 비대면 실시간 수의사 상담 오픈',
+    title: '비대면 실시간 수의사 상담 오픈',
     desc: '늦은 밤 갑작스러운 구토나 이상 증세, 당황하지 말고 전문의와 비대면 1:1 상담을 받아보세요.',
-    emoji: '🚑'
+    icon: Stethoscope
   },
   {
     badge: '슬기로운 생활',
-    title: '🏡 슬개골 방지 논슬립 안심 매트',
+    title: '슬개골 방지 논슬립 안심 매트',
     desc: '강아지 슬개골 연골 마모 예방 특허 완료. 1등급 방수 및 무독성 논슬립 패드 35% 특가.',
-    emoji: '🐕'
+    icon: Dog
   }
 ];
 
@@ -89,7 +90,9 @@ const AdBanner: React.FC<AdBannerProps> = ({ style }) => {
           {activeAd.desc}
         </p>
       </div>
-      <div style={{ fontSize: '2rem', zIndex: 1 }}>{activeAd.emoji}</div>
+      <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', color: 'var(--main-primary)', paddingLeft: '8px' }}>
+        {React.createElement(activeAd.icon, { size: 32 })}
+      </div>
       
       {/* Subtle background gradient circle */}
       <div style={{
