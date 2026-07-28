@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Generate App Icon</title>
+</head>
+<body>
+  <h3>512x512 Canvas</h3>
+  <canvas id="canvas512" width="512" height="512" style="border:1px solid #ccc;"></canvas>
+  <h3>192x192 Canvas</h3>
+  <canvas id="canvas192" width="192" height="192" style="border:1px solid #ccc;"></canvas>
+  <div id="status" style="font-weight: bold; color: blue;">Processing...</div>
+  <textarea id="result512" style="width:100%; height:150px; margin-top: 10px;"></textarea>
+  <textarea id="result192" style="width:100%; height:150px; margin-top: 10px;"></textarea>
+  
+  <script>
+    const img = new Image();
+    // 로컬 경로의 lgt_mode.png 로드
+    img.src = 'lgt_mode.png';
+    img.onload = function() {
+      // 1. 512x512 캔버스 가공
+      const canvas512 = document.getElementById('canvas512');
+      const ctx512 = canvas512.getContext('2d');
+      
+      // 배경을 앱 테마 색상 계열인 연한 청록 민트톤(#EBF7F5) 또는 버터크림(#FAF7F2)으로 꽉 채움
+      ctx512.fillStyle = '#EBF7F5';
+      ctx512.fillRect(0, 0, 512, 512);
+      
+      // 이미지 그리기 (중앙 기준 1.45배 확대하여 마스크 safe area에 꽉 차게 조절)
+      const scale = 1.45;
+      const newWidth = 512 * scale;
+      const newHeight = 512 * scale;
+      const offset = (512 - newWidth) / 2;
+      ctx512.drawImage(img, offset, offset, newWidth, newHeight);
+      
+      // 2. 192x192 캔버스 가공
+      const canvas192 = document.getElementById('canvas192');
+      const ctx192 = canvas192.getContext('2d');
+      ctx192.fillStyle = '#EBF7F5';
+      ctx192.fillRect(0, 0, 192, 192);
+      
+      const newWidth192 = 192 * scale;
+      const newHeight192 = 192 * scale;
+      const offset192 = (192 - newWidth192) / 2;
+      ctx192.drawImage(img, offset192, offset192, newWidth192, newHeight192);
+      
+      // 결과 base64 추출
+      document.getElementById('result512').value = canvas512.toDataURL('image/png');
+      document.getElementById('result192').value = canvas192.toDataURL('image/png');
+      document.getElementById('status').innerText = 'Done!';
+    };
+    img.onerror = function() {
+      document.getElementById('status').innerText = 'Error loading image';
+    };
+  </script>
+</body>
+</html>

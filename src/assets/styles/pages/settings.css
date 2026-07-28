@@ -58,6 +58,6 @@
 
 .set-btn.secondary {
     background: var(--butter-cream);
-    color: var(--main-primary);
-    border: 1.5px solid var(--main-primary);
+    color: var(--icon-color);
+    border: 1.5px solid var(--icon-color);
 }

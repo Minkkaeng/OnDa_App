@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
-import { usePetStore } from './store/petStore';
+import { usePetStore, THEME_PRESETS } from './store/petStore';
 import { ChevronLeft, Home, Heart, Calendar as CalendarIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 
 // Import Pages
@@ -15,23 +15,6 @@ import GlobalTour from './components/GlobalTour';
 import GlobalWalkBar from './components/common/GlobalWalkBar';
 import { useOnboarding } from './hooks/useOnboarding';
 import Profile from './pages/Profile';
-
-const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string }> = {
-  light: {
-    primary: '#4A3B32',
-    background: '#FAFAFA',
-    paper: '#FFFFFF',
-    text: '#2B2825',
-    muted: '#78716C'
-  },
-  dark: {
-    primary: '#4A3B32',
-    background: '#1F1A17',
-    paper: '#2B2825',
-    text: '#FAFAFA',
-    muted: '#A8A29E'
-  }
-};
 
 const CustomDialog: React.FC = () => {
   const { customDialog, closeDialog } = usePetStore();
@@ -239,6 +222,7 @@ const AppContent: React.FC = () => {
       root.style.setProperty('--card-bg', colors.paper);
       root.style.setProperty('--text-main', colors.text);
       root.style.setProperty('--text-muted', colors.muted);
+      root.style.setProperty('--icon-color', colors.icon || colors.primary);
       root.style.setProperty('--butter-cream', colors.primary + '1a');
     }
   }, [activeThemeId, customThemes]);
@@ -295,6 +279,21 @@ const AppContent: React.FC = () => {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
+  // Detect Android WebView / Hybrid App statusbar overlay
+  useEffect(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    const isAndroid = ua.indexOf('android') > -1;
+    const isWebView = isAndroid && (
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (window as any).Android || 
+      ua.indexOf('wv') > -1 || 
+      ua.indexOf('webview') > -1
+    );
+    if (isWebView) {
+      document.documentElement.classList.add('android-webview');
+    }
+  }, []);
+
   const isObPage = location.pathname === '/onboarding';
   const mainTabs = ['/', '/dashboard', '/care', '/calendar', '/diary', '/settings'];
   const isSubPage = !mainTabs.includes(location.pathname) && !isObPage;
@@ -312,7 +311,7 @@ const AppContent: React.FC = () => {
                   onClick={() => navigate(-1)}
                   style={{
                     background: 'var(--butter-cream)',
-                    border: '1px solid var(--main-primary)',
+                    border: '1px solid var(--icon-color)',
                     borderRadius: '50%',
                     width: '34px',
                     height: '34px',
@@ -320,23 +319,23 @@ const AppContent: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    color: 'var(--main-primary)',
+                    color: 'var(--icon-color)',
                     padding: 0
                   }}
                   title="뒤로 가기"
                 >
-                  <ChevronLeft size={22} color="var(--main-primary)" />
+                  <ChevronLeft size={22} style={{ color: 'var(--icon-color)' }} />
                 </button>
               ) : (
                 <Link to="/" className="brand-logo-link" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" style={{ height: '30px' }}>
-                    <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M 168 25 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
-                    <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
-                    <path d="M 128 85 V 45" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
-                    <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
-                    <circle cx="240" cy="65" r="20" fill="none" stroke="var(--main-primary)" strokeWidth="16"/>
-                    <path d="M 260 45 V 85" fill="none" stroke="var(--main-primary)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 98 45 A 15 15 0 0 0 68 45 C 68 70, 98 85, 98 85 C 98 85, 128 70, 128 45 A 15 15 0 0 0 98 45" fill="none" stroke="var(--text-main)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M 168 25 V 85" fill="none" stroke="var(--text-main)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 168 25 C 223 25, 223 85, 168 85" fill="none" stroke="var(--text-main)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 128 85 V 45" fill="none" stroke="var(--text-main)" strokeWidth="16" strokeLinecap="round"/>
+                    <path d="M 128 55 C 128 35, 168 35, 168 55 V 85" fill="none" stroke="var(--text-main)" strokeWidth="16" strokeLinecap="round"/>
+                    <circle cx="240" cy="65" r="20" fill="none" stroke="var(--text-main)" strokeWidth="16"/>
+                    <path d="M 260 45 V 85" fill="none" stroke="var(--text-main)" strokeWidth="16" strokeLinecap="round"/>
                   </svg>
                 </Link>
               )}
@@ -355,20 +354,20 @@ const AppContent: React.FC = () => {
                       alignItems: 'center',
                       gap: '6px',
                       backgroundColor: 'var(--butter-cream)',
-                      border: '1px solid var(--main-primary)',
+                      border: '1px solid var(--icon-color)',
                       padding: '3px 8px 3px 4px',
                       borderRadius: '20px',
                       cursor: 'pointer',
-                      color: 'var(--main-primary)'
+                      color: 'var(--icon-color)'
                     }}
                   >
                     <img 
                       src={activePet.image || '/default_paw.png'} 
                       alt="Profile Menu" 
-                      style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--main-primary)' }}
+                      style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--icon-color)' }}
                       onError={(e) => { e.currentTarget.src = '/default_paw.png' }}
                     />
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--main-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px', display: 'inline-block' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--icon-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px', display: 'inline-block' }}>
                       {activePet.name} ▾
                     </span>
                   </div>

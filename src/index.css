@@ -280,6 +280,10 @@ code {
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
+.android-webview .app-top-bar {
+  padding-top: calc(12px + env(safe-area-inset-top, 24px)) !important;
+}
+
 .app-bottom-nav {
   display: flex;
   justify-content: space-around;
@@ -319,7 +323,7 @@ code {
 }
 
 .bottom-nav-item.active {
-  color: var(--main-primary);
+  color: var(--icon-color);
   font-weight: 700;
 }
 

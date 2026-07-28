@@ -45,12 +45,12 @@ const Dashboard: React.FC = () => {
 
 
   const quickTiles: { id: 'diary' | 'walk' | 'hospital' | 'schedule' | 'ai' | 'medication'; label: string; icon: React.ReactNode }[] = [
-    { id: 'diary', label: '일기기록', icon: <FileText size={20} color="var(--main-primary)" /> },
-    { id: 'walk', label: '산책기록', icon: <Footprints size={20} color="var(--main-primary)" /> },
-    { id: 'hospital', label: '의료기록', icon: <Stethoscope size={20} color="var(--main-primary)" /> },
-    { id: 'schedule', label: '케어일정', icon: <CalendarIcon size={20} color="var(--main-primary)" /> },
-    { id: 'ai', label: 'AI가이드', icon: <Sparkles size={20} color="var(--main-primary)" /> },
-    { id: 'medication', label: '약/영양제', icon: <Pill size={20} color="var(--main-primary)" /> }
+    { id: 'diary', label: '일기기록', icon: <FileText size={20} style={{ color: 'var(--icon-color)' }} /> },
+    { id: 'walk', label: '산책기록', icon: <Footprints size={20} style={{ color: 'var(--icon-color)' }} /> },
+    { id: 'hospital', label: '의료기록', icon: <Stethoscope size={20} style={{ color: 'var(--icon-color)' }} /> },
+    { id: 'schedule', label: '케어일정', icon: <CalendarIcon size={20} style={{ color: 'var(--icon-color)' }} /> },
+    { id: 'ai', label: 'AI가이드', icon: <Sparkles size={20} style={{ color: 'var(--icon-color)' }} /> },
+    { id: 'medication', label: '약/영양제', icon: <Pill size={20} style={{ color: 'var(--icon-color)' }} /> }
   ];
 
   return (

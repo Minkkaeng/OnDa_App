@@ -568,7 +568,7 @@ const Calendar: React.FC = () => {
 
             <div className="cal-ad-zone" style={{ marginTop: '20px', padding: '12px' }}>
               <span className="ad-badge">AD ZONE</span>
-              <div className="cal-ad-text" style={{ fontSize: '0.85rem' }}>우리 아이를 위한 안심 가습기전<br/><span style={{ fontSize: '0.75rem', color: '#666' }}>최대 35% 단독 할인 혜택</span></div>
+              <div className="cal-ad-text" style={{ fontSize: '0.85rem' }}>우리 아이를 위한 안심 가습기전<br/><span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>최대 35% 단독 할인 혜택</span></div>
             </div>
           </div>
         </div>

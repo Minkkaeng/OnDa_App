@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { usePetStore, type CustomTheme, type CustomReminder, type BackupSnapshot, type Inquiry } from '../store/petStore';
+import { usePetStore, THEME_PRESETS, type CustomTheme, type CustomReminder, type BackupSnapshot, type Inquiry } from '../store/petStore';
 import { db } from '../db';
 import { Palette, Bell, Database, HelpCircle, ChevronDown, ChevronUp, Bone, Lock, PawPrint, MessageSquare, ShieldCheck } from 'lucide-react';
 
@@ -30,7 +30,7 @@ const Settings: React.FC = () => {
     deleteInquiry
   } = usePetStore();
 
-  const [expandedMenu, setExpandedMenu] = useState<'theme' | 'notification' | 'system' | 'support' | 'faq' | null>('theme');
+  const [expandedMenu, setExpandedMenu] = useState<'theme' | 'notification' | 'system' | 'support' | 'faq' | null>(null);
   const [isPushActive, setIsPushActive] = useState(true);
   const [lastBackupDate, setLastBackupDate] = useState(localStorage.getItem('last_backup_date') || '');
 
@@ -63,6 +63,7 @@ const Settings: React.FC = () => {
   const [paperColor, setPaperColor] = useState('#FFFFFF');
   const [textColor, setTextColor] = useState('#2B2825');
   const [mutedColor, setMutedColor] = useState('#78716C');
+  const [iconColor, setIconColor] = useState('#4A3B32');
 
   // Reminder Form States
   const [reminderTitle, setReminderTitle] = useState('');
@@ -98,7 +99,8 @@ const Settings: React.FC = () => {
       background: backgroundColor,
       paper: paperColor,
       text: textColor,
-      muted: mutedColor
+      muted: mutedColor,
+      icon: iconColor
     };
 
     if (editingThemeId) {
@@ -130,6 +132,7 @@ const Settings: React.FC = () => {
     setPaperColor(theme.colors.paper);
     setTextColor(theme.colors.text);
     setMutedColor(theme.colors.muted);
+    setIconColor(theme.colors.icon || theme.colors.primary);
     setShowThemeForm(true);
   };
 
@@ -406,13 +409,13 @@ const Settings: React.FC = () => {
       </div>
 
       {/* 1.5. Data Safety Trust Badge */}
-      <div style={{ backgroundColor: 'var(--butter-cream)', border: '1px solid var(--main-primary)', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(20, 195, 163, 0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', color: 'var(--main-primary)' }}>
+      <div style={{ backgroundColor: 'var(--butter-cream)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(20, 195, 163, 0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', color: 'var(--icon-color)' }}>
           <Lock size={24} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>안전한 로컬 데이터 저장소</span>
-          <span style={{ fontSize: '0.75rem', color: '#065F46', lineHeight: 1.4 }}>모든 소중한 데이터는 서버가 아닌 기기에 오프라인으로 안전하게 보관됩니다.</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>모든 소중한 데이터는 서버가 아닌 기기에 오프라인으로 안전하게 보관됩니다.</span>
         </div>
       </div>
 
@@ -450,7 +453,7 @@ const Settings: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--main-primary)',
+                color: 'var(--icon-color)',
                 flexShrink: 0
               }}>
                 <Palette size={20} />
@@ -473,111 +476,217 @@ const Settings: React.FC = () => {
           }}>
             <div style={{ overflow: 'hidden' }}>
               <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
-              {/* Custom Themes List */}
-              <div style={{ marginBottom: '0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem' }}>나의 테마 목록 ({customThemes.length})</p>
-                  {!showThemeForm && (
-                    <button 
-                      onClick={() => {
-                        setEditingThemeId(null);
-                        setThemeName('');
-                        setPrimaryColor('#4A3B32');
-                        setBackgroundColor('#FAFAFA');
-                        setPaperColor('#FFFFFF');
-                        setTextColor('#2B2825');
-                        setMutedColor('#78716C');
-                        setShowThemeForm(true);
-                      }}
-                      className="premium-btn"
-                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                    >
-                      + 테마 추가
-                    </button>
-                  )}
-                </div>
-
-                {customThemes.length === 0 && !showThemeForm && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 커스텀 테마가 없습니다.</p>
-                )}
-
-                {/* Custom Theme Cards */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {customThemes.map(t => (
-                    <div 
-                      key={t.id} 
-                      style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        padding: '10px 14px', 
-                        borderRadius: '16px', 
-                        border: activeThemeId === t.id ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)',
-                        backgroundColor: 'var(--card-bg)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
-                      }}
-                    >
+                {/* Preset Themes List */}
+                <div style={{ marginBottom: '24px' }}>
+                  <p style={{ fontWeight: 'bold', marginBottom: '12px', fontSize: '0.9rem', color: 'var(--text-main)' }}>기본 테마 프리셋</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {Object.entries(THEME_PRESETS).map(([id, colors]) => (
                       <div 
-                        onClick={() => setThemeId(t.id)} 
-                        style={{ cursor: 'pointer', flexGrow: 1, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}
+                        key={id}
+                        onClick={() => setThemeId(id)}
+                        style={{
+                          cursor: 'pointer',
+                          padding: '12px',
+                          borderRadius: '16px',
+                          border: activeThemeId === id ? '2px solid var(--main-primary)' : '1px solid var(--border-color)',
+                          backgroundColor: activeThemeId === id ? 'var(--butter-cream)' : 'var(--card-bg)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                        }}
                       >
-                        <span style={{ fontWeight: 'bold' }}>{t.name}</span>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.primary, border: '1px solid #ddd' }} />
-                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.background, border: '1px solid #ddd' }} />
-                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.paper, border: '1px solid #ddd' }} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: activeThemeId === id ? 'var(--main-primary)' : 'var(--text-main)' }}>
+                            {id === 'light' ? '밝은 테마' : '어두운 테마'}
+                          </span>
+                          {activeThemeId === id && (
+                            <span style={{ fontSize: '0.65rem', color: 'var(--main-primary)', fontWeight: 'bold' }}>사용중</span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.primary, border: '1px solid #ddd' }} title="Primary" />
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.background, border: '1px solid #ddd' }} title="Background" />
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.paper, border: '1px solid #ddd' }} title="Paper" />
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button onClick={() => handleEditThemeClick(t)} className="set-btn secondary" style={{ padding: '3px 8px', fontSize: '0.75rem' }}>수정</button>
-                        <button onClick={() => deleteCustomTheme(t.id)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF' }}>삭제</button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
 
-                {/* Theme Edit Form */}
-                {showThemeForm && (
-                  <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '16px', marginTop: '16px', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                    <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
-                      {editingThemeId ? '테마 정보 수정' : '새 커스텀 테마 등록'}
-                    </h4>
-                    <div className="form-group" style={{ marginBottom: '10px' }}>
-                      <label className="form-label" style={{ fontSize: '0.8rem' }}>테마 이름</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        value={themeName} 
-                        onChange={(e) => setThemeName(e.target.value)} 
-                        placeholder="예) 봄날의 민트" 
-                        required 
-                      />
-                    </div>
-                    <div className="color-picker-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.75rem' }}>
-                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label>강조색 (Primary)</label>
-                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+                {/* Custom Themes List */}
+                <div style={{ marginBottom: '0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <p style={{ fontWeight: 'bold', margin: 0, fontSize: '0.9rem', color: 'var(--text-main)' }}>나의 커스텀 테마 목록 ({customThemes.length})</p>
+                    {!showThemeForm && (
+                      <button 
+                        onClick={() => {
+                          setEditingThemeId(null);
+                          setThemeName('');
+                          setPrimaryColor('#4A3B32');
+                          setBackgroundColor('#FAFAFA');
+                          setPaperColor('#FFFFFF');
+                          setTextColor('#2B2825');
+                          setMutedColor('#78716C');
+                          setIconColor('#4A3B32');
+                          setShowThemeForm(true);
+                        }}
+                        className="set-btn secondary"
+                        style={{ padding: '6px 12px', fontSize: '0.8rem', marginTop: 0, width: 'auto' }}
+                      >
+                        + 테마 추가
+                      </button>
+                    )}
+                  </div>
+
+                  {customThemes.length === 0 && !showThemeForm && (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>등록된 커스텀 테마가 없습니다.</p>
+                  )}
+
+                  {/* Custom Theme Cards */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {customThemes.map(t => (
+                      <div 
+                        key={t.id} 
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          padding: '10px 14px', 
+                          borderRadius: '16px', 
+                          border: activeThemeId === t.id ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)',
+                          backgroundColor: 'var(--card-bg)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                        }}
+                      >
+                        <div 
+                          onClick={() => setThemeId(t.id)} 
+                          style={{ cursor: 'pointer', flexGrow: 1, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}
+                        >
+                          <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{t.name}</span>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.primary, border: '1px solid #ddd' }} title="Primary" />
+                            <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.background, border: '1px solid #ddd' }} title="Background" />
+                            <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.paper, border: '1px solid #ddd' }} title="Paper" />
+                            <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.colors.icon || t.colors.primary, border: '1px solid #ddd' }} title="Icon" />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => handleEditThemeClick(t)} className="set-btn secondary" style={{ padding: '3px 8px', fontSize: '0.75rem', marginTop: 0, width: 'auto' }}>수정</button>
+                          <button onClick={() => deleteCustomTheme(t.id)} className="set-btn" style={{ padding: '3px 8px', fontSize: '0.75rem', backgroundColor: 'var(--error-red)', color: '#FFF', marginTop: 0, width: 'auto' }}>삭제</button>
+                        </div>
                       </div>
-                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label>배경색 (Background)</label>
-                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
+                    ))}
+                  </div>
+
+                  {/* Theme Edit Form */}
+                  {showThemeForm && (
+                    <form onSubmit={handleSaveTheme} style={{ border: '1.5px solid var(--main-primary)', padding: '16px', borderRadius: '16px', marginTop: '16px', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                      <h4 style={{ color: 'var(--main-primary)', marginBottom: '12px', fontSize: '0.9rem' }}>
+                        {editingThemeId ? '테마 정보 수정' : '새 커스텀 테마 등록'}
+                      </h4>
+
+                      {/* Live Preview Container */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem', marginBottom: '6px', display: 'block' }}>실시간 미리보기</label>
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          backgroundColor: backgroundColor,
+                          border: '1px solid var(--border-color)',
+                          transition: 'background-color 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: textColor, fontWeight: 'bold', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Bone size={14} color={iconColor} /> {themeName || '새 테마 이름'}
+                            </span>
+                            <span style={{ color: mutedColor, fontSize: '0.65rem' }}>미리보기 화면</span>
+                          </div>
+                          
+                          <div style={{
+                            backgroundColor: paperColor,
+                            padding: '10px',
+                            borderRadius: '8px',
+                            border: `1px solid ${mutedColor}22`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px'
+                          }}>
+                            <div style={{ color: textColor, fontSize: '0.7rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <PawPrint size={14} color={iconColor} /> 초코의 오늘의 돌봄
+                            </div>
+                            <div style={{ color: mutedColor, fontSize: '0.6rem' }}>
+                              오늘 산책을 완료하고 저녁 사료를 먹였습니다.
+                            </div>
+                            <div style={{
+                              backgroundColor: primaryColor,
+                              color: '#FFFFFF',
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.6rem',
+                              textAlign: 'center',
+                              fontWeight: 'bold',
+                              marginTop: '4px',
+                              cursor: 'default',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}>
+                              <ShieldCheck size={12} color="#FFFFFF" /> 케어 완료
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label>카드색 (Paper)</label>
-                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={paperColor} onChange={(e) => setPaperColor(e.target.value)} />
+
+                      <div className="form-group" style={{ marginBottom: '10px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>테마 이름</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          value={themeName} 
+                          onChange={(e) => setThemeName(e.target.value)} 
+                          placeholder="예) 봄날의 민트" 
+                          required 
+                        />
                       </div>
-                      <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label>글자색 (Text)</label>
-                        <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={textColor} onChange={(e) => setTextColor(e.target.value)} />
+                      <div className="color-picker-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.75rem' }}>
+                        <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label>강조색 (Primary)</label>
+                          <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+                        </div>
+                        <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label>배경색 (Background)</label>
+                          <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
+                        </div>
+                        <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label>카드색 (Paper)</label>
+                          <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={paperColor} onChange={(e) => setPaperColor(e.target.value)} />
+                        </div>
+                        <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label>글자색 (Text)</label>
+                          <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={textColor} onChange={(e) => setTextColor(e.target.value)} />
+                        </div>
+                        <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label>설명색 (Muted)</label>
+                          <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={mutedColor} onChange={(e) => setMutedColor(e.target.value)} />
+                        </div>
+                        <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label>아이콘색 (Icon)</label>
+                          <input type="color" style={{ width: '100%', height: '30px', cursor: 'pointer' }} value={iconColor} onChange={(e) => setIconColor(e.target.value)} />
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '16px' }}>
-                      <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '8px' }}>취소</button>
-                      <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
-                    </div>
-                  </form>
-                )}
-              </div>
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '16px' }}>
+                        <button type="button" onClick={() => setShowThemeForm(false)} className="btn-submit" style={{ flex: 1, backgroundColor: 'var(--butter-cream)', color: 'var(--main-primary)', marginTop: 0, padding: '8px' }}>취소</button>
+                        <button type="submit" className="btn-submit" style={{ flex: 1, marginTop: 0, padding: '8px' }}>저장</button>
+                      </div>
+                    </form>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -614,7 +723,7 @@ const Settings: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--main-primary)',
+                color: 'var(--icon-color)',
                 flexShrink: 0
               }}>
                 <Bell size={20} />
@@ -820,7 +929,7 @@ const Settings: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--main-primary)',
+                color: 'var(--icon-color)',
                 flexShrink: 0
               }}>
                 <Database size={20} />
@@ -997,7 +1106,7 @@ const Settings: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--main-primary)',
+                color: 'var(--icon-color)',
                 flexShrink: 0
               }}>
                 <MessageSquare size={20} />
@@ -1068,7 +1177,7 @@ const Settings: React.FC = () => {
                       </div>
 
                       {expandedInquiryId === inq.id && (
-                        <div style={{ padding: '12px', borderTop: '1px solid var(--border-color)', backgroundColor: '#fcfcfc', fontSize: '0.8rem' }}>
+                        <div style={{ padding: '12px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--screen-bg)', fontSize: '0.8rem' }}>
                           <p style={{ whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{inq.content}</p>
                           <p style={{ fontWeight: 'bold', color: 'var(--main-primary)' }}>[답변]</p>
                           <p style={{ whiteSpace: 'pre-wrap', backgroundColor: 'var(--butter-cream)', padding: '8px', borderRadius: '4px' }}>{getMockedReply(inq)}</p>
@@ -1204,7 +1313,7 @@ const Settings: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--main-primary)',
+                color: 'var(--icon-color)',
                 flexShrink: 0
               }}>
                 <HelpCircle size={20} />

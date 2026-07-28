@@ -19,8 +19,29 @@ export interface CustomTheme {
     paper: string;
     text: string;
     muted: string;
+    icon: string;
   };
 }
+
+export const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string; icon: string }> = {
+  light: {
+    primary: '#4A3B32',
+    background: '#FAFAFA',
+    paper: '#FFFFFF',
+    text: '#2B2825',
+    muted: '#78716C',
+    icon: '#4A3B32'
+  },
+  dark: {
+    primary: '#4A3B32',
+    background: '#1F1A17',
+    paper: '#2B2825',
+    text: '#FAFAFA',
+    muted: '#A8A29E',
+    icon: '#FAFAFA'
+  }
+};
+
 
 export interface CustomReminder {
   id: string;

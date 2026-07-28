@@ -293,13 +293,13 @@ const Care: React.FC = () => {
                           </span>
                           <span style={{fontSize:'0.8rem', opacity: 0.6}}>▼</span>
                         </summary>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#555', lineHeight: 1.5, paddingLeft: tip.status ? '18px' : '0' }}>{tip.content}</p>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, paddingLeft: tip.status ? '18px' : '0' }}>{tip.content}</p>
                       </details>
                     );
                   })
                 ) : (
                   <div style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)' }}>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: 1.5, textAlign: 'center' }}>데이터를 기반으로 가이드를 준비중입니다.</p>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>데이터를 기반으로 가이드를 준비중입니다.</p>
                   </div>
                 )}
               </div>
@@ -490,7 +490,7 @@ const Care: React.FC = () => {
                   <div key={idx} style={{ padding: '12px', background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>{item.name}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.3 }}>{item.address}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>{item.address}</span>
                     </div>
                     {item.tel && item.tel !== '전화번호 없음' && (
                       <a href={`tel:${item.tel}`} style={{ backgroundColor: 'var(--card-bg)', border: '1.5px solid var(--border-color)', color: 'var(--text-main)', textDecoration: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> 전화</a>

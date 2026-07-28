@@ -717,7 +717,7 @@ const Diary: React.FC = () => {
               )}
             </div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 16px 0' }}>{selectedDetailEvent.title}</h2>
-            <p style={{ fontSize: '1rem', lineHeight: 1.6, color: '#333', whiteSpace: 'pre-wrap', margin: 0 }}>
+            <p style={{ fontSize: '1rem', lineHeight: 1.6, color: 'var(--text-main)', whiteSpace: 'pre-wrap', margin: 0 }}>
               {selectedDetailEvent.content}
             </p>
 
