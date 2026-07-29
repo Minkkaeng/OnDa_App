@@ -15,7 +15,7 @@ interface AdBannerProps {
 
 const AD_PRESETS: AdPreset[] = [
   {
-    badge: '마이도기',
+    badge: '마이펫',
     title: '유기농 수제 케어 푸드 출시!',
     desc: '온다 회원 대상 전상품 15% 런칭 감사 쿠폰 지급 중. 신선한 자연식 사료를 만나보세요.',
     icon: Bone
@@ -29,7 +29,7 @@ const AD_PRESETS: AdPreset[] = [
   {
     badge: '슬기로운 생활',
     title: '슬개골 방지 논슬립 안심 매트',
-    desc: '강아지 슬개골 연골 마모 예방 특허 완료. 1등급 방수 및 무독성 논슬립 패드 35% 특가.',
+    desc: '반려동물 슬개골 연골 마모 예방 특허 완료. 1등급 방수 및 무독성 논슬립 패드 35% 특가.',
     icon: Dog
   }
 ];

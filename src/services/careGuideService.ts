@@ -58,9 +58,9 @@ export const generateDailyGuides = (activePet: Pet, events: CalendarEvent[]): Gu
     } else if (latestPoop.poopStatus === 'good') {
       tips.push({
         id: 'guide-poop-good',
-        title: '완벽한 황금 맛동산!',
+        title: '완벽한 건강변!',
         status: 'good',
-        content: '오늘 건강한 황금똥을 누었네요! 장 건강이 아주 좋은 상태입니다. 지금의 식단과 산책 루틴을 잘 유지해주세요.'
+        content: '오늘 건강하고 이쁜 대변을 보았네요! 장 건강이 아주 좋은 상태입니다. 지금의 식단과 일상 루틴을 잘 유지해주세요.'
       });
     }
   }
@@ -95,6 +95,54 @@ export const generateDailyGuides = (activePet: Pet, events: CalendarEvent[]): Gu
     }
   }
 
+  // 3.5. Species Specific Basic Guides
+  if (activePet.species) {
+    const sp = activePet.species.toLowerCase();
+    if (sp === 'dog') {
+      tips.push({
+        id: 'guide-spec-dog',
+        title: '반려견 관절 및 스트레스 케어',
+        content: '말티즈, 푸들, 포메라니안 등 소형견은 슬개골 탈구에 취약합니다. 미끄럼 방지 매트를 깔아주고, 산책 시 냄새를 충분히 맡게 해 스트레스를 완화해주세요.'
+      });
+    } else if (sp === 'cat') {
+      tips.push({
+        id: 'guide-spec-cat',
+        title: '반려묘 음수량 및 수직 공간 확보',
+        content: '고양이는 신장 건강을 위해 음수량을 늘리는 정수기나 습식 캔 급여가 필수적이며, 스트레스 해소를 위해 수직 공간(캣타워)을 충분히 배치해주세요.'
+      });
+    } else if (sp === 'small_mammal' || sp === 'hamster' || sp === 'rabbit') {
+      tips.push({
+        id: 'guide-spec-small-mammal',
+        title: '소형 포유류 건초 급여 및 사육 환경 케어',
+        content: '토끼는 부정교합 방지를 위해 무제한 건초(티모시) 급여가 필수이며, 햄스터는 단독 사육이 원칙이고 겨울철 저체온 동면을 방지하기 위해 실내 온도를 20도 이상으로 유지해주세요.'
+      });
+    } else if (sp === 'bird') {
+      tips.push({
+        id: 'guide-spec-bird',
+        title: '반려조 영양 펠렛 및 호흡기 케어',
+        content: '앵무새는 호흡기가 매우 예민하므로 공기청정과 환기에 신경 쓰고, 영양 불균형 방지를 위해 알곡 위주보다 조류 전용 균형 영양 펠렛을 주식으로 급여해주세요.'
+      });
+    } else if (sp === 'reptile') {
+      tips.push({
+        id: 'guide-spec-reptile',
+        title: '파충류 칼슘(MBD 예방) 및 온습도 관리',
+        content: '파충류는 칼슘 결핍 시 대사성 골질환(MBD)에 걸리기 쉬우므로 먹이에 칼슘제를 묻히는 더스팅이 필수이며, 사육장 내 핫존/쿨존 온도를 다르게 유지해주세요.'
+      });
+    } else if (sp === 'amphibian') {
+      tips.push({
+        id: 'guide-spec-amphibian',
+        title: '양서류 습도 및 수질 온도 조절',
+        content: '양서류는 피부로도 호흡하는 연약한 동물입니다. 항상 적정 습도를 유지하여 피부가 마르지 않게 하고, 급격한 온도 변화 및 수질 오염(수돗물 염소 제거 필수)을 방지해주세요.'
+      });
+    } else if (sp === 'fish') {
+      tips.push({
+        id: 'guide-spec-fish',
+        title: '어류 물잡이 수온 유지 및 환수 일정 관리',
+        content: '물고기를 키울 때는 급격한 수질 변화가 치명적입니다. 여과 장치를 점검하고 정기적으로 부분 환수(전체 물의 20~30% 교체)를 진행하며 적정 수온을 일정하게 유지해주세요.'
+      });
+    }
+  }
+
   // 4. Fallback Static Rules (Age / Weight)
   if (tips.length === 0) {
     let ageMonths = 0;
@@ -106,15 +154,15 @@ export const generateDailyGuides = (activePet: Pet, events: CalendarEvent[]): Gu
     if (ageMonths < 12 && ageMonths > 0) {
       tips.push({
         id: 'guide-age-puppy',
-        title: '자견 맞춤 면역 & 사회성 케어',
-        content: `현재 ${ageMonths}개월령인 어린 시기입니다. 외부 외출 시 위생에 주의하고, 긍정적인 사회성 기르기를 위해 낯선 소리와 실내 환경 체험을 자주 접하게 해주세요.`
+        title: '성장기 반려동물 면역 & 사회성 케어',
+        content: `현재 ${ageMonths}개월령인 어린 시기입니다. 외부 활동 시 위생에 주의하고, 긍정적인 사회성 기르기를 위해 다양한 소리와 실내외 환경 체험을 자주 접하게 해주세요.`
       });
     } else if (ageMonths >= 84) {
       const years = Math.floor(ageMonths / 12);
       tips.push({
         id: 'guide-age-senior',
-        title: '노령견 슬개골 및 영양 관리',
-        content: `올해 ${years}살로 노령기에 진입했습니다. 발바닥 털이 길면 관절에 무리가 가므로 정기 미용을 하고, 슬개골 보호를 위해 거실 매트와 계단을 설치해 주세요.`
+        title: '노령기 반려동물 관절 및 영양 관리',
+        content: `올해 ${years}살로 노령기에 진입했습니다. 발바닥 털이 길거나 발톱이 길면 관절에 무리가 가므로 정기적으로 케어하고, 관절 보호를 위해 전용 매트나 경사로를 설치해 주세요.`
       });
     } else if (petWeight > 15) {
       tips.push({

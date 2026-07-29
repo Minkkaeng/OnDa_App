@@ -81,7 +81,7 @@ const Settings: React.FC = () => {
 
   // Preset FAQ
   const faqList = [
-    { q: 'OnDa Pet Care는 어떤 서비스인가요?', a: '반려견의 건강, 산책, 투약 일정 등을 캘린더와 대시보드를 통해 손쉽게 관리하고 기록할 수 있는 하이브리드 반려견 전용 다이어리 서비스입니다.' },
+    { q: 'OnDa Pet Care는 어떤 서비스인가요?', a: '반려동물의 건강, 산책, 투약 일정 등을 캘린더와 대시보드를 통해 손쉽게 관리하고 기록할 수 있는 하이브리드 반려동물 전용 다이어리 서비스입니다.' },
     { q: '데이터 백업은 어떻게 하나요?', a: '설정 > 시스템 설정 메뉴에서 "백업 파일 내보내기"를 통해 모든 데이터를 JSON 파일로 다운로드하여 영구 보관할 수 있습니다.' },
     { q: '모바일에서도 실시간으로 사용할 수 있나요?', a: '네! 본 앱은 모바일 환경에 최적화되어 있으며 모바일 브라우저나 설치형 APK를 통해 이용하실 수 있습니다.' }
   ];
@@ -730,7 +730,7 @@ const Settings: React.FC = () => {
               </div>
               <div style={{ textAlign: 'left' }}>
                 <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>알림 및 알람 리마인더 설정</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>반려견을 위한 투약 일정 및 케어 푸시 리마인더</p>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>반려동물을 위한 투약 일정 및 케어 푸시 리마인더</p>
               </div>
             </div>
             <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
@@ -846,7 +846,7 @@ const Settings: React.FC = () => {
                       {editingReminderId ? '알람 일정 수정' : '새 알람 예약 등록'}
                     </h4>
                     <div className="form-group" style={{ marginBottom: '10px' }}>
-                      <label className="form-label" style={{ fontSize: '0.8rem' }}>대상 반려견</label>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>대상 반려동물</label>
                       <select 
                         className="form-input" 
                         value={reminderPetId} 

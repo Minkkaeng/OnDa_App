@@ -138,6 +138,7 @@ interface PetState {
 const mockPet: Pet = {
   id: 'mock-pet',
   name: '초코',
+  species: 'dog',
   breed: '토이 푸들',
   birth: '2023-05-10',
   weight: 4.5,

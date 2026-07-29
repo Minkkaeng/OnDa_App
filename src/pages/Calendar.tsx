@@ -100,8 +100,8 @@ const Calendar: React.FC = () => {
       try {
         const vaccines = JSON.parse(savedVac);
         const categories = [
-          { id: 'dhppi', label: '종합백신 (DHPPi)', type: 'annual' },
-          { id: 'corona', label: '코로나 장염 백신', type: 'annual' },
+          { id: 'dhppi', label: '종합백신 (DHPPi / FVRCP 등)', type: 'annual' },
+          { id: 'corona', label: '추가백신 (코로나/복막염 등)', type: 'annual' },
           { id: 'rabies', label: '광견병 예방 백신', type: 'annual' },
           { id: 'parasite', label: '내/외부 기생충 케어', type: 'monthly' }
         ];

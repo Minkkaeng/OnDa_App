@@ -4,6 +4,83 @@ import { usePetStore } from '../store/petStore';
 
 import ImageCropper from '../components/common/ImageCropper';
 
+export const SPECIES_PRESETS: Record<string, { label: string; breeds: string[] }> = {
+  dog: {
+    label: '개',
+    breeds: [
+      '말티즈', '포메라니안', '치와와', '토이 푸들', '시츄', 
+      '비글', '코카 스파니엘', '진도견', '웰시 코기', 
+      '골든 리트리버', '래브라도 리트리버', '허스키', '저먼 셰퍼드', 
+      '비숑 프리제', '보더 콜리', '시바견', '요크셔 테리어', 
+      '닥스훈트', '슈나우저', '스피츠', '사모예드', '믹스견'
+    ]
+  },
+  cat: {
+    label: '고양이',
+    breeds: [
+      '코리안 쇼트헤어', '브리티시 쇼트헤어', '러시안 블루', '샴', 
+      '페르시안', '메인쿤', '노르웨이 숲', '스코티시 폴드', 
+      '아비시니안', '렉돌', '아메리칸 쇼트헤어', '먼치킨', 
+      '스핑크스', '뱅갈', '터키시 앙고라', '믹스묘'
+    ]
+  },
+  small_mammal: {
+    label: '설치류 및 소형 포유류',
+    breeds: [
+      '골든 햄스터', '로보로브스키', '정글리안(시베리안)', 
+      '아비시니안 기니피그', '페루비안 기니피그', '아메리칸 기니피그', 
+      '드워프 핫롯 토끼', '롭어드 토끼', '라이언헤드 토끼', 
+      '아프리칸 피그미 고슴도치', '슈가글라이더', 
+      '친칠라', '페럿', '데구', '몽골리안 저빌', '팬더마우스'
+    ]
+  },
+  bird: {
+    label: '조류',
+    breeds: [
+      '모란앵무', '사랑앵무(버저가리)', '잉꼬', 
+      '왕관앵무', '코뉴어', 
+      '회색앵무', '아마존 앵무', '마카우(금강앵무)', 
+      '퀘이커 앵무', '카이큐', '유황앵무(코카투)', 
+      '금화조', '문조', '십자매', '카나리아'
+    ]
+  },
+  reptile: {
+    label: '파충류',
+    breeds: [
+      '크레스트 게코', '가고일 게코', 
+      '레오파드 게코', '비어디 드래곤', 
+      '레이저백 머스크터틀', '커먼 머스크터틀', '쿠터 종류', 
+      '호스로필드 육지거북', '별거북', '설카타 육지거북', 
+      '레오파드 육지거북', '레드풋 육지거북', 
+      '콘스네이크', '볼 파이톤', '킹스네이크', '서부돼지코뱀 (호그노즈)', 
+      '블루텅 스킨크', '펫테일 게코', '납테일 게코'
+    ]
+  },
+  amphibian: {
+    label: '양서류',
+    breeds: [
+      '팩맨 프로그(뿔개구리)', '화이트 트리프로그(청개구리류)', 
+      '우파루파(멕시코도롱뇽)', '파이어 살라맨더', 
+      '픽시프로그', '토마토프로그', '다트프로그', 
+      '크로커다일 뉴트', '타이거 살라맨더'
+    ]
+  },
+  fish: {
+    label: '어류',
+    breeds: [
+      '구피', '플래티', '몰리', '베타', 
+      '네온 테트라', '제브라 다리오', '카디널 테트라', 
+      '난주', '오란다', '진주린', '비단잉어', 
+      '아프리칸 시클리드', '아메리칸 시클리드', 
+      '디스커스', '엔젤피쉬', '코리도라스', '안시 (플레코)'
+    ]
+  },
+  custom: {
+    label: '직접 입력',
+    breeds: []
+  }
+};
+
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { addPet, showAlert, isGlobalTourActive } = usePetStore();
@@ -13,7 +90,11 @@ const Onboarding: React.FC = () => {
   
   // Step 1: Basic Info
   const [name, setName] = useState('');
+  const [species, setSpecies] = useState('dog');
+  const [customSpecies, setCustomSpecies] = useState('');
   const [breed, setBreed] = useState('');
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [filteredBreeds, setFilteredBreeds] = useState<string[]>([]);
   const [birth, setBirth] = useState('');
   const [weight, setWeight] = useState('');
   const [image, setImage] = useState<string>('/default_paw.png');
@@ -63,6 +144,21 @@ const Onboarding: React.FC = () => {
     setRawImage('');
   };
 
+  // 품종 자동완성 필터링
+  useEffect(() => {
+    if (species && species !== 'custom') {
+      const presets = SPECIES_PRESETS[species]?.breeds || [];
+      if (breed.trim() === '') {
+        setFilteredBreeds(presets);
+      } else {
+        const matches = presets.filter(b => b.toLowerCase().includes(breed.trim().toLowerCase()));
+        setFilteredBreeds(matches);
+      }
+    } else {
+      setFilteredBreeds([]);
+    }
+  }, [breed, species]);
+
   // Real-time Validation for Step 1
   useEffect(() => {
     let isValid = true;
@@ -97,10 +193,14 @@ const Onboarding: React.FC = () => {
       isValid = false;
     }
 
+    if (species === 'custom' && !customSpecies.trim()) {
+      isValid = false;
+    }
+
     if (!breed.trim()) isValid = false;
 
     setIsStep1Valid(isValid);
-  }, [name, breed, birth, weight]);
+  }, [name, breed, birth, weight, species, customSpecies]);
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,9 +216,11 @@ const Onboarding: React.FC = () => {
     try {
       const formattedMedications = medicationName && medicationTime ? `${medicationName} (${medicationTime})` : (medicationName || medicationTime || '');
       const formattedWalkGoal = walkDuration ? `${walkDuration}` : '';
+      const petSpecies = species === 'custom' ? customSpecies.trim() : species;
 
       await addPet({
         name: name.trim(),
+        species: petSpecies,
         breed: breed.trim(),
         birth,
         weight: parseFloat(weight) || 0,
@@ -184,7 +286,7 @@ const Onboarding: React.FC = () => {
       </div>
 
       <div className="onboarding-header" style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '1.6rem' }}>{step === 1 ? '반려견 프로필 등록' : '특별 케어 정보 등록'}</h1>
+        <h1 style={{ fontSize: '1.6rem' }}>{step === 1 ? '반려동물 프로필 등록' : '특별 케어 정보 등록'}</h1>
         <p>{step === 1 ? '우리 아이를 소개하는 기본 정보를 입력해주세요.' : '아이의 맞춤 케어를 위한 세부 정보를 등록해 주세요.'}</p>
       </div>
 
@@ -249,15 +351,104 @@ const Onboarding: React.FC = () => {
               {nameError && <span style={{ color: 'var(--blood-coral)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{nameError}</span>}
             </div>
             <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">견종</label>
+              <label className="form-label">종류 *</label>
+              <select 
+                value={species} 
+                onChange={(e) => {
+                  setSpecies(e.target.value);
+                  setBreed(''); // 종류가 바뀌면 품종 초기화
+                  setCustomSpecies('');
+                }} 
+                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: '1.5px solid var(--border-color)',
+                  fontSize: '0.95rem',
+                  backgroundColor: 'var(--card-bg)',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+                required
+              >
+                <option value="dog">개</option>
+                <option value="cat">고양이</option>
+                <option value="small_mammal">설치류 및 소형 포유류</option>
+                <option value="bird">조류</option>
+                <option value="reptile">파충류</option>
+                <option value="amphibian">양서류</option>
+                <option value="fish">어류</option>
+                <option value="custom">직접 입력</option>
+              </select>
+            </div>
+            {species === 'custom' && (
+              <div className="form-group" style={{ marginBottom: '14px' }}>
+                <label className="form-label">동물 종류 직접 입력 *</label>
+                <input 
+                  type="text" 
+                  value={customSpecies} 
+                  onChange={(e) => setCustomSpecies(e.target.value)} 
+                  className="form-input" 
+                  placeholder="예: 앵무새, 고슴도치 등" 
+                  required 
+                />
+              </div>
+            )}
+            <div className="form-group" style={{ marginBottom: '14px', position: 'relative' }}>
+              <label className="form-label">품종 *</label>
               <input 
                 type="text" 
                 value={breed} 
                 onChange={(e) => setBreed(e.target.value)} 
+                onFocus={() => setShowAutocomplete(true)}
+                onBlur={() => {
+                  // 클릭 이벤트를 캡처하기 위해 약간의 딜레이 후 닫음
+                  setTimeout(() => setShowAutocomplete(false), 200);
+                }}
                 className="form-input" 
-                placeholder="예) 토이 푸들" 
+                placeholder={species === 'custom' ? "직접 품종을 입력해주세요" : "품종을 입력하거나 선택해주세요"} 
                 required 
               />
+              {showAutocomplete && filteredBreeds.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  border: '1.5px solid var(--border-color)',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                  zIndex: 200,
+                  maxHeight: '180px',
+                  overflowY: 'auto',
+                  marginTop: '4px'
+                }}>
+                  {filteredBreeds.map((b) => (
+                    <div 
+                      key={b}
+                      onMouseDown={() => {
+                        setBreed(b);
+                        setShowAutocomplete(false);
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        fontSize: '0.9rem',
+                        color: 'var(--text-main)',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid var(--screen-bg)',
+                        textAlign: 'left'
+                      }}
+                    >
+                      {b}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                💡 목록에 없는 희귀 품종은 드롭다운을 무시하고 직접 입력하여 등록하실 수 있습니다.
+              </span>
             </div>
             <div className="form-group" style={{ marginBottom: '14px' }}>
               <label className="form-label">생년월일</label>

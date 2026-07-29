@@ -4,7 +4,7 @@ import { Sparkles, Droplet, Dog } from 'lucide-react';
 const GUIDE_PRESETS = [
   {
     badge: '초보 가이드',
-    title: '강아지 양치질 완벽 가이드',
+    title: '반려동물 양치질 완벽 가이드',
     desc: '치석 예방을 위한 올바른 양치 방법과 치약 선택 팁을 알아봐요.',
     icon: Sparkles
   },

@@ -606,7 +606,7 @@ const Diary: React.FC = () => {
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '8px 0' }}>
         {[
-          { value: '일상', label: '일상', desc: '오늘 하루 반려견과 함께한 평범하고 행복한 일상' },
+          { value: '일상', label: '일상', desc: '오늘 하루 반려동물과 함께한 평범하고 행복한 일상' },
           { value: '건강', label: '건강', desc: '병원 내원, 예방 접종 및 건강 관련 특이사항' },
           { value: '산책', label: '산책', desc: '산책 중 있었던 특별한 에피소드나 기록' },
           { value: '훈련', label: '훈련', desc: '새로 배운 명령어, 개인기 및 훈련 과정' },
