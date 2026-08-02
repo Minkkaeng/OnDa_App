@@ -7,7 +7,7 @@ import { WalkTimer } from '../components/WalkTimer';
 import AdBanner from '../components/common/AdBanner';
 import CareGuideBanner from '../components/common/CareGuideBanner';
 import { DashboardManageModal } from '../components/DashboardManageModal';
-import { Calendar as CalendarIcon, FileText, Footprints, Stethoscope, Sparkles, Pill, Settings, BookOpen } from 'lucide-react';
+import { Calendar as CalendarIcon, FileText, Footprints, Stethoscope, Sparkles, Pill, Settings, BookOpen, PawPrint, Utensils, Droplet, Activity } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +44,15 @@ const Dashboard: React.FC = () => {
   const todayStr = getTodayStr();
 
 
+  const handleQuickTileClick = (id: 'diary' | 'walk' | 'hospital' | 'schedule' | 'ai' | 'medication') => {
+    setSelectedTile(id);
+    if (id === 'diary') navigate('/diary');
+    else if (id === 'walk') setShowWalkTimer(true);
+    else if (id === 'hospital') navigate('/hospitals');
+    else if (id === 'schedule') navigate('/calendar');
+    else if (id === 'ai' || id === 'medication') navigate('/care');
+  };
+
   const quickTiles: { id: 'diary' | 'walk' | 'hospital' | 'schedule' | 'ai' | 'medication'; label: string; icon: React.ReactNode }[] = [
     { id: 'diary', label: '일기기록', icon: <FileText size={20} style={{ color: 'var(--icon-color)' }} /> },
     { id: 'walk', label: '산책기록', icon: <Footprints size={20} style={{ color: 'var(--icon-color)' }} /> },
@@ -52,6 +61,60 @@ const Dashboard: React.FC = () => {
     { id: 'ai', label: 'AI가이드', icon: <Sparkles size={20} style={{ color: 'var(--icon-color)' }} /> },
     { id: 'medication', label: '약/영양제', icon: <Pill size={20} style={{ color: 'var(--icon-color)' }} /> }
   ];
+
+  if (!activePet) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '70vh',
+        padding: '24px',
+        textAlign: 'center',
+        color: '#8E867E',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        <div style={{
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          backgroundColor: '#F8F7F3',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '16px',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
+        }}>
+          <Sparkles size={28} style={{ color: '#5C715E' }} />
+        </div>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 6px 0', color: '#2E2B2A' }}>
+          등록된 반려동물이 없습니다
+        </h3>
+        <p style={{ fontSize: '0.8rem', color: '#8E867E', margin: '0 0 20px 0', lineHeight: 1.4 }}>
+          온보딩을 완료하고 나만의 소중한 아이들의<br/>
+          소중한 일상 및 건강 관리를 시작해 보세요!
+        </p>
+        <button
+          onClick={() => navigate('/onboarding')}
+          style={{
+            height: '42px',
+            padding: '0 20px',
+            backgroundColor: '#5C715E',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            fontSize: '0.85rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(92, 113, 94, 0.25)'
+          }}
+        >
+          초기 프로필 작성하러 가기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -62,6 +125,209 @@ const Dashboard: React.FC = () => {
         {/* 상단 프로필 바로 아래 광고 배너 */}
         <AdBanner />
 
+        {/* 오늘의 컨디션 3종 알약 카드 (디자인 가이드 매칭) */}
+        <div className="onda-card" style={{ padding: '18px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h3 className="onda-section-title" style={{ fontSize: '1.1rem' }}>
+              오늘의 컨디션
+            </h3>
+            <PawPrint size={18} style={{ color: 'var(--main-primary)' }} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+            {/* Pill 1: 사료/식사 */}
+            <div 
+              onClick={() => navigate('/care')}
+              style={{
+                backgroundColor: '#FCFAF7',
+                borderRadius: '18px',
+                padding: '12px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid var(--main-primary-light)',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '14px',
+                backgroundColor: 'var(--main-primary-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Utensils size={20} color="var(--main-primary)" />
+              </div>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-main)' }}>사료/식사</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--main-primary)' }}>완료</span>
+            </div>
+
+            {/* Pill 2: 물/음수량 */}
+            <div 
+              onClick={() => navigate('/care')}
+              style={{
+                backgroundColor: '#FCFAF7',
+                borderRadius: '18px',
+                padding: '12px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid rgba(102, 202, 190, 0.2)',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '14px',
+                backgroundColor: 'rgba(102, 202, 190, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Droplet size={20} color="var(--accent)" />
+              </div>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-main)' }}>음수량</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)' }}>충분</span>
+            </div>
+
+            {/* Pill 3: 배변/건강 */}
+            <div 
+              onClick={() => navigate('/care')}
+              style={{
+                backgroundColor: '#FCFAF7',
+                borderRadius: '18px',
+                padding: '12px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid rgba(102, 202, 190, 0.2)',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '14px',
+                backgroundColor: 'rgba(102, 202, 190, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Activity size={20} color="var(--accent)" />
+              </div>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-main)' }}>배변/건강</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', backgroundColor: 'rgba(102, 202, 190, 0.12)', padding: '2px 6px', borderRadius: '8px' }}>
+                완료
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 다가오는 일정 카드 (디자인 가이드 A 화면 동기화) */}
+        <div className="onda-card" style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 className="onda-section-title" style={{ fontSize: '1.1rem' }}>
+              다가오는 일정
+            </h3>
+            <CalendarIcon size={18} style={{ color: 'var(--main-primary)' }} />
+          </div>
+          <div style={{
+            backgroundColor: '#FCFAF7',
+            borderRadius: '16px',
+            padding: '14px 16px',
+            border: '1px solid var(--onda-border-light)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            textAlign: 'left'
+          }}>
+            {(() => {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const upcoming = events
+                .filter(e => e.petId === activePet.id && e.date >= todayStr)
+                .sort((a, b) => a.date.localeCompare(b.date));
+              const nextEvent = upcoming[0];
+              
+              if (nextEvent) {
+                return (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                        {nextEvent.title}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--main-primary)', backgroundColor: 'var(--main-primary-light)', padding: '2px 8px', borderRadius: '10px' }}>
+                        {nextEvent.date.replace(/-/g, '/')}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                      {nextEvent.content || '일정의 상세 내용이 없습니다.'}
+                    </span>
+                  </>
+                );
+              }
+              return (
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0', display: 'block', width: '100%' }}>
+                  예정된 일정이 없습니다. 새로운 일정을 등록해 보세요!
+                </span>
+              );
+            })()}
+          </div>
+          <button 
+            className="onda-btn-primary" 
+            onClick={() => navigate('/calendar')}
+            style={{ height: '42px', fontSize: '0.85rem' }}
+          >
+            일정 관리하러 가기
+          </button>
+        </div>
+
+        {/* 내 주변 동물병원 & 약국 찾기 퀵 배너 */}
+        <div 
+          className="onda-card onda-card-interactive"
+          onClick={() => navigate('/hospitals')}
+          style={{
+            backgroundColor: '#FCFAF7',
+            border: '1.5px solid var(--main-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 16px',
+            boxShadow: '0 4px 14px rgba(92, 113, 94, 0.12)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--main-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              boxShadow: '0 4px 10px rgba(92,113,94,0.25)',
+              flexShrink: 0
+            }}>
+              <Stethoscope size={22} />
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                내 주변 동물병원 & 약국 찾기
+              </h4>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                24시 응급실, 동물약국, 미용실 실시간 안내
+              </p>
+            </div>
+          </div>
+          <span style={{ fontSize: '1.4rem', color: 'var(--main-primary)', fontWeight: 800 }}>›</span>
+        </div>
+
         {/* 6가지 퀵 바로가기 타일 (구조 최적화) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
           {/* 상단 메인 기능 (일기, 산책) */}
@@ -71,7 +337,7 @@ const Dashboard: React.FC = () => {
               return (
                 <div 
                   key={tile.id}
-                  onClick={() => setSelectedTile(tile.id)}
+                  onClick={() => handleQuickTileClick(tile.id)}
                   style={{
                     width: '100%',
                     minWidth: 0,
@@ -116,7 +382,7 @@ const Dashboard: React.FC = () => {
               return (
                 <div 
                   key={tile.id}
-                  onClick={() => setSelectedTile(tile.id)}
+                  onClick={() => handleQuickTileClick(tile.id)}
                   style={{
                     width: '100%',
                     minWidth: 0,
@@ -279,23 +545,23 @@ const Dashboard: React.FC = () => {
 
           {/* 5. AI 가이드 */}
           {selectedTile === 'ai' && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F5F3FF', padding: '10px 14px', borderRadius: '12px', border: '1px solid #DDD6FE' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F4F7F4', padding: '10px 14px', borderRadius: '12px', border: '1px solid #D4E2D2' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#5B21B6' }}>AI 변 건강 상태 분석 리포트</span>
-                <span style={{ fontSize: '0.75rem', color: '#6D28D9' }}>사진 촬영 시 대변 성상 & 건강 이상징후 AI 즉시 진단</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#354737' }}>AI 변 건강 상태 분석 리포트</span>
+                <span style={{ fontSize: '0.75rem', color: '#5C715E' }}>사진 촬영 시 대변 성상 & 건강 이상징후 AI 즉시 진단</span>
               </div>
-              <button onClick={() => navigate('/care')} style={{ backgroundColor: '#8B5CF6', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>AI 분석</button>
+              <button onClick={() => navigate('/care')} style={{ backgroundColor: '#5C715E', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>AI 분석</button>
             </div>
           )}
 
           {/* 6. 약/영양제 */}
           {selectedTile === 'medication' && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EEF2FF', padding: '10px 14px', borderRadius: '12px', border: '1px solid #C7D2FE' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F4F7F4', padding: '10px 14px', borderRadius: '12px', border: '1px solid #D4E2D2' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3730A3' }}>복용 약/영양제: {activePet.medications || '유산균, 관절 영양제'}</span>
-                <span style={{ fontSize: '0.75rem', color: '#4338CA' }}>주의 알레르기: {activePet.allergies || '없음'}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#354737' }}>복용 약/영양제: {activePet.medications || '유산균, 관절 영양제'}</span>
+                <span style={{ fontSize: '0.75rem', color: '#5C715E' }}>주의 알레르기: {activePet.allergies || '없음'}</span>
               </div>
-              <button onClick={() => navigate('/profile')} style={{ backgroundColor: '#6366F1', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>수정</button>
+              <button onClick={() => navigate('/profile')} style={{ backgroundColor: '#5C715E', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>수정</button>
             </div>
           )}
           </div>

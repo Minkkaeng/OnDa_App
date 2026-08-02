@@ -362,7 +362,7 @@ const Calendar: React.FC = () => {
     <>
       {/* Calendar Guide overlay disabled for global tour */}
 
-      <div style={{ paddingBottom: '0' }}>
+      <div className="onda-page-container">
 
       {/* Unified Top Control Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 8px 16px', borderBottom: '1px solid var(--border-color)', margin: '8px 0 16px 0' }}>

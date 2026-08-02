@@ -95,6 +95,24 @@ export const generateDailyGuides = (activePet: Pet, events: CalendarEvent[]): Gu
     }
   }
 
+  // 3.5. Species Specific Basic Guides (Dog & Cat Only)
+  if (activePet.species) {
+    const sp = activePet.species.toLowerCase();
+    if (sp === 'dog') {
+      tips.push({
+        id: 'guide-spec-dog',
+        title: '반려견 슬개골 및 관절 관리',
+        content: '말티즈, 푸들, 포메라니안 등 소형견은 슬개골 탈구에 취약합니다. 실내에 미끄럼 방지 매트를 설치하고 높은 곳에서 뛰어내리지 않게 훈련해주세요.'
+      });
+    } else if (sp === 'cat') {
+      tips.push({
+        id: 'guide-spec-cat',
+        title: '반려묘 음수량 및 수직 공간 확보',
+        content: '고양이는 신장 건강을 위한 충분한 수분 섭취(정수기 설치, 습식 캔 급여)가 매우 중요하며, 스트레스 해소를 위해 캣타워 같은 수직 공간을 확보해주세요.'
+      });
+    }
+  }
+
   // 4. Fallback Static Rules (Age / Weight)
   if (tips.length === 0) {
     let ageMonths = 0;

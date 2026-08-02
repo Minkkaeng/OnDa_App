@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePetStore } from '../store/petStore';
-import { Settings, AlertTriangle } from 'lucide-react';
+import { Settings, AlertTriangle, PawPrint } from 'lucide-react';
 
 interface ProfileCardProps {
   isScrolled?: boolean;
@@ -10,20 +10,19 @@ interface ProfileCardProps {
 export const ProfileCard: React.FC<ProfileCardProps> = ({ isScrolled = false }) => {
   const navigate = useNavigate();
   const { pets, activePetId, events } = usePetStore();
-  const [isManualCollapsed, setIsManualCollapsed] = useState(false);
-  const effectivelyScrolled = isScrolled || isManualCollapsed;
 
   const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   if (!activePet) {
     return (
-      <div className="global-profile-card">
-        <div className="global-profile-info">
-          <h3>등록된 반려동물이 없습니다.</h3>
-        </div>
+      <div className="onda-card" style={{ textAlign: 'center', padding: '24px' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-main)' }}>
+          등록된 반려동물이 없습니다.
+        </h3>
         <button 
-          className="global-profile-switch-btn"
+          className="onda-btn-primary"
           onClick={() => navigate('/onboarding')}
+          style={{ width: 'auto', padding: '0 20px', margin: '0 auto' }}
         >
           등록하러 가기
         </button>
@@ -52,42 +51,107 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ isScrolled = false }) 
 
   return (
     <div 
+      className="onda-card"
       style={{ 
         position: 'relative', 
-        backgroundColor: 'var(--card-bg)',
-        borderRadius: isScrolled ? '14px' : '20px',
-        padding: isScrolled ? '8px 12px' : '12px 14px',
-        boxShadow: isScrolled ? '0 2px 8px rgba(0,0,0,0.06)' : 'var(--shadow-card)',
-        border: '1.5px solid var(--border-color)',
+        padding: isScrolled ? '12px 16px' : '18px 20px',
+        backgroundColor: '#FFFFFF',
         display: 'flex',
         flexDirection: 'column',
-        gap: effectivelyScrolled ? '4px' : '10px',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        gap: isScrolled ? '4px' : '12px',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflow: 'hidden'
       }}
     >
+      {/* Background Decorative Paw Icon */}
+      <PawPrint 
+        size={90} 
+        style={{
+          position: 'absolute',
+          top: '-15px',
+          right: '-15px',
+          color: 'var(--main-primary-light)',
+          opacity: 0.25,
+          pointerEvents: 'none'
+        }} 
+      />
+
       {/* Overdue Care Alert Badge */}
       {overdueCount > 0 && (
-        <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', padding: '10px 14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => navigate('/calendar')}>
-          <AlertTriangle size={18} color="#DC2626" />
-          <span style={{ fontSize: '0.85rem', color: '#B91C1C', fontWeight: 800 }}>지연된 병원/접종 일정이 {overdueCount}건 있습니다.</span>
+        <div 
+          style={{ 
+            backgroundColor: '#FEF2F2', 
+            border: '1px solid #FECACA', 
+            padding: '8px 12px', 
+            borderRadius: '14px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            cursor: 'pointer', 
+            zIndex: 2 
+          }} 
+          onClick={() => navigate('/calendar')}
+        >
+          <AlertTriangle size={16} color="#DC2626" />
+          <span style={{ fontSize: '0.8rem', color: '#B91C1C', fontWeight: 800 }}>지연된 병원/접종 일정이 {overdueCount}건 있습니다.</span>
         </div>
       )}
 
-      {/* Main Pet Info Row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          {/* Avatar Image */}
-          <div style={{
-            width: effectivelyScrolled ? '42px' : '52px',
-            height: effectivelyScrolled ? '42px' : '52px',
-            borderRadius: '50%',
-            border: '2px solid var(--main-primary)',
-            padding: '2px',
-            backgroundColor: 'white',
-            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.15)',
-            flexShrink: 0,
+      {/* Main Pet Hero Banner Content */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 2 }}>
+        {/* Left Side: Header Labels & Large Pet Name */}
+        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+            오늘의 케어
+          </span>
+          <h2 style={{ 
+            fontSize: isScrolled ? '1.3rem' : '1.8rem', 
+            fontWeight: 800, 
+            color: 'var(--text-main)', 
+            margin: '0 0 4px 0', 
+            lineHeight: 1.1,
             transition: 'all 0.3s ease'
           }}>
+            {activePet.name}
+          </h2>
+
+          {!isScrolled && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800, backgroundColor: 'var(--main-primary-light)', padding: '3px 10px', borderRadius: '12px' }}>
+                {activePet.breed}
+              </span>
+              {activePet.weight && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 800, backgroundColor: '#F8F7F3', padding: '3px 10px', borderRadius: '12px', border: '1px solid var(--onda-border-light)' }}>
+                  {activePet.weight}kg
+                </span>
+              )}
+              {calculateAge(activePet.birth) && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  {calculateAge(activePet.birth)}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Large Character Pet Avatar & Edit Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div 
+            onClick={() => navigate(`/profile?id=${activePet.id}`)}
+            style={{
+              width: isScrolled ? '46px' : '68px',
+              height: isScrolled ? '46px' : '68px',
+              borderRadius: '50%',
+              border: '3px solid var(--main-primary)',
+              padding: '2px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0 6px 18px rgba(92, 113, 94, 0.25)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+          >
             <img 
               src={activePet.image || '/default_paw.png'} 
               alt={activePet.name} 
@@ -95,101 +159,26 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ isScrolled = false }) 
               onError={(e) => { e.currentTarget.src = '/default_paw.png' }}
             />
           </div>
-
-          {/* Name & Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <h3 style={{ margin: 0, fontSize: isScrolled ? '1.05rem' : '1.2rem', fontWeight: 800, color: 'var(--text-main)', transition: 'all 0.3s ease' }}>
-                {activePet.name}
-              </h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800, backgroundColor: 'var(--butter-cream)', padding: '2px 8px', borderRadius: '10px' }}>
-                {activePet.breed}
-              </span>
-            </div>
-            {!effectivelyScrolled && (
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, animation: 'fadeInTab 0.2s ease-out' }}>
-                {activePet.birth || '생일 미설정'} {calculateAge(activePet.birth) ? `(${calculateAge(activePet.birth)})` : ''}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Profile Edit Button */}
-        <button
-          onClick={() => navigate(`/profile?id=${activePet.id}`)}
-          style={{
-            backgroundColor: 'var(--screen-bg)',
-            color: 'var(--text-main)',
-            border: '1px solid var(--border-color)',
-            padding: effectivelyScrolled ? '4px 10px' : '6px 12px',
-            borderRadius: '14px',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <Settings size={14} /> 수정
-        </button>
-      </div>
-
-      {/* Manual Collapse Toggle Button */}
-      {!isScrolled && (
-        <button
-          onClick={() => setIsManualCollapsed(!isManualCollapsed)}
-          style={{
-            position: 'absolute',
-            bottom: '-14px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'var(--card-bg)',
-            border: '1.5px solid var(--border-color)',
-            borderRadius: '50%',
-            width: '28px',
-            height: '28px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            zIndex: 10,
-            color: 'var(--text-muted)',
-            fontSize: '0.8rem'
-          }}
-        >
-          {isManualCollapsed ? '▼' : '▲'}
-        </button>
-      )}
-
-      {/* Collapsible Stats Row */}
-      <div style={{
-        maxHeight: effectivelyScrolled ? '0px' : '80px',
-        opacity: effectivelyScrolled ? 0 : 1,
-        overflow: 'hidden',
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingTop: effectivelyScrolled ? 0 : '10px',
-        borderTop: effectivelyScrolled ? 'none' : '1px dashed var(--border-color)',
-        marginTop: effectivelyScrolled ? 0 : '2px',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-      }}>
-        <div style={{ flex: 1, minWidth: 0, textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activePet.weight ? `${activePet.weight}kg` : '-'}</span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>몸무게</span>
-        </div>
-        <div style={{ flex: 1, minWidth: 0, textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activePet.walkDuration || activePet.walkGoal || '30분'}</span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>산책 목표</span>
-        </div>
-        <div style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: activePet.allergies && activePet.allergies !== '없음' ? '#D97706' : 'var(--main-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {activePet.allergies && activePet.allergies !== '없음' ? '주의' : '양호'}
-          </span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>알레르기</span>
+          <button
+            onClick={() => navigate(`/profile?id=${activePet.id}`)}
+            style={{
+              backgroundColor: '#F8F7F3',
+              color: 'var(--text-main)',
+              border: '1px solid var(--onda-border)',
+              padding: '6px 10px',
+              borderRadius: '12px',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Settings size={14} />
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default ProfileCard;

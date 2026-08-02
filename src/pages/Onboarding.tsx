@@ -1,40 +1,110 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePetStore } from '../store/petStore';
-
 import ImageCropper from '../components/common/ImageCropper';
+import ScrollTimePickerModal from '../components/common/ScrollTimePickerModal';
+import OnboardingStep0Terms from '../components/onboarding/OnboardingStep0Terms';
+import OnboardingStep1Profile from '../components/onboarding/OnboardingStep1Profile';
+import OnboardingStep2Routine from '../components/onboarding/OnboardingStep2Routine';
+import OnboardingStep3Health from '../components/onboarding/OnboardingStep3Health';
+import OnboardingTermsModal from '../components/onboarding/OnboardingTermsModal';
+import { SPECIES_PRESETS } from '../constants/petProfile';
+import { searchDiseases, type DiseaseItem } from '../constants/diseaseDataset';
+import { Settings, Heart, PawPrint } from 'lucide-react';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { addPet, showAlert, isGlobalTourActive } = usePetStore();
 
+  const [step, setStep] = useState(0); // Start from terms & notifications step
   
-  const [step, setStep] = useState(1);
-  
+  // Hybrid Multi-Pet State
+  const [targetPetCount, setTargetPetCount] = useState<number>(1);
+  const [currentPetIndex, setCurrentPetIndex] = useState<number>(0);
+  const [savedPets, setSavedPets] = useState<{ id?: string; name: string; species: string; breed: string; birth: string; weight: number; image: string; }[]>([]);
+  const [showPetDropdown, setShowPetDropdown] = useState<boolean>(false);
+
+  // Active Tab Auto Scroll Ref
+  const activeTabRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [currentPetIndex, targetPetCount]);
+
+  // Android Keyboard Viewport Lift Handler
+  useEffect(() => {
+    const handleViewportResize = () => {
+      if (window.visualViewport) {
+        const isKeyboardOpen = window.visualViewport.height < window.innerHeight - 150;
+        if (isKeyboardOpen) {
+          document.body.classList.add('keyboard-active');
+          const activeEl = document.activeElement;
+          if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+            setTimeout(() => {
+              activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
+        } else {
+          document.body.classList.remove('keyboard-active');
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+    }
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
+      }
+      document.body.classList.remove('keyboard-active');
+    };
+  }, []);
+
+  // Time Picker Drag/Wheel Scroll Modal State
+  const [showWalkTimePickerModal, setShowWalkTimePickerModal] = useState(false);
+
+  // Disease Autocomplete Dataset Search State
+  const [diseaseSearchResults, setDiseaseSearchResults] = useState<DiseaseItem[]>([]);
+
   // Step 1: Basic Info
   const [name, setName] = useState('');
+  const [species, setSpecies] = useState('dog');
+  const [customSpecies, setCustomSpecies] = useState('');
   const [breed, setBreed] = useState('');
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [filteredBreeds, setFilteredBreeds] = useState<string[]>([]);
   const [birth, setBirth] = useState('');
   const [weight, setWeight] = useState('');
-  const [image, setImage] = useState<string>('/default_paw.png');
+  const [image, setImage] = useState('/default_paw.png');
+
+  // Terms and Conditions States
+  const [agreeLocation, setAgreeLocation] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeNotification, setAgreeNotification] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState<'location' | 'privacy' | null>(null);
 
   // Cropper states
-  const [rawImage, setRawImage] = useState<string>('');
+  const [rawImage, setRawImage] = useState('');
   const [showCropModal, setShowCropModal] = useState(false);
 
-  // Step 2: Special Care Info
-  const [medicationName, setMedicationName] = useState('');
-  const [medicationTime, setMedicationTime] = useState('');
-  const [allergies, setAllergies] = useState('');
-  const [walkDepartTime, setWalkDepartTime] = useState('');
-  const [walkDuration, setWalkDuration] = useState('');
+  // Step 2 & 3: Care & Special Info (Chip system based)
+  const [walkDuration, setWalkDuration] = useState('30분');
+  const [walkDepartTime, setWalkDepartTime] = useState('오전 10:00');
+  const [allergiesList, setAllergiesList] = useState<string[]>(['초콜릿', '포도', '양파', '마늘']);
+  const [medicationsList, setMedicationsList] = useState<string[]>([]);
+  const [regularDiseasesList, setRegularDiseasesList] = useState<{ name: string; cycle: string; }[]>([]);
+  const [hospitalName, setHospitalName] = useState('');
 
-  // Time Picker Modal states
-  const [activePicker, setActivePicker] = useState<'medication' | 'depart' | 'duration' | null>(null);
-  const [pickerHour, setPickerHour] = useState('09');
-  const [pickerMinute, setPickerMinute] = useState('00');
-  const [pickerDurationHour, setPickerDurationHour] = useState('0');
-  const [pickerDurationMinute, setPickerDurationMinute] = useState('30');
+  // Local inputs for chip registration
+  const [allergyInput, setAllergyInput] = useState('');
+  const [medInput, setMedInput] = useState('');
+  const [diseaseNameInput, setDiseaseNameInput] = useState('');
+  const [diseaseCycleInput, setDiseaseCycleInput] = useState('1개월');
+  const [isCustomCycle, setIsCustomCycle] = useState(false);
+  const [customCycleInput, setCustomCycleInput] = useState('');
 
   // Error states for Step 1
   const [nameError, setNameError] = useState('');
@@ -42,7 +112,176 @@ const Onboarding: React.FC = () => {
   const [weightError, setWeightError] = useState('');
   const [isStep1Valid, setIsStep1Valid] = useState(false);
 
-  // Guide Overlay state auto-trigger removed to prevent race conditions.
+  // Cozy C-Option Colors
+  const colors = {
+    screenBg: '#FFFFFF',
+    cardBg: '#FFFFFF',
+    mainPrimary: '#5C715E',
+    mainPrimaryLight: '#D4E2D2',
+    butterCream: '#E9E6DF',
+    sandBg: '#F8F7F3',
+    inputBg: '#FCFAF7',
+    textMain: '#2E2B2A',
+    textMuted: '#8E867E',
+    borderColor: '#E8E2D9',
+    activeRed: '#E07A5F',
+    grayButton: '#9E9E9E'
+  };
+
+  const commonInputStyle: React.CSSProperties = {
+    width: '100%',
+    height: '42px',
+    padding: '0 16px',
+    borderRadius: '24px',
+    border: `1.5px solid ${colors.borderColor}`,
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    backgroundColor: '#F9F8F3',
+    color: colors.textMain,
+    outline: 'none',
+    boxSizing: 'border-box'
+  };
+
+  const commonCardStyle: React.CSSProperties = {
+    backgroundColor: colors.cardBg,
+    borderRadius: '16px',
+    padding: '12px 16px',
+    boxShadow: '0 4px 16px rgba(142, 134, 126, 0.04)',
+    marginBottom: '8px',
+    width: '100%',
+    maxWidth: '400px',
+    margin: '0 auto 8px auto',
+    boxSizing: 'border-box',
+    overflow: 'visible',
+    border: 'none'
+  };
+
+  const getErrorStyle = (errorMsg: string) => ({
+    borderColor: errorMsg ? 'var(--blood-coral)' : undefined
+  });
+
+  // Filter breed list based on species & input
+  useEffect(() => {
+    if (species === 'custom') {
+      setFilteredBreeds([]);
+      return;
+    }
+    const currentList = SPECIES_PRESETS[species as keyof typeof SPECIES_PRESETS]?.breeds || [];
+    if (!breed.trim()) {
+      setFilteredBreeds(currentList);
+    } else {
+      const q = breed.toLowerCase();
+      setFilteredBreeds(currentList.filter(b => b.toLowerCase().includes(q)));
+    }
+  }, [species, breed]);
+
+  // Real-time Disease Autocomplete Search
+  useEffect(() => {
+    if (!diseaseNameInput.trim()) {
+      setDiseaseSearchResults([]);
+    } else {
+      const results = searchDiseases(diseaseNameInput);
+      setDiseaseSearchResults(results);
+    }
+  }, [diseaseNameInput]);
+
+  // Real-time Step 1 validation
+  useEffect(() => {
+    let valid = true;
+
+    if (!name.trim()) {
+      setNameError('');
+      valid = false;
+    } else {
+      setNameError('');
+    }
+
+    if (species === 'custom' && !customSpecies.trim()) {
+      valid = false;
+    }
+
+    if (!breed.trim()) {
+      valid = false;
+    }
+
+    if (!birth) {
+      setBirthError('');
+      valid = false;
+    } else {
+      const selectedDate = new Date(birth);
+      const today = new Date();
+      if (selectedDate > today) {
+        setBirthError('미래 날짜는 선택할 수 없습니다');
+        valid = false;
+      } else {
+        setBirthError('');
+      }
+    }
+
+    if (!weight) {
+      setWeightError('');
+      valid = false;
+    } else {
+      const numWeight = parseFloat(weight);
+      if (isNaN(numWeight) || numWeight <= 0) {
+        setWeightError('올바른 몸무게를 입력해주세요');
+        valid = false;
+      } else {
+        setWeightError('');
+      }
+    }
+
+    setIsStep1Valid(valid);
+  }, [name, species, customSpecies, breed, birth, weight]);
+
+  // Chip handlers for Step 3
+  const handleAddAllergy = () => {
+    if (allergyInput.trim()) {
+      const trimmed = allergyInput.trim();
+      if (!allergiesList.includes(trimmed)) {
+        setAllergiesList([...allergiesList, trimmed]);
+      }
+      setAllergyInput('');
+    }
+  };
+
+  const handleRemoveAllergy = (itemToRemove: string) => {
+    setAllergiesList(allergiesList.filter(item => item !== itemToRemove));
+  };
+
+  const handleAddMedication = () => {
+    if (medInput.trim()) {
+      const trimmed = medInput.trim();
+      if (!medicationsList.includes(trimmed)) {
+        setMedicationsList([...medicationsList, trimmed]);
+      }
+      setMedInput('');
+    }
+  };
+
+  const handleRemoveMedication = (itemToRemove: string) => {
+    setMedicationsList(medicationsList.filter(item => item !== itemToRemove));
+  };
+
+  const handleAddDisease = () => {
+    const nameTrimmed = diseaseNameInput.trim();
+    const cycleVal = isCustomCycle ? customCycleInput.trim() : diseaseCycleInput;
+    if (nameTrimmed && cycleVal) {
+      const duplicate = regularDiseasesList.some(d => d.name === nameTrimmed);
+      if (!duplicate) {
+        setRegularDiseasesList([...regularDiseasesList, { name: nameTrimmed, cycle: cycleVal }]);
+      }
+      setDiseaseNameInput('');
+      setIsCustomCycle(false);
+      setDiseaseCycleInput('1개월');
+      setCustomCycleInput('');
+    }
+  };
+
+  const handleRemoveDisease = (nameToRemove: string) => {
+    setRegularDiseasesList(regularDiseasesList.filter(d => d.name !== nameToRemove));
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -63,525 +302,451 @@ const Onboarding: React.FC = () => {
     setRawImage('');
   };
 
-  // Real-time Validation for Step 1
-  useEffect(() => {
-    let isValid = true;
-    
-    const trimmedName = name.trim();
-    if (name.length > 0) {
-      if (!/^[가-힣a-zA-Z\s]+$/.test(trimmedName) || trimmedName.length > 10) {
-        setNameError('한글/영문 10자 이내로 입력해주세요.');
-        isValid = false;
-      } else {
-        setNameError('');
-      }
-    } else {
-      isValid = false;
-    }
-
-    if (birth.length > 0) {
-      setBirthError('');
-    } else {
-      isValid = false;
-    }
-
-    if (weight.length > 0) {
-      const w = parseFloat(weight);
-      if (isNaN(w) || w <= 0) {
-        setWeightError('올바른 숫자를 입력해주세요.');
-        isValid = false;
-      } else {
-        setWeightError('');
-      }
-    } else {
-      isValid = false;
-    }
-
-    if (!breed.trim()) isValid = false;
-
-    setIsStep1Valid(isValid);
-  }, [name, breed, birth, weight]);
-
-  const handleNextStep = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isStep1Valid) {
-      setStep(2);
-    }
+  const handleResetAll = () => {
+    setName('');
+    setBreed('');
+    setBirth('');
+    setWeight('');
+    setSpecies('dog');
+    setCustomSpecies('');
+    setWalkDuration('30분');
+    setAllergiesList([]);
+    setHospitalName('');
+    setRegularDiseasesList([]);
+    setMedicationsList([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isStep1Valid) return;
+    if (step === 0) {
+      if (agreeLocation && agreePrivacy) {
+        setStep(1);
+      } else {
+        showAlert('필수 약관에 모두 동의해주세요.');
+      }
+      return;
+    }
+    if (step === 1) {
+      if (isStep1Valid) setStep(2);
+      return;
+    }
+    if (step === 2) {
+      setStep(3);
+      return;
+    }
 
     try {
-      const formattedMedications = medicationName && medicationTime ? `${medicationName} (${medicationTime})` : (medicationName || medicationTime || '');
-      const formattedWalkGoal = walkDuration ? `${walkDuration}` : '';
-
-      await addPet({
+      const petSpecies = species === 'custom' ? customSpecies.trim() : species;
+      const petData = {
         name: name.trim(),
+        species: petSpecies,
         breed: breed.trim(),
         birth,
         weight: parseFloat(weight) || 0,
         image,
-        medicationName: medicationName.trim() || undefined,
-        medicationTime: medicationTime.trim() || undefined,
-        medications: formattedMedications.trim() || undefined,
-        allergies: allergies.trim() || undefined,
+        hospitalName: hospitalName.trim() || undefined,
+        allergies: allergiesList.map(s => s.trim()).filter(Boolean).join(','),
+        medications: medicationsList.map(s => s.trim()).filter(Boolean).join(','),
+        regularDiseases: JSON.stringify(regularDiseasesList.filter(d => d.name.trim() !== '')),
         walkDepartTime: walkDepartTime.trim() || undefined,
-        walkDuration: formattedWalkGoal.trim() || undefined,
         walkTime: walkDepartTime ? `나가는 시간: ${walkDepartTime}` : undefined,
-        walkGoal: formattedWalkGoal ? `목표: ${formattedWalkGoal}` : undefined
-      });
+        walkGoal: walkDuration ? `${walkDuration}` : '30분',
+        walkDuration: walkDuration ? `${walkDuration}` : '30분'
+      };
 
-      localStorage.setItem('isFirstRun', 'false');
-      navigate('/dashboard');
+      await addPet(petData);
+      setSavedPets(prev => [...prev, { name: petData.name, species: petData.species, breed: petData.breed, birth: petData.birth, weight: petData.weight, image: petData.image }]);
+
+      // Check if there are remaining pets to fill
+      if (currentPetIndex + 1 < targetPetCount) {
+        setCurrentPetIndex(prev => prev + 1);
+        handleResetAll();
+        setStep(1);
+      } else {
+        localStorage.setItem('isFirstRun', 'false');
+        localStorage.setItem('isNotificationAgreed', agreeNotification ? 'true' : 'false');
+        navigate('/dashboard');
+      }
     } catch (err) {
       console.error(err);
       showAlert('등록 중 오류가 발생했습니다.');
     }
   };
 
-  const getErrorStyle = (errorMsg: string) => ({
-    borderColor: errorMsg ? 'var(--blood-coral)' : undefined
-  });
+  const getArchCoordinates = (index: number, total: number) => {
+    const radius = 140;
+    const startAngle = -60 * (Math.PI / 180);
+    const endAngle = 60 * (Math.PI / 180);
+    const angleStep = (endAngle - startAngle) / (total - 1);
+    const angle = startAngle + index * angleStep;
+
+    const x = 160 + radius * Math.sin(angle);
+    const y = 160 - radius * Math.cos(angle);
+    const rotateDeg = angle * (180 / Math.PI);
+
+    return { x, y, rotateDeg };
+  };
 
   return (
-    <div className="onboarding-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--card-bg)' }}>
-      {/* Unified Global Tour takes care of guides */}
-
-      {/* Step Header Indicators */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', margin: '20px 0 10px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ backgroundColor: colors.screenBg, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: window.innerWidth > 500 ? '10px 0' : '0', boxSizing: 'border-box', color: colors.textMain, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div className="onboarding-container" style={{ 
+        height: window.innerWidth > 500 ? 'min(760px, 95vh)' : '100vh', 
+        width: '100%',
+        maxWidth: '500px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        backgroundColor: colors.screenBg, 
+        overflow: 'hidden',
+        position: 'relative',
+        boxShadow: window.innerWidth > 500 ? '0 16px 48px rgba(0,0,0,0.04)' : 'none',
+        borderRadius: window.innerWidth > 500 ? '24px' : '0px'
+      }}>
+      
+      {/* 1. Header Indicators */}
+      {step > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '30px', margin: '10px 0 8px 0', flexShrink: 0, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '20%', right: '20%', height: '2px', backgroundColor: colors.borderColor, zIndex: 1 }} />
+          
           <span style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '24px',
-            height: '24px',
+            width: step === 1 ? '46px' : '32px',
+            height: step === 1 ? '46px' : '32px',
             borderRadius: '50%',
-            backgroundColor: step === 1 ? 'var(--main-primary)' : 'var(--border-color)',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '0.85rem'
-          }}>1</span>
-          <span style={{ fontWeight: step === 1 ? 'bold' : 'normal', color: step === 1 ? 'var(--text-main)' : 'var(--text-muted)' }}>기본 정보</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            backgroundColor: step === 1 ? colors.mainPrimary : '#EBEBE6',
+            color: step === 1 ? 'white' : '#A2A29B',
+            zIndex: 2,
+            boxShadow: step === 1 ? '0 4px 10px rgba(92,113,94,0.2)' : 'none',
+            transition: 'all 0.3s ease'
+          }}>
+            <Settings size={step === 1 ? 20 : 16} />
+          </span>
+
           <span style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '24px',
-            height: '24px',
+            width: step === 2 ? '46px' : '32px',
+            height: step === 2 ? '46px' : '32px',
             borderRadius: '50%',
-            backgroundColor: step === 2 ? 'var(--main-primary)' : 'var(--border-color)',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '0.85rem'
-          }}>2</span>
-          <span style={{ fontWeight: step === 2 ? 'bold' : 'normal', color: step === 2 ? 'var(--text-main)' : 'var(--text-muted)' }}>케어 정보</span>
+            backgroundColor: step === 2 ? colors.mainPrimary : '#EBEBE6',
+            color: step === 2 ? 'white' : '#A2A29B',
+            zIndex: 2,
+            boxShadow: step === 2 ? '0 4px 10px rgba(92,113,94,0.2)' : 'none',
+            transition: 'all 0.3s ease'
+          }}>
+            <PawPrint size={step === 2 ? 20 : 16} />
+          </span>
+
+          <span style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: step === 3 ? '46px' : '32px',
+            height: step === 3 ? '46px' : '32px',
+            borderRadius: '50%',
+            backgroundColor: step === 3 ? colors.mainPrimary : '#EBEBE6',
+            color: step === 3 ? 'white' : '#A2A29B',
+            zIndex: 2,
+            boxShadow: step === 3 ? '0 4px 10px rgba(92,113,94,0.2)' : 'none',
+            transition: 'all 0.3s ease'
+          }}>
+            <Heart size={step === 3 ? 20 : 16} />
+          </span>
         </div>
-      </div>
-
-      <div className="onboarding-header" style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '1.6rem' }}>{step === 1 ? '반려견 프로필 등록' : '특별 케어 정보 등록'}</h1>
-        <p>{step === 1 ? '우리 아이를 소개하는 기본 정보를 입력해주세요.' : '아이의 맞춤 케어를 위한 세부 정보를 등록해 주세요.'}</p>
-      </div>
-
-      {step === 1 ? (
-        <form onSubmit={handleNextStep}>
-          <div className="avatar-upload" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <label htmlFor="ob-avatar-input" style={{ cursor: 'pointer', position: 'relative', width: '110px', height: '110px' }}>
-              <img 
-                src={image} 
-                alt="Avatar Preview" 
-                style={{ 
-                  width: '110px', 
-                  height: '110px', 
-                  borderRadius: '50%', 
-                  border: '4px solid var(--main-primary)', 
-                  objectFit: 'cover',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                }} 
-              />
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                backgroundColor: 'var(--main-primary)',
-                color: 'white',
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                border: '3px solid var(--card-bg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                  <circle cx="12" cy="13" r="4"></circle>
-                </svg>
-              </div>
-              <input 
-                type="file" 
-                id="ob-avatar-input" 
-                accept="image/*" 
-                onChange={handleImageChange} 
-                style={{ display: 'none' }} 
-              />
-            </label>
-          </div>
-
-          <div className="onboarding-form">
-            <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">이름</label>
-              <input 
-                type="text" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                className="form-input" 
-                style={getErrorStyle(nameError)}
-                placeholder="예) 초코" 
-                required 
-              />
-              {nameError && <span style={{ color: 'var(--blood-coral)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{nameError}</span>}
-            </div>
-            <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">견종</label>
-              <input 
-                type="text" 
-                value={breed} 
-                onChange={(e) => setBreed(e.target.value)} 
-                className="form-input" 
-                placeholder="예) 토이 푸들" 
-                required 
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">생년월일</label>
-              <input 
-                type="date" 
-                value={birth} 
-                onChange={(e) => setBirth(e.target.value)} 
-                className="form-input" 
-                style={getErrorStyle(birthError)}
-                required 
-              />
-              {birthError && <span style={{ color: 'var(--blood-coral)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{birthError}</span>}
-            </div>
-            <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">몸무게 (kg)</label>
-              <input 
-                type="number" 
-                value={weight} 
-                onChange={(e) => setWeight(e.target.value)} 
-                className="form-input" 
-                style={getErrorStyle(weightError)}
-                placeholder="예) 4.2" 
-                step="0.1" 
-                required 
-              />
-              {weightError && <span style={{ color: 'var(--blood-coral)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{weightError}</span>}
-            </div>
-          </div>
-
-          {!isGlobalTourActive && (
-            <div className="onboarding-footer" style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
-              <button 
-                type="submit" 
-                className="btn-submit" 
-                disabled={!isStep1Valid}
-                style={{ 
-                  backgroundColor: isStep1Valid ? 'var(--main-primary)' : '#E0E0E0',
-                  cursor: isStep1Valid ? 'pointer' : 'not-allowed',
-                  padding: '10px 24px',
-                  fontSize: '0.95rem',
-                  width: 'auto',
-                  minWidth: '120px'
-                }}
-              >
-                다음
-              </button>
-            </div>
-          )}
-        </form>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="onboarding-form">
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label">투약 약물 이름</label>
-              <input 
-                type="text" 
-                value={medicationName} 
-                onChange={(e) => setMedicationName(e.target.value)} 
-                className="form-input" 
-                placeholder="예) 안약, 유산균, 심장사상충약" 
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label">투약 시간 설정</label>
-              <button 
-                type="button" 
-                className="form-input" 
-                style={{ 
-                  textAlign: 'left', 
-                  cursor: 'pointer', 
-                  background: 'var(--card-bg)',
-                  color: medicationTime ? 'var(--text-main)' : 'var(--text-muted)'
-                }}
-                onClick={() => {
-                  if (medicationTime) {
-                    const [h, m] = medicationTime.split(':');
-                    setPickerHour(h);
-                    setPickerMinute(m);
-                  } else {
-                    setPickerHour('09');
-                    setPickerMinute('00');
-                  }
-                  setActivePicker('medication');
-                }}
-              >
-                {medicationTime || '예) 10:00'}
-              </button>
-            </div>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label">알레르기 및 특이사항</label>
-              <input 
-                type="text" 
-                value={allergies} 
-                onChange={(e) => setAllergies(e.target.value)} 
-                className="form-input" 
-                placeholder="예) 닭고기 알레르기, 진드기 주의" 
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label">산책 나가는 시간</label>
-              <button 
-                type="button" 
-                className="form-input" 
-                style={{ 
-                  textAlign: 'left', 
-                  cursor: 'pointer', 
-                  background: 'var(--card-bg)',
-                  color: walkDepartTime ? 'var(--text-main)' : 'var(--text-muted)'
-                }}
-                onClick={() => {
-                  if (walkDepartTime) {
-                    const [h, m] = walkDepartTime.split(':');
-                    setPickerHour(h);
-                    setPickerMinute(m);
-                  } else {
-                    setPickerHour('18');
-                    setPickerMinute('00');
-                  }
-                  setActivePicker('depart');
-                }}
-              >
-                {walkDepartTime || '예) 18:00'}
-              </button>
-            </div>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label">산책 목표 시간</label>
-              <button 
-                type="button" 
-                className="form-input" 
-                style={{ 
-                  textAlign: 'left', 
-                  cursor: 'pointer', 
-                  background: 'var(--card-bg)',
-                  color: walkDuration ? 'var(--text-main)' : 'var(--text-muted)'
-                }}
-                onClick={() => {
-                  if (walkDuration) {
-                    if (walkDuration.includes('시간')) {
-                      const parts = walkDuration.split('시간');
-                      setPickerDurationHour(parts[0].trim());
-                      const minPart = parts[1].replace('분', '').trim();
-                      setPickerDurationMinute(minPart || '0');
-                    } else {
-                      setPickerDurationHour('0');
-                      setPickerDurationMinute(walkDuration.replace('분', '').trim() || '30');
-                    }
-                  } else {
-                    setPickerDurationHour('0');
-                    setPickerDurationMinute('30');
-                  }
-                  setActivePicker('duration');
-                }}
-              >
-                {walkDuration || '예) 30분'}
-              </button>
-            </div>
-          </div>
-
-          {!isGlobalTourActive && (
-            <div className="onboarding-footer" style={{ marginTop: '32px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button 
-                type="button" 
-                className="btn-submit" 
-                onClick={() => setStep(1)}
-                style={{ 
-                  backgroundColor: 'var(--text-muted)', 
-                  padding: '10px 24px',
-                  fontSize: '0.95rem',
-                  width: 'auto',
-                  minWidth: '100px',
-                  marginTop: 0
-                }}
-              >
-                이전
-              </button>
-              <button 
-                type="submit" 
-                className="btn-submit" 
-                style={{ 
-                  backgroundColor: 'var(--main-primary)', 
-                  padding: '10px 24px',
-                  fontSize: '0.95rem',
-                  width: 'auto',
-                  minWidth: '120px',
-                  marginTop: 0
-                }}
-              >
-                완료하기
-              </button>
-            </div>
-          )}
-        </form>
       )}
 
-      {/* Time & Duration Picker Modal */}
-      {activePicker && (
-        <div 
-          className="modal-overlay" 
-          style={{ 
-            display: 'flex', 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            background: 'rgba(0,0,0,0.5)', 
-            zIndex: 150000, 
-            alignItems: 'center', 
-            justifyContent: 'center' 
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setActivePicker(null);
-          }}
-        >
-          <div className="modal-content" style={{ background: 'white', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', gap: '16px' }}>
-            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1rem', fontWeight: 800 }}>
-              {activePicker === 'medication' ? '투약 시간 설정' : activePicker === 'depart' ? '산책 출발 시간 설정' : '산책 목표 시간 설정'}
-            </h4>
+      <div className="onboarding-header" style={{ marginBottom: '8px', padding: '0 28px', flexShrink: 0, textAlign: 'left' }}>
+        <h1 style={{ fontSize: '1.35rem', margin: '0', color: colors.textMain, fontWeight: 800, lineHeight: 1.3 }}>
+          {step === 0 ? '서비스 이용을 위해\n약관에 동의해주세요.' : step === 1 ? '우리 아이의 프로필을\n설정해볼까요?' : step === 2 ? '우리 아이의 하루 일상은\n어떤가요?' : '우리 아이를 위해 더 챙겨야 할\n정보가 있나요?'}
+        </h1>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <div className="onboarding-form" style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          padding: '0 20px 10px 20px', 
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}>
+          {/* STEP 0: Terms & Notifications Center Modal Overlay */}
+          {step === 0 && (
+            <OnboardingStep0Terms 
+              agreeLocation={agreeLocation}
+              setAgreeLocation={setAgreeLocation}
+              agreePrivacy={agreePrivacy}
+              setAgreePrivacy={setAgreePrivacy}
+              agreeNotification={agreeNotification}
+              setAgreeNotification={setAgreeNotification}
+              onShowTermsModal={(type) => setShowTermsModal(type)}
+              onConfirmTerms={() => setStep(1)}
+              colors={colors}
+              commonCardStyle={commonCardStyle}
+            />
+          )}
+
+          {/* STEP 1: Basic Profile */}
+          {step === 1 && (
+            <OnboardingStep1Profile 
+              targetPetCount={targetPetCount}
+              savedPets={savedPets}
+              currentPetIndex={currentPetIndex}
+              name={name}
+              setName={setName}
+              species={species}
+              setSpecies={setSpecies}
+              customSpecies={customSpecies}
+              setCustomSpecies={setCustomSpecies}
+              breed={breed}
+              setBreed={setBreed}
+              birth={birth}
+              setBirth={setBirth}
+              weight={weight}
+              setWeight={setWeight}
+              image={image}
+              showPetDropdown={showPetDropdown}
+              setShowPetDropdown={setShowPetDropdown}
+              showAutocomplete={showAutocomplete}
+              setShowAutocomplete={setShowAutocomplete}
+              filteredBreeds={filteredBreeds}
+              nameError={nameError}
+              birthError={birthError}
+              weightError={weightError}
+              getErrorStyle={getErrorStyle}
+              handleImageChange={handleImageChange}
+              handleResetAll={handleResetAll}
+              setStep={setStep}
+              setTargetPetCount={setTargetPetCount}
+              setCurrentPetIndex={setCurrentPetIndex}
+              colors={colors}
+              commonCardStyle={commonCardStyle}
+              commonInputStyle={commonInputStyle}
+            />
+          )}
+
+          {/* STEP 2: Routine */}
+          {step === 2 && (
+            <OnboardingStep2Routine 
+              walkDuration={walkDuration}
+              setWalkDuration={setWalkDuration}
+              walkDepartTime={walkDepartTime}
+              onOpenTimePicker={() => setShowWalkTimePickerModal(true)}
+              getArchCoordinates={getArchCoordinates}
+              colors={colors}
+              commonCardStyle={commonCardStyle}
+            />
+          )}
+
+          {/* STEP 3: Health & Special Info */}
+          {step === 3 && (
+            <OnboardingStep3Health 
+              allergiesList={allergiesList}
+              setAllergiesList={setAllergiesList}
+              allergyInput={allergyInput}
+              setAllergyInput={setAllergyInput}
+              medicationsList={medicationsList}
+              medInput={medInput}
+              setMedInput={setMedInput}
+              regularDiseasesList={regularDiseasesList}
+              diseaseNameInput={diseaseNameInput}
+              setDiseaseNameInput={setDiseaseNameInput}
+              diseaseCycleInput={diseaseCycleInput}
+              setDiseaseCycleInput={setDiseaseCycleInput}
+              isCustomCycle={isCustomCycle}
+              setIsCustomCycle={setIsCustomCycle}
+              customCycleInput={customCycleInput}
+              setCustomCycleInput={setCustomCycleInput}
+              diseaseSearchResults={diseaseSearchResults}
+              setDiseaseSearchResults={setDiseaseSearchResults}
+              hospitalName={hospitalName}
+              setHospitalName={setHospitalName}
+              handleAddAllergy={handleAddAllergy}
+              handleRemoveAllergy={handleRemoveAllergy}
+              handleAddMedication={handleAddMedication}
+              handleRemoveMedication={handleRemoveMedication}
+              handleAddDisease={handleAddDisease}
+              handleRemoveDisease={handleRemoveDisease}
+              colors={colors}
+              commonCardStyle={commonCardStyle}
+              commonInputStyle={commonInputStyle}
+            />
+          )}
+        </div>
+
+        {/* 5. Cozy Option Actions bottom controls */}
+        {!isGlobalTourActive && (
+          <div className="onboarding-footer" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            width: '100%',
+            maxWidth: '400px',
+            margin: '0 auto 8px auto',
+            padding: '0 20px',
+            boxSizing: 'border-box',
+            zIndex: 10,
+            flexShrink: 0
+          }}>
             
-            {activePicker === 'duration' ? (
-              // Duration Picker (Hours & Minutes)
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-                <select 
-                  value={pickerDurationHour} 
-                  onChange={(e) => setPickerDurationHour(e.target.value)}
-                  className="form-input"
-                  style={{ width: '90px', padding: '8px', fontSize: '1rem', fontWeight: 'bold', textAlign: 'center' }}
+            {step > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={handleResetAll}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: colors.textMuted,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '2px'
+                  }}
                 >
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <option key={i} value={i}>{i}시간</option>
-                  ))}
-                </select>
-                <select 
-                  value={pickerDurationMinute} 
-                  onChange={(e) => setPickerDurationMinute(e.target.value)}
-                  className="form-input"
-                  style={{ width: '90px', padding: '8px', fontSize: '1rem', fontWeight: 'bold', textAlign: 'center' }}
-                >
-                  {['00', '10', '20', '30', '40', '50'].map(m => (
-                    <option key={m} value={m}>{parseInt(m)}분</option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              // Standard Time Picker (Hour : Minute)
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-                <select 
-                  value={pickerHour} 
-                  onChange={(e) => setPickerHour(e.target.value)}
-                  className="form-input"
-                  style={{ width: '90px', padding: '8px', fontSize: '1rem', fontWeight: 'bold', textAlign: 'center' }}
-                >
-                  {Array.from({ length: 24 }, (_, i) => {
-                    const hStr = String(i).padStart(2, '0');
-                    return <option key={hStr} value={hStr}>{hStr}시</option>;
-                  })}
-                </select>
-                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>:</span>
-                <select 
-                  value={pickerMinute} 
-                  onChange={(e) => setPickerMinute(e.target.value)}
-                  className="form-input"
-                  style={{ width: '90px', padding: '8px', fontSize: '1rem', fontWeight: 'bold', textAlign: 'center' }}
-                >
-                  {Array.from({ length: 60 }, (_, i) => {
-                    const mStr = String(i).padStart(2, '0');
-                    return <option key={mStr} value={mStr}>{mStr}분</option>;
-                  })}
-                </select>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'scaleX(-1)' }}>
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                  </svg>
+                </button>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-              <button 
-                type="button" 
-                className="btn-submit"
-                onClick={() => setActivePicker(null)}
-                style={{ backgroundColor: 'var(--text-muted)', flex: 1, marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
-              >
-                취소
-              </button>
-              <button 
-                type="button" 
-                className="btn-submit"
-                onClick={() => {
-                  if (activePicker === 'duration') {
-                    let formatted = '';
-                    const hrs = parseInt(pickerDurationHour);
-                    const mins = parseInt(pickerDurationMinute);
-                    if (hrs > 0) {
-                      formatted = `${hrs}시간 ${mins > 0 ? `${mins}분` : ''}`.trim();
-                    } else {
-                      formatted = `${mins}분`;
+            <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+              {step > 0 && (
+                <button 
+                  type="button" 
+                  className="btn-submit" 
+                  onClick={() => {
+                    if (step === 1) {
+                      setStep(0);
+                    } else if (step > 1) {
+                      setStep(step - 1);
                     }
-                    setWalkDuration(formatted);
-                  } else {
-                    const timeStr = `${pickerHour}:${pickerMinute}`;
-                    if (activePicker === 'medication') {
-                      setMedicationTime(timeStr);
-                    } else if (activePicker === 'depart') {
-                      setWalkDepartTime(timeStr);
-                    }
-                  }
-                  setActivePicker(null);
-                }}
-                style={{ flex: 1, marginTop: 0, padding: '10px', fontSize: '0.9rem' }}
-              >
-                설정
-              </button>
+                  }}
+                  style={{ 
+                    flex: 1,
+                    height: '48px',
+                    backgroundColor: colors.grayButton, 
+                    color: 'white',
+                    borderRadius: '14px',
+                    border: 'none',
+                    fontSize: '0.95rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    margin: 0
+                  }}
+                >
+                  이전
+                </button>
+              )}
+              
+              {step === 0 ? (
+                <button 
+                  type="submit" 
+                  className="btn-submit" 
+                  disabled={!agreeLocation || !agreePrivacy}
+                  style={{ 
+                    flex: 1,
+                    height: '48px',
+                    backgroundColor: (!agreeLocation || !agreePrivacy) ? '#D0D0D0' : colors.mainPrimary, 
+                    color: 'white',
+                    borderRadius: '14px',
+                    border: 'none',
+                    cursor: (!agreeLocation || !agreePrivacy) ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1px',
+                    boxShadow: (!agreeLocation || !agreePrivacy) ? 'none' : '0 4px 12px rgba(92,113,94,0.25)',
+                    margin: 0,
+                    width: '100%'
+                  }}
+                >
+                  <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>동의하고 계속하기</span>
+                  <span style={{ fontSize: '0.6rem', fontWeight: 500, opacity: 0.85 }}>프로필 작성 단계로 이동</span>
+                </button>
+              ) : (
+                <button 
+                  type="submit" 
+                  className="btn-submit" 
+                  disabled={step === 1 && !isStep1Valid}
+                  style={{ 
+                    flex: 1.2,
+                    height: '48px',
+                    backgroundColor: (step === 1 && !isStep1Valid) ? '#D0D0D0' : colors.mainPrimary, 
+                    color: 'white',
+                    borderRadius: '14px',
+                    border: 'none',
+                    cursor: (step === 1 && !isStep1Valid) ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1px',
+                    boxShadow: (step === 1 && !isStep1Valid) ? 'none' : '0 4px 12px rgba(92,113,94,0.25)',
+                    margin: 0
+                  }}
+                >
+                  <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>
+                    {step === 3 
+                      ? (currentPetIndex + 1 < targetPetCount ? '다음 아이 작성' : '등록 완료') 
+                      : '다음'}
+                  </span>
+                  <span style={{ fontSize: '0.6rem', fontWeight: 500, opacity: 0.85 }}>
+                    {step === 3 
+                      ? (currentPetIndex + 1 < targetPetCount 
+                          ? `${currentPetIndex + 1}/${targetPetCount}번째 아이 완료 > 다음 작성` 
+                          : `총 ${savedPets.length + 1}마리 등록 > 온다 시작`) 
+                      : '다음 단계로 이동'}
+                  </span>
+                </button>
+              )}
             </div>
-          </div>
-        </div>
-      )}
 
+          </div>
+        )}
+      </form>
+
+      {/* Image Crop Modal */}
       {showCropModal && (
         <ImageCropper 
-          rawImage={rawImage}
-          onCropComplete={handleCropComplete}
+          rawImage={rawImage} 
+          onCropComplete={handleCropComplete} 
           onCancel={() => {
             setShowCropModal(false);
             setRawImage('');
-          }}
+          }} 
         />
       )}
+
+      {/* Terms Modal */}
+      <OnboardingTermsModal 
+        showTermsModal={showTermsModal}
+        onClose={() => setShowTermsModal(null)}
+        colors={colors}
+      />
+
+      {/* Walk Time Picker Scroll Wheel Modal */}
+      {showWalkTimePickerModal && (
+        <ScrollTimePickerModal
+          title="산책 출발 시각 설정"
+          onConfirm={(formattedTime) => {
+            setWalkDepartTime(formattedTime);
+            setShowWalkTimePickerModal(false);
+          }}
+          onCancel={() => setShowWalkTimePickerModal(false)}
+          primaryColor={colors.mainPrimary}
+          textColor={colors.textMain}
+          mutedColor={colors.textMuted}
+        />
+      )}
+
+      </div>
     </div>
   );
 };

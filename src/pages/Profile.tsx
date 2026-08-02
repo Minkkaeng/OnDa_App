@@ -5,7 +5,6 @@ import {
   User, 
   Stethoscope, 
   Footprints, 
-  FileText, 
   Camera, 
   Plus, 
   Save, 
@@ -13,27 +12,9 @@ import {
   ChevronUp,
   ChevronDown
 } from 'lucide-react';
-
-const COMMON_BREEDS = [
-  '토이 푸들', '말티즈', '포메라니안', '비숑 프리제', 
-  '시바견', '골든 리트리버', '치와와', '코리안 숏헤어', '믹스견'
-];
-
-const ALLERGY_PRESETS = [
-  { id: 'chicken', label: '닭고기' },
-  { id: 'beef', label: '소고기' },
-  { id: 'pork', label: '돼지고기' },
-  { id: 'egg', label: '계란/유제품' },
-  { id: 'dust', label: '먼지/꽃가루' },
-  { id: 'none', label: '없음' }
-];
-
-const PERSONALITY_TAGS = [
-  '활발함', '얌전함', '호기심왕', '겁쟁이', 
-  '식탐왕', '애교쟁이', '사회성만점', '사람좋아'
-];
-
-const WALK_GOAL_OPTIONS = ['15분', '30분', '45분', '60분', '90분'];
+import { BasicCareForm } from '../components/profile/BasicCareForm';
+import { DailyCareForm } from '../components/profile/DailyCareForm';
+import { SpecialCareForm } from '../components/profile/SpecialCareForm';
 
 const Profile: React.FC = () => {
   const location = useLocation();
@@ -44,13 +25,20 @@ const Profile: React.FC = () => {
 
   // Form states
   const [name, setName] = useState('');
+  const [species, setSpecies] = useState('dog');
+  const [customSpecies, setCustomSpecies] = useState('');
   const [breed, setBreed] = useState('');
   const [birth, setBirth] = useState('');
   const [weight, setWeight] = useState('');
   const [hospitalName, setHospitalName] = useState('');
-  const [allergies, setAllergies] = useState('');
-  const [medications, setMedications] = useState('');
+  const [allergiesList, setAllergiesList] = useState<string[]>(['']);
+  const [medicationsList, setMedicationsList] = useState<string[]>(['']);
   const [notes, setNotes] = useState('');
+
+
+  const [regularDiseasesList, setRegularDiseasesList] = useState<{ name: string; cycle: string; }[]>([{ name: '', cycle: '1개월' }]);
+
+
   const [walkTime, setWalkTime] = useState('');
   const [walkGoal, setWalkGoal] = useState('30분');
   const [image, setImage] = useState('/default_paw.png');
@@ -76,12 +64,34 @@ const Profile: React.FC = () => {
       const pet = pets.find(p => p.id === selectedPetId);
       if (pet) {
         setName(pet.name || '');
+        const isPreset = ['dog', 'cat'].includes(pet.species || '');
+        if (pet.species) {
+          if (isPreset) {
+            setSpecies(pet.species);
+            setCustomSpecies('');
+          } else {
+            setSpecies('custom');
+            setCustomSpecies(pet.species);
+          }
+        } else {
+          setSpecies('dog');
+          setCustomSpecies('');
+        }
         setBreed(pet.breed || '');
         setBirth(pet.birth || '');
         setWeight(pet.weight ? String(pet.weight) : '');
         setHospitalName(pet.hospitalName || '');
-        setAllergies(pet.allergies || '');
-        setMedications(pet.medications || '');
+        setAllergiesList(pet.allergies ? pet.allergies.split(',').map(s => s.trim()) : ['']);
+        setMedicationsList(pet.medications ? pet.medications.split(',').map(s => s.trim()) : ['']);
+        if (pet.regularDiseases) {
+          try {
+            setRegularDiseasesList(JSON.parse(pet.regularDiseases));
+          } catch {
+            setRegularDiseasesList([{ name: '', cycle: '1개월' }]);
+          }
+        } else {
+          setRegularDiseasesList([{ name: '', cycle: '1개월' }]);
+        }
         setNotes(pet.notes || '');
         setImage(pet.image || '/default_paw.png');
         setWalkTime(pet.walkTime || '');
@@ -90,18 +100,22 @@ const Profile: React.FC = () => {
     } else {
       // Clear form for new pet
       setName('');
+      setSpecies('dog');
+      setCustomSpecies('');
       setBreed('');
       setBirth('');
       setWeight('');
       setHospitalName('');
-      setAllergies('');
-      setMedications('');
+      setAllergiesList(['']);
+      setMedicationsList(['']);
+      setRegularDiseasesList([{ name: '', cycle: '1개월' }]);
       setNotes('');
       setImage('/default_paw.png');
       setWalkTime('');
       setWalkGoal('30분');
     }
   }, [selectedPetId, pets]);
+
 
   // Calculate age string from birth date
   const calculateAgeStr = (birthDateStr: string) => {
@@ -144,17 +158,25 @@ const Profile: React.FC = () => {
   const toggleAllergyPreset = (label: string) => {
     const cleanLabel = label.split(' ')[0]; // Extract text part
     if (cleanLabel === '없음') {
-      setAllergies('없음');
+      setAllergiesList(['없음']);
       return;
     }
-    const currentList = allergies ? allergies.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const currentList = allergiesList.filter(Boolean);
     if (currentList.includes(cleanLabel)) {
       const filtered = currentList.filter(item => item !== cleanLabel);
-      setAllergies(filtered.join(', '));
+      setAllergiesList(filtered.length === 0 ? [''] : filtered);
     } else {
       const filtered = currentList.filter(item => item !== '없음');
-      filtered.push(cleanLabel);
-      setAllergies(filtered.join(', '));
+      // 첫 번째 빈 필드가 있다면 거기에 넣고, 없다면 새로 푸시
+      const emptyIdx = allergiesList.findIndex(x => !x.trim());
+      if (emptyIdx > -1) {
+        const next = [...allergiesList];
+        next[emptyIdx] = cleanLabel;
+        setAllergiesList(next.filter(item => item !== '없음'));
+      } else {
+        setAllergiesList([...filtered, cleanLabel]);
+      }
     }
   };
 
@@ -189,16 +211,27 @@ const Profile: React.FC = () => {
       showAlert('반려동물 이름을 입력해 주세요.');
       return;
     }
+    if (species === 'custom' && !customSpecies.trim()) {
+      showAlert('동물 종류를 입력해 주세요.');
+      return;
+    }
+    if (!breed.trim()) {
+      showAlert('품종을 입력해 주세요.');
+      return;
+    }
 
     try {
+      const petSpecies = species === 'custom' ? customSpecies.trim() : species;
       const petData = {
         name: name.trim(),
+        species: petSpecies,
         breed: breed.trim(),
         birth: birth,
         weight: parseFloat(weight) || 0,
         hospitalName: hospitalName.trim(),
-        allergies: allergies.trim(),
-        medications: medications.trim(),
+        allergies: allergiesList.map(s => s.trim()).filter(Boolean).join(','),
+        medications: medicationsList.map(s => s.trim()).filter(Boolean).join(','),
+        regularDiseases: JSON.stringify(regularDiseasesList.filter(d => d.name.trim() !== '')),
         notes: notes.trim(),
         walkTime: walkTime.trim(),
         walkGoal: walkGoal,
@@ -226,70 +259,102 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', padding: '4px 8px 32px 8px' }}>
+    <div className="onda-page-container">
       
-      {/* 2. Interactive Pet Carousel Tabs */}
-      <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px', scrollbarWidth: 'none' }}>
-        {pets.map(pet => {
+      {/* 1. Header Title & Sub-Chips */}
+      <div style={{ textAlign: 'left', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-main)' }}>
+          마이펫 관리
+        </h1>
+        <div className="horizontal-scroll-chips">
+          <button type="button" className="onda-chip-tab active">
+            <span>체중</span>
+          </button>
+          <button type="button" className="onda-chip-tab">
+            <span>예방접종</span>
+          </button>
+          <button type="button" className="onda-chip-tab">
+            <span>건강 상태</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Pet Cards List Matching Reference Mockup */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>
+            반려동물 목록 ({pets.length})
+          </span>
+        </div>
+
+        {pets.map((pet, idx) => {
           const isSelected = pet.id === selectedPetId;
+          const isMain = pet.id === activePetId || idx === 0;
+
           return (
             <div 
               key={pet.id}
               onClick={() => setSelectedPetId(pet.id)}
+              className="onda-card onda-card-interactive"
               style={{
+                padding: '14px 16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px 6px 8px',
-                borderRadius: '30px',
-                backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
-                border: isSelected ? '1px solid var(--main-primary)' : '1px solid var(--border-color)',
-                boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.15), inset 0 0 0 1px var(--main-primary)' : 'none',
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: 'all 0.2s ease'
+                justifyContent: 'space-between',
+                border: isSelected ? '2px solid var(--main-primary)' : '1px solid var(--onda-border-light)',
+                backgroundColor: isSelected ? '#FCFAF7' : '#FFFFFF'
               }}
             >
-              <img 
-                src={pet.image || '/default_paw.png'} 
-                alt={pet.name} 
-                style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
-                onError={(e) => { e.currentTarget.src = '/default_paw.png' }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: isSelected ? 'var(--main-primary)' : 'var(--text-main)' }}>
-                  {pet.name}
-                </span>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  {pet.breed || '미설정'}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <img 
+                  src={pet.image || '/default_paw.png'} 
+                  alt={pet.name} 
+                  style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--main-primary-light)' }}
+                  onError={(e) => { e.currentTarget.src = '/default_paw.png' }}
+                />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                      {pet.name}
+                    </span>
+                    {isMain && (
+                      <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--main-primary)', backgroundColor: 'var(--main-primary-light)', padding: '2px 8px', borderRadius: '10px' }}>
+                        Main
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {pet.breed || '품종 미설정'} {pet.weight ? `(${pet.weight}kg)` : ''}
+                  </span>
+                </div>
               </div>
+              <span style={{ fontSize: '1.2rem', color: 'var(--main-primary)', fontWeight: 800 }}>›</span>
             </div>
           );
         })}
 
-        <div 
+        <button 
+          type="button"
           onClick={() => setSelectedPetId(null)}
           style={{
+            width: '100%',
+            height: '46px',
+            borderRadius: '16px',
+            backgroundColor: '#FCFAF7',
+            border: '1.5px dashed var(--main-primary)',
+            color: 'var(--main-primary)',
+            fontSize: '0.88rem',
+            fontWeight: 800,
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            padding: '6px 14px',
-            borderRadius: '30px',
-            backgroundColor: selectedPetId === null ? 'var(--main-primary)' : 'var(--card-bg)',
-            color: selectedPetId === null ? 'white' : 'var(--text-muted)',
-            border: selectedPetId === null ? '1px solid var(--main-primary)' : '1px dashed var(--border-color)',
-            boxShadow: selectedPetId === null ? 'inset 0 0 0 1px var(--main-primary)' : 'none',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'all 0.2s ease',
-            fontWeight: 800,
-            fontSize: '0.85rem'
+            justifyContent: 'center',
+            gap: '8px'
           }}
         >
-          <Plus size={16} />
-          <span>추가</span>
-        </div>
+          <Plus size={18} />
+          <span>새로운 펫 추가</span>
+        </button>
       </div>
 
       {/* 3. Simple Visual Profile Avatar Section */}
@@ -349,7 +414,7 @@ const Profile: React.FC = () => {
       {/* 4. Accordion Form Container */}
       <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         
-        {/* PANEL 1: Basic Info Accordion */}
+        {/* PANEL 1: Basic Care Accordion (기본) */}
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
@@ -385,8 +450,8 @@ const Profile: React.FC = () => {
                 <User size={20} style={{ color: 'var(--icon-color)' }} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>기본 정보 설정</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>반려견 이름, 품종, 생년월일, 몸무게 입력</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>일반 케어 설정 (기본)</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>이름, 종류, 품종, 생일, 몸무게 등 기본 프로필 설정</p>
               </div>
             </div>
             <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
@@ -402,166 +467,44 @@ const Profile: React.FC = () => {
             visibility: expandedPanel === 'basic' ? 'visible' : 'hidden'
           }}>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                
-                {/* Name Input */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>반려동물 이름 *</label>
-                  <input 
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="예: 뽀삐, 초코, 몽이"
-                    required
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.95rem',
-                      fontWeight: 700,
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                </div>
-
-                {/* Breed Input + Preset Chips */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>품종</label>
-                  <input 
-                    type="text"
-                    value={breed}
-                    onChange={(e) => setBreed(e.target.value)}
-                    placeholder="직접 입력하거나 아래 칩을 선택하세요"
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                  {/* Breed Chips */}
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {COMMON_BREEDS.map(b => (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() => setBreed(b)}
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '16px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          border: breed === b ? '1px solid var(--main-primary)' : '1px solid var(--border-color)',
-                          boxShadow: breed === b ? 'inset 0 0 0 0.5px var(--main-primary)' : 'none',
-                          backgroundColor: breed === b ? 'var(--butter-cream)' : 'var(--card-bg)',
-                          color: breed === b ? 'var(--main-primary)' : 'var(--text-muted)',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {b}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Birth Date Input */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>생년월일 (입양일)</label>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 800 }}>
-                      {calculateAgeStr(birth)}
-                    </span>
-                  </div>
-                  <input 
-                    type="date"
-                    value={birth}
-                    onChange={(e) => setBirth(e.target.value)}
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                </div>
-
-                {/* Weight Input with +/- Adjust Buttons */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>현재 체중 (kg)</label>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input 
-                      type="number"
-                      step="0.1"
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
-                      placeholder="0.0"
-                      style={{
-                        flex: 1,
-                        padding: '12px 14px',
-                        borderRadius: '12px',
-                        border: '1.5px solid var(--border-color)',
-                        fontSize: '1rem',
-                        fontWeight: 800,
-                        outline: 'none',
-                        backgroundColor: 'var(--screen-bg)',
-                        color: 'var(--text-main)'
-                      }}
-                    />
-                    {[-0.5, -0.1, +0.1, +0.5].map(delta => (
-                      <button
-                        key={delta}
-                        type="button"
-                        onClick={() => handleWeightAdjust(delta)}
-                        style={{
-                          padding: '10px 8px',
-                          borderRadius: '10px',
-                          border: '1px solid var(--border-color)',
-                          backgroundColor: 'var(--card-bg)',
-                          color: delta > 0 ? 'var(--main-primary)' : '#EF4444',
-                          fontWeight: 800,
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {delta > 0 ? `+${delta}` : delta}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
+              <BasicCareForm
+                name={name}
+                setName={setName}
+                species={species}
+                setSpecies={setSpecies}
+                customSpecies={customSpecies}
+                setCustomSpecies={setCustomSpecies}
+                breed={breed}
+                setBreed={setBreed}
+                birth={birth}
+                setBirth={setBirth}
+                weight={weight}
+                setWeight={setWeight}
+                calculateAgeStr={calculateAgeStr}
+                handleWeightAdjust={handleWeightAdjust}
+              />
             </div>
           </div>
         </div>
 
-        {/* PANEL 2: Health & Medical Accordion */}
+        {/* PANEL 2: Daily Care Accordion (케어 1) */}
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedPanel === 'health' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
+          border: expandedPanel === 'care1' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
           borderRadius: '16px',
-          boxShadow: expandedPanel === 'health' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
+          boxShadow: expandedPanel === 'care1' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
           transition: 'all 0.25s ease'
         }}>
           <div 
-            onClick={() => setExpandedPanel(expandedPanel === 'health' ? null : 'health')}
+            onClick={() => setExpandedPanel(expandedPanel === 'care1' ? null : 'care1')}
             style={{ 
               padding: '18px 20px', 
               display: 'flex', 
               alignItems: 'center',
               justifyContent: 'space-between', 
               cursor: 'pointer',
-              backgroundColor: expandedPanel === 'health' ? 'var(--butter-cream)' : 'transparent',
+              backgroundColor: expandedPanel === 'care1' ? 'var(--butter-cream)' : 'transparent',
               transition: 'background-color 0.2s'
             }}
           >
@@ -570,154 +513,7 @@ const Profile: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: expandedPanel === 'health' ? 'var(--card-bg)' : 'var(--butter-cream)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--icon-color)',
-                flexShrink: 0
-              }}>
-                <Stethoscope size={20} style={{ color: 'var(--icon-color)' }} />
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>의료 및 건강 케어</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>다니는 병원, 식이 알레르기, 정기 복용약</p>
-              </div>
-            </div>
-            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-              {expandedPanel === 'health' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </div>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateRows: expandedPanel === 'health' ? '1fr' : '0fr',
-            transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
-            opacity: expandedPanel === 'health' ? 1 : 0,
-            visibility: expandedPanel === 'health' ? 'visible' : 'hidden'
-          }}>
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                
-                {/* Hospital Input */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>자주 가는 동물병원</label>
-                  <input 
-                    type="text"
-                    value={hospitalName}
-                    onChange={(e) => setHospitalName(e.target.value)}
-                    placeholder="예: 강남 24시 동물메디컬센터"
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                </div>
-
-                {/* Allergy Information + One-Touch Chips */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>알레르기 식이/환경 요소</label>
-                  <input 
-                    type="text"
-                    value={allergies}
-                    onChange={(e) => setAllergies(e.target.value)}
-                    placeholder="직접 입력하거나 아래 칩을 눌러 조합하세요"
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {ALLERGY_PRESETS.map(ap => {
-                      const cleanLabel = ap.label.split(' ')[0];
-                      const isSelected = allergies.includes(cleanLabel);
-                      return (
-                        <button
-                          key={ap.id}
-                          type="button"
-                          onClick={() => toggleAllergyPreset(ap.label)}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '16px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            border: isSelected ? '1px solid #EF4444' : '1px solid var(--border-color)',
-                            boxShadow: isSelected ? 'inset 0 0 0 0.5px #EF4444' : 'none',
-                            backgroundColor: isSelected ? '#FEF2F2' : 'var(--card-bg)',
-                            color: isSelected ? '#EF4444' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          {ap.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Regular Medication / Supplements */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>정기 복용약 및 영양제</label>
-                  <input 
-                    type="text"
-                    value={medications}
-                    onChange={(e) => setMedications(e.target.value)}
-                    placeholder="예: 심장사상충 매월 1일, 유산균 매일 아침"
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* PANEL 3: Walk & Care Routine Accordion */}
-        <div className="panel" style={{ 
-          padding: '0', 
-          overflow: 'hidden', 
-          border: expandedPanel === 'routine' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
-          borderRadius: '16px',
-          boxShadow: expandedPanel === 'routine' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
-          transition: 'all 0.25s ease'
-        }}>
-          <div 
-            onClick={() => setExpandedPanel(expandedPanel === 'routine' ? null : 'routine')}
-            style={{ 
-              padding: '18px 20px', 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'space-between', 
-              cursor: 'pointer',
-              backgroundColor: expandedPanel === 'routine' ? 'var(--butter-cream)' : 'transparent',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                backgroundColor: expandedPanel === 'routine' ? 'var(--card-bg)' : 'var(--butter-cream)',
+                backgroundColor: expandedPanel === 'care1' ? 'var(--card-bg)' : 'var(--butter-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -727,100 +523,54 @@ const Profile: React.FC = () => {
                 <Footprints size={20} style={{ color: 'var(--icon-color)' }} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>산책 & 케어 루틴</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>일일 산책 목표, 주로 선호하는 산책 시간</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>일상 케어 설정 (케어 1)</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>산책 루틴 설정 및 식이/알레르기 유발 요소 관리</p>
               </div>
             </div>
             <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-              {expandedPanel === 'routine' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {expandedPanel === 'care1' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateRows: expandedPanel === 'routine' ? '1fr' : '0fr',
+            gridTemplateRows: expandedPanel === 'care1' ? '1fr' : '0fr',
             transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
-            opacity: expandedPanel === 'routine' ? 1 : 0,
-            visibility: expandedPanel === 'routine' ? 'visible' : 'hidden'
+            opacity: expandedPanel === 'care1' ? 1 : 0,
+            visibility: expandedPanel === 'care1' ? 'visible' : 'hidden'
           }}>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                
-                {/* Walk Goal Options */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>일일 산책 목표 시간</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
-                    {WALK_GOAL_OPTIONS.map(opt => {
-                      const isSelected = walkGoal === opt;
-                      return (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => setWalkGoal(opt)}
-                          style={{
-                            padding: '10px 0',
-                            borderRadius: '12px',
-                            fontSize: '0.85rem',
-                            fontWeight: 800,
-                            border: isSelected ? '1px solid var(--main-primary)' : '1px solid var(--border-color)',
-                            boxShadow: isSelected ? 'inset 0 0 0 1px var(--main-primary)' : 'none',
-                            backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
-                            color: isSelected ? 'var(--main-primary)' : 'var(--text-main)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            textAlign: 'center'
-                          }}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Walk Schedule Time */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>주요 산책 선호 시간대</label>
-                  <input 
-                    type="text"
-                    value={walkTime}
-                    onChange={(e) => setWalkTime(e.target.value)}
-                    placeholder="예: 매일 오후 7:30, 아침 출근 전"
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)'
-                    }}
-                  />
-                </div>
-
-              </div>
+              <DailyCareForm
+                walkGoal={walkGoal}
+                setWalkGoal={setWalkGoal}
+                walkTime={walkTime}
+                setWalkTime={setWalkTime}
+                allergiesList={allergiesList}
+                setAllergiesList={setAllergiesList}
+                toggleAllergyPreset={toggleAllergyPreset}
+              />
             </div>
           </div>
         </div>
 
-        {/* PANEL 4: Personality & Notes Accordion */}
+        {/* PANEL 3: Special Care Accordion (케어 2) */}
         <div className="panel" style={{ 
           padding: '0', 
           overflow: 'hidden', 
-          border: expandedPanel === 'notes' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
+          border: expandedPanel === 'care2' ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)', 
           borderRadius: '16px',
-          boxShadow: expandedPanel === 'notes' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
+          boxShadow: expandedPanel === 'care2' ? 'inset 0 2px 4px rgba(74,59,50,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
           transition: 'all 0.25s ease'
         }}>
           <div 
-            onClick={() => setExpandedPanel(expandedPanel === 'notes' ? null : 'notes')}
+            onClick={() => setExpandedPanel(expandedPanel === 'care2' ? null : 'care2')}
             style={{ 
               padding: '18px 20px', 
               display: 'flex', 
               alignItems: 'center',
               justifyContent: 'space-between', 
               cursor: 'pointer',
-              backgroundColor: expandedPanel === 'notes' ? 'var(--butter-cream)' : 'transparent',
+              backgroundColor: expandedPanel === 'care2' ? 'var(--butter-cream)' : 'transparent',
               transition: 'background-color 0.2s'
             }}
           >
@@ -829,89 +579,44 @@ const Profile: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: expandedPanel === 'notes' ? 'var(--card-bg)' : 'var(--butter-cream)',
+                backgroundColor: expandedPanel === 'care2' ? 'var(--card-bg)' : 'var(--butter-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--icon-color)',
                 flexShrink: 0
               }}>
-                <FileText size={20} style={{ color: 'var(--icon-color)' }} />
+                <Stethoscope size={20} style={{ color: 'var(--icon-color)' }} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>성격 및 자유 특이사항</h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>아이의 성격 키워드 칩 지정 및 주의사항 메모</p>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>특별 케어 설정 (케어 2)</h3>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>주기적 질병 치료/정기검진, 상시 복용약, 성격 및 특이사항</p>
               </div>
             </div>
             <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-              {expandedPanel === 'notes' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {expandedPanel === 'care2' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </div>
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateRows: expandedPanel === 'notes' ? '1fr' : '0fr',
+            gridTemplateRows: expandedPanel === 'care2' ? '1fr' : '0fr',
             transition: 'grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out, visibility 0.35s',
-            opacity: expandedPanel === 'notes' ? 1 : 0,
-            visibility: expandedPanel === 'notes' ? 'visible' : 'hidden'
+            opacity: expandedPanel === 'care2' ? 1 : 0,
+            visibility: expandedPanel === 'care2' ? 'visible' : 'hidden'
           }}>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                
-                {/* Personality Tag Chips */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>우리 아이 성격 키워드</label>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {PERSONALITY_TAGS.map(pt => {
-                      const isSelected = notes.includes(pt);
-                      return (
-                        <button
-                          key={pt}
-                          type="button"
-                          onClick={() => togglePersonalityTag(pt)}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '16px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            border: isSelected ? '1px solid var(--main-primary)' : '1px solid var(--border-color)',
-                            boxShadow: isSelected ? 'inset 0 0 0 0.5px var(--main-primary)' : 'none',
-                            backgroundColor: isSelected ? 'var(--butter-cream)' : 'var(--card-bg)',
-                            color: isSelected ? 'var(--main-primary)' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          {pt}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Free Notes Textarea */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>기타 케어 주의사항 및 메모</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="좋아하는 간식, 싫어하는 행동, 빗질 팁 등 자유롭게 메모하세요."
-                    rows={4}
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1.5px solid var(--border-color)',
-                      fontSize: '0.9rem',
-                      lineHeight: 1.5,
-                      outline: 'none',
-                      backgroundColor: 'var(--screen-bg)',
-                      color: 'var(--text-main)',
-                      resize: 'none'
-                    }}
-                  />
-                </div>
-
-              </div>
+              <SpecialCareForm
+                hospitalName={hospitalName}
+                setHospitalName={setHospitalName}
+                regularDiseasesList={regularDiseasesList}
+                setRegularDiseasesList={setRegularDiseasesList}
+                medicationsList={medicationsList}
+                setMedicationsList={setMedicationsList}
+                notes={notes}
+                setNotes={setNotes}
+                togglePersonalityTag={togglePersonalityTag}
+              />
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { usePetStore, THEME_PRESETS } from './store/petStore';
-import { ChevronLeft, Home, Heart, Calendar as CalendarIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
+import { ChevronLeft, Home, Heart, Calendar as CalendarIcon, BookOpen, PawPrint } from 'lucide-react';
 
 // Import Pages
 import Onboarding from './pages/Onboarding';
@@ -15,6 +15,7 @@ import GlobalTour from './components/GlobalTour';
 import GlobalWalkBar from './components/common/GlobalWalkBar';
 import { useOnboarding } from './hooks/useOnboarding';
 import Profile from './pages/Profile';
+import HospitalMap from './pages/HospitalMap';
 
 const CustomDialog: React.FC = () => {
   const { customDialog, closeDialog } = usePetStore();
@@ -150,49 +151,35 @@ const AppContent: React.FC = () => {
   // Handle Android Hardware Back Button
   useEffect(() => {
     let listener: any;
-    let backPressCount = 0;
-    let backPressTimer: any = null;
 
     const handleBackButton = async () => {
-      // 확인할 수 있는 history index가 0보다 크면 뒤로 갈 곳이 있음
-      const canGoBack = window.history.state && window.history.state.idx > 0;
+      // 메인 루트 탭 경로들 및 온보딩 화면 정의
+      const MAIN_ROUTES = ['/dashboard', '/care', '/calendar', '/diary', '/settings', '/onboarding'];
+      const isMainRoute = MAIN_ROUTES.includes(location.pathname);
 
-      if (canGoBack && !isExitPromptShowingRef.current) {
+      if (!isMainRoute && !isExitPromptShowingRef.current) {
+        // 이전으로 돌아가기 버튼이 활성화된 서브 상세 페이지들은 이전 화면으로 복귀
         navigate(-1);
       } else {
-        // 더 이상 뒤로 갈 곳이 없는 경우 (앱의 최상단 루트)
+        // 메인 탭/온보딩 화면에서는 앱 종료 프로세스 적용
         if (isExitPromptShowingRef.current) {
-          // 이미 종료 확인창이 떠있는 상태에서 뒤로가기 누르면 즉시 종료
+          // 종료 확인 다이얼로그가 이미 노출된 상태에서 한 번 더 누르면 즉시 종료
           CapacitorApp.exitApp();
           return;
         }
 
-        if (backPressCount === 0) {
-          backPressCount++;
-          // 첫 번째 누름: 토스트 안내문구 표시
-          // showAlert 대신 직접 가벼운 Toast를 띄우거나 showAlert 사용
-          // 기존에 쓰던 showAlert가 커스텀 다이얼로그라 화면을 덮을 수 있으므로 
-          // 상태가 허락한다면 간단한 UI로 처리하거나 그냥 showAlert 호출
-          showAlert('뒤로 가기 버튼을 한 번 더 누르시면 종료 확인 창이 뜹니다.');
-          
-          backPressTimer = setTimeout(() => {
-            backPressCount = 0;
-          }, 2000);
-        } else {
-          // 두 번 누름: 종료 다이얼로그 띄우기
-          clearTimeout(backPressTimer);
-          backPressCount = 0;
-          
-          isExitPromptShowingRef.current = true;
-          showConfirm('앱을 종료하시겠습니까?', '앱 종료', 
-            () => {
-              CapacitorApp.exitApp();
-            },
-            () => {
-              isExitPromptShowingRef.current = false;
-            }
-          );
-        }
+        // 첫 번째 누름: 앱 종료 여부를 묻는 컨펌 다이얼로그 노출
+        isExitPromptShowingRef.current = true;
+        showConfirm(
+          '앱을 종료하시겠습니까?',
+          '앱 종료',
+          () => {
+            CapacitorApp.exitApp();
+          },
+          () => {
+            isExitPromptShowingRef.current = false;
+          }
+        );
       }
     };
     
@@ -218,6 +205,7 @@ const AppContent: React.FC = () => {
     if (colors) {
       const root = document.documentElement;
       root.style.setProperty('--main-primary', colors.primary);
+      root.style.setProperty('--main-primary-light', (colors as any).primaryLight || colors.primary + '1a');
       root.style.setProperty('--screen-bg', colors.background);
       root.style.setProperty('--card-bg', colors.paper);
       root.style.setProperty('--text-main', colors.text);
@@ -227,46 +215,53 @@ const AppContent: React.FC = () => {
     }
   }, [activeThemeId, customThemes]);
 
-
-
-
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Load local database data on mount
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
 
-  // Check first run or no pets
+  // Check first run or no pets - Gated by showWelcome and isGlobalTourActive
   useEffect(() => {
-    if (!loading && !isGlobalTourActive) {
+    if (!loading && !isGlobalTourActive && !showWelcome && !showSplash) {
       const { pets } = usePetStore.getState();
       const isFirstRun = localStorage.getItem('isFirstRun');
       if ((!isFirstRun || pets.length === 0) && location.pathname !== '/onboarding') {
         navigate('/onboarding');
       }
     }
-  }, [loading, location.pathname, navigate, isGlobalTourActive]);
+  }, [loading, location.pathname, navigate, isGlobalTourActive, showWelcome, showSplash]);
+
+  // Trigger welcome modal after global tour finishes (or if already seen but welcome not seen)
+  useEffect(() => {
+    if (!loading && !onboardingLoading && !showSplash) {
+      if (!isGlobalTourActive && isGlobalTourSeen && !localStorage.getItem('isWelcomeSeen')) {
+        setShowWelcome(true);
+      }
+    }
+  }, [loading, onboardingLoading, showSplash, isGlobalTourActive, isGlobalTourSeen]);
 
   // Splash screen transition
   useEffect(() => {
     if (!showSplash) return;
     if (!loading && !onboardingLoading) {
-      // 최소 3.5초(3500ms) 동안 스플래시 화면을 유지한 후 페이드아웃 시작
       const minDurationTimer = setTimeout(() => {
-        // 페이드아웃 시작할 때(3.5초 직후) 가이드 투어 활성화를 미리 수행하여 레이아웃 렌더링을 마침
-        if (!isGlobalTourSeen && !isGlobalTourActive) {
-          setGlobalTourActive(true);
-        }
         setSplashFade(true);
         const fadeTimer = setTimeout(() => {
           setShowSplash(false);
+          // 스플래시 종료 시 온보딩 미진행 상태면 온보딩 진행
+          const { pets } = usePetStore.getState();
+          if (pets.length === 0 && location.pathname !== '/onboarding') {
+            navigate('/onboarding');
+          }
         }, 300);
         return () => clearTimeout(fadeTimer);
-      }, 3500); // 스플래시 대기 시간을 3.5초로 설정
+      }, 1800);
 
       return () => clearTimeout(minDurationTimer);
     }
-  }, [loading, onboardingLoading, isGlobalTourSeen, isGlobalTourActive, setGlobalTourActive, showSplash, setShowSplash]);
+  }, [loading, onboardingLoading, isGlobalTourSeen, setGlobalTourActive, showSplash, setShowSplash]);
 
   // Click outside for header dropdown
   useEffect(() => {
@@ -301,9 +296,9 @@ const AppContent: React.FC = () => {
   const renderAppLayout = () => {
     return (
       <div className="web-layout" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', width: '100%', overflow: 'hidden' }}>
-        {/* 1. App Top Bar */}
+        {/* 1. App Top Bar - Status Bar Safe Area Padding */}
         {!isObPage && (
-          <header className="app-top-bar">
+          <header className="app-top-bar" style={{ paddingTop: 'calc(env(safe-area-inset-top, var(--status-bar-height, 12px)) + 8px)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {isSubPage ? (
                 <button
@@ -439,6 +434,7 @@ const AppContent: React.FC = () => {
               <Route path="/diary" element={<Diary />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/hospitals" element={<HospitalMap />} />
             </Routes>
           )}
         </main>
@@ -448,26 +444,35 @@ const AppContent: React.FC = () => {
         {/* 3. App Bottom Navigation */}
         {!isObPage && (
           <nav className="app-bottom-nav">
-            <NavLink to="/dashboard" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-              <Home size={24} />
-              <span>홈</span>
-            </NavLink>
-            <NavLink to="/care" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-              <Heart size={24} />
-              <span>케어</span>
-            </NavLink>
-            <NavLink to="/calendar" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-              <CalendarIcon size={24} />
-              <span>캘린더</span>
-            </NavLink>
-            <NavLink to="/diary" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-              <BookOpen size={24} />
-              <span>기록</span>
-            </NavLink>
-            <NavLink to="/settings" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-              <SettingsIcon size={24} />
-              <span>설정</span>
-            </NavLink>
+            <div className="bottom-nav-slot">
+              <NavLink to="/dashboard" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <Home size={22} />
+                <span>홈</span>
+              </NavLink>
+            </div>
+            <div className="bottom-nav-slot">
+              <NavLink to="/care" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <Heart size={22} />
+                <span>케어</span>
+              </NavLink>
+            </div>
+            <div className="bottom-nav-slot">
+              <NavLink to="/hospitals" className={({ isActive }) => `bottom-nav-fab ${isActive ? 'active' : ''}`} title="주변 병원/약국">
+                <PawPrint size={24} />
+              </NavLink>
+            </div>
+            <div className="bottom-nav-slot">
+              <NavLink to="/calendar" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <CalendarIcon size={22} />
+                <span>일정</span>
+              </NavLink>
+            </div>
+            <div className="bottom-nav-slot">
+              <NavLink to="/diary" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <BookOpen size={22} />
+                <span>기록</span>
+              </NavLink>
+            </div>
           </nav>
         )}
       </div>
@@ -509,11 +514,99 @@ const AppContent: React.FC = () => {
 
       <CustomDialog />
 
+      {/* Welcome Screen Overlay */}
+      {showWelcome && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: '#FAF8F4',
+          zIndex: 99999,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '24px',
+          boxSizing: 'border-box',
+          textAlign: 'center',
+          color: '#2E2B2A',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '24px',
+            padding: '30px 24px',
+            boxShadow: '0 16px 48px rgba(142, 134, 126, 0.08)',
+            maxWidth: '380px',
+            width: '100%',
+            boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+          }}>
+            {/* Soft Olive Green Round Icon Container */}
+            <div style={{
+              width: '68px',
+              height: '68px',
+              borderRadius: '50%',
+              backgroundColor: '#5C715E',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              boxShadow: '0 6px 16px rgba(92, 113, 94, 0.25)'
+            }}>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+
+            <div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 8px 0', lineHeight: 1.35 }}>
+                온다(OnDa)에<br/>오신 것을 환영합니다!
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: '#8E867E', margin: 0, lineHeight: 1.5, wordBreak: 'keep-all' }}>
+                우리아이 맞춤 케어를 시작하기 전에,<br/>
+                OnDa의 핵심 기능 가이드를 먼저 둘러볼까요?
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                localStorage.setItem('isWelcomeSeen', 'true');
+                setShowWelcome(false);
+                const { pets } = usePetStore.getState();
+                if (pets.length === 0) {
+                  navigate('/onboarding');
+                } else {
+                  setGlobalTourActive(true);
+                }
+              }}
+              style={{
+                width: '100%',
+                height: '48px',
+                backgroundColor: '#5C715E',
+                color: 'white',
+                border: 'none',
+                borderRadius: '14px',
+                fontSize: '0.95rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(92, 113, 94, 0.25)'
+              }}
+            >
+              시작하기
+            </button>
+          </div>
+        </div>
+      )}
+
       {renderAppLayout()}
       {isGlobalTourActive && <GlobalTour />}
       <button 
         onClick={() => {
           localStorage.clear();
+          indexedDB.deleteDatabase('OnDaDatabase');
           window.location.reload();
         }}
         style={{

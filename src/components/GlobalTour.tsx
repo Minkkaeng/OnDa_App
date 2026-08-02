@@ -55,7 +55,9 @@ const GlobalTour: React.FC = () => {
     setIsVisible(false);
     setGlobalTourActive(false);
     await completeGuide('isGlobalTourSeen');
-    navigate('/onboarding', { replace: true });
+    if (location.pathname !== '/onboarding') {
+      navigate('/onboarding', { replace: true });
+    }
   };
 
   const handleNext = () => {
@@ -121,7 +123,7 @@ const GlobalTour: React.FC = () => {
           lineHeight: '1.5',
           fontWeight: 500,
           wordBreak: 'keep-all',
-          border: '1px solid rgba(20, 195, 163, 0.15)',
+          border: '1px solid rgba(92, 113, 94, 0.2)',
           pointerEvents: 'auto'
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', color: '#334155' }}>
@@ -184,7 +186,7 @@ const GlobalTour: React.FC = () => {
                   fontWeight: 700, 
                   fontSize: '0.8rem',
                   cursor: 'pointer', 
-                  boxShadow: '0 2px 6px rgba(20, 195, 163, 0.25)', 
+                  boxShadow: '0 2px 6px rgba(92, 113, 94, 0.25)', 
                   transition: 'all 0.2s' 
                 }}
               >

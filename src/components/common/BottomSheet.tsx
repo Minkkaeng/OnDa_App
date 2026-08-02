@@ -5,9 +5,10 @@ interface BottomSheetProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  position?: 'bottom' | 'center';
 }
 
-const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, children }) => {
+const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, children, position = 'bottom' }) => {
   const [animate, setAnimate] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
@@ -26,14 +27,17 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, child
 
   if (!shouldRender) return null;
 
+  const isCenter = position === 'center';
+
   return (
     <div style={{
       position: 'fixed',
       inset: 0,
       zIndex: 9999,
       display: 'flex',
-      alignItems: 'flex-end',
+      alignItems: isCenter ? 'center' : 'flex-end',
       justifyContent: 'center',
+      padding: isCenter ? '20px' : '0'
     }}>
       {/* Background Overlay */}
       <div 
@@ -49,37 +53,46 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, child
         }}
       />
 
-      {/* Sheet Body */}
+      {/* Sheet / Modal Body */}
       <div style={{
         position: 'relative',
         zIndex: 2,
         width: '100%',
-        maxWidth: '500px',
+        maxWidth: isCenter ? '440px' : '500px',
         backgroundColor: 'var(--card-bg)',
         borderTopLeftRadius: '24px',
         borderTopRightRadius: '24px',
-        padding: '16px 20px 24px 20px',
-        boxShadow: '0 -8px 30px rgba(0, 0, 0, 0.12)',
-        transform: animate ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        maxHeight: '85vh',
+        borderBottomLeftRadius: isCenter ? '24px' : '0',
+        borderBottomRightRadius: isCenter ? '24px' : '0',
+        padding: isCenter ? '24px' : '16px 20px 24px 20px',
+        boxShadow: isCenter ? '0 16px 40px rgba(0, 0, 0, 0.15)' : '0 -8px 30px rgba(0, 0, 0, 0.12)',
+        transform: isCenter 
+          ? (animate ? 'scale(1)' : 'scale(0.95)') 
+          : (animate ? 'translateY(0)' : 'translateY(100%)'),
+        opacity: isCenter ? (animate ? 1 : 0) : 1,
+        transition: isCenter 
+          ? 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s' 
+          : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        maxHeight: isCenter ? '80vh' : '85vh',
         display: 'flex',
         flexDirection: 'column',
       }}>
-        {/* Drag Handle Bar */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          paddingBottom: '16px',
-          cursor: 'pointer'
-        }} onClick={onClose}>
+        {/* Drag Handle Bar (only for bottom sheet) */}
+        {!isCenter && (
           <div style={{
-            width: '40px',
-            height: '5px',
-            borderRadius: '3px',
-            backgroundColor: 'var(--border-color)', // steel/light gray
-          }} />
-        </div>
+            display: 'flex',
+            justifyContent: 'center',
+            paddingBottom: '16px',
+            cursor: 'pointer'
+          }} onClick={onClose}>
+            <div style={{
+              width: '40px',
+              height: '5px',
+              borderRadius: '3px',
+              backgroundColor: 'var(--border-color)',
+            }} />
+          </div>
+        )}
 
         {/* Header */}
         {title && (

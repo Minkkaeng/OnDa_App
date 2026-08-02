@@ -1,608 +1,394 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePetStore } from '../store/petStore';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchHospitalsOrPharmacies, type HospitalOrPharmacy } from '../services/hospitalService';
-import { Utensils, Droplet, Cookie, Activity, RefreshCw, Phone, AlertTriangle } from 'lucide-react';
-import BottomSheet from '../components/common/BottomSheet';
-
-const REGION_MAP: Record<string, string[]> = {
-  '서울특별시': ['강남구', '송파구', '서초구', '마포구', '종로구', '성동구', '영등포구'],
-  '경기도': ['수원시', '성남시', '고양시', '용인시', '부천시', '안양시', '의정부시'],
-  '인천광역시': ['연수구', '남동구', '부평구', '서구', '미추홀구'],
-  '부산광역시': ['해운대구', '부산진구', '수영구', '동래구', '사하구'],
-  '대구광역시': ['수성구', '중구', '북구', '달서구', '동구']
-};
+import DailyRoutineTimeline from '../components/care/DailyRoutineTimeline';
+import QuickHealthCheck from '../components/care/QuickHealthCheck';
+import MedicationScheduler from '../components/care/MedicationScheduler';
+import ScrollTimePickerModal from '../components/common/ScrollTimePickerModal';
+import NotificationService from '../services/notificationService';
+import { Heart, Activity, TrendingUp, Syringe, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const Care: React.FC = () => {
-  const { pets, activePetId, showAlert, updatePet, addCalendarEvent, events } = usePetStore();
-  const activePet = pets.find(p => p.id === activePetId);
+  const navigate = useNavigate();
+  const { pets, activePetId, addCalendarEvent, showAlert, showConfirm } = usePetStore();
+  const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'daily' | 'health' | 'hospital'>('dashboard');
+  // Top Sub-nav chip tabs matching reference mockup
+  const [activeSubTab, setActiveSubTab] = useState<'report' | 'routine' | 'weight' | 'vaccine'>('report');
 
-  // Dashboard Checklist
-  const [careTips, setCareTips] = useState<{ id: string; title: string; content: string; status?: 'hard' | 'loose' | 'bloody' | 'good' | 'water-good' }[]>([]);
-  const [isTipsLoading, setIsTipsLoading] = useState(false);
+  // Daily Routine checklist state
+  const [routineChecked, setRoutineChecked] = useState<Record<string, boolean>>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const saved = localStorage.getItem(`routine_${activePetId}_${today}`);
+    return saved ? JSON.parse(saved) : {};
+  });
 
-  // Daily Routine States
-  const [activeCategory, setActiveCategory] = useState<'stool' | 'meal' | 'water' | 'snack' | null>(null);
-  const [meals, setMeals] = useState<{time: string, amount: string}[]>([]);
-  const [waters, setWaters] = useState<{time: string, amount: number}[]>([]);
-  const [snacks, setSnacks] = useState<{time: string, name: string}[]>([]);
-  const [stools, setStools] = useState<{time: string, status: string}[]>([]);
-
-  // Health Check States
-  const [newWeight, setNewWeight] = useState('');
-  const [weightHistory, setWeightHistory] = useState<{ date: string; weight: number }[]>([]);
-  const [vaccines, setVaccines] = useState<{ dhppi?: string; corona?: string; rabies?: string; parasite?: string; }>({});
-  
-  // Hospital/Pharmacy States
-  const [selectedCity, setSelectedCity] = useState('서울특별시');
-  const [selectedDistrict, setSelectedDistrict] = useState('강남구');
-  const [locatorSearchType, setLocatorSearchType] = useState<'hospital' | 'pharmacy' | 'grooming'>('hospital');
-  const [locatorResults, setLocatorResults] = useState<HospitalOrPharmacy[]>([]);
-  const [isLocatorLoading, setIsLocatorLoading] = useState(false);
-  const [locatorError, setLocatorError] = useState(false);
-
-  const getTodayStr = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const toggleRoutine = (key: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const updated = { ...routineChecked, [key]: !routineChecked[key] };
+    setRoutineChecked(updated);
+    localStorage.setItem(`routine_${activePetId}_${today}`, JSON.stringify(updated));
   };
-  const todayStr = getTodayStr();
 
-  // Load Data
-  useEffect(() => {
-    if (activePetId) {
-      // Daily Routine
-      const loadArr = (key: string) => {
-        const saved = localStorage.getItem(`onda_${key}_${activePetId}_${todayStr}`);
-        return saved ? JSON.parse(saved) : [];
-      };
-      setMeals(loadArr('meals'));
-      setWaters(loadArr('waters'));
-      setSnacks(loadArr('snacks'));
-      setStools(loadArr('stools'));
+  // Quick 3-State Health Check Form State
+  const [healthStatus, setHealthStatus] = useState<'good' | 'warning' | 'alert'>('good');
+  const [healthMemo, setHealthMemo] = useState<string>('');
 
-      // Health
-      const savedWeight = localStorage.getItem(`onda_weight_history_${activePetId}`);
-      if (savedWeight) {
-        try { setWeightHistory(JSON.parse(savedWeight)); } catch { setWeightHistory([]); }
-      } else setWeightHistory([]);
+  const handleSaveHealthLog = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const statusLabel = healthStatus === 'good' ? '컨디션 양호' : healthStatus === 'warning' ? '주의 필요' : '병원방문/경고';
+    const contentText = `상태: ${statusLabel}${healthMemo.trim() ? `\n메모: ${healthMemo.trim()}` : ''}`;
 
-      const savedVac = localStorage.getItem(`onda_vaccines_${activePetId}`);
-      if (savedVac) {
-        try { setVaccines(JSON.parse(savedVac)); } catch { setVaccines({}); }
-      } else setVaccines({});
+    try {
+      await addCalendarEvent({
+        petId: activePetId || (pets[0] && pets[0].id) || 'default',
+        date: today,
+        title: `일일 케어 점검 (${statusLabel})`,
+        content: contentText,
+        type: 'diary'
+      });
+      showAlert('오늘의 건강 상태가 일기장에 저장되었습니다!');
+      setHealthMemo('');
+    } catch (err) {
+      console.error(err);
+      showAlert('저장 중 오류가 발생했습니다.');
     }
-  }, [activePetId, todayStr]);
-
-  // Care Tips
-  useEffect(() => {
-    let active = true;
-    const loadTips = async () => {
-      if (!activePet) return;
-      setIsTipsLoading(true);
-      try {
-        const { generateDailyGuides } = await import('../services/careGuideService');
-        const generatedTips = generateDailyGuides(activePet, events);
-        if (active) setCareTips(generatedTips);
-      } catch (error) {
-        console.error('Error generating tips:', error);
-      } finally {
-        if (active) setIsTipsLoading(false);
-      }
-    };
-    loadTips();
-    return () => { active = false; };
-  }, [activePet, events]);
-
-  // Hospital Locator
-  useEffect(() => {
-    const districts = REGION_MAP[selectedCity] || [];
-    if (districts.length > 0 && !districts.includes(selectedDistrict)) {
-      setSelectedDistrict(districts[0]);
-    }
-  }, [selectedCity, selectedDistrict]);
-
-  useEffect(() => {
-    let active = true;
-    const runSearch = async () => {
-      if (!selectedCity || !selectedDistrict) return;
-      setIsLocatorLoading(true);
-      setLocatorError(false);
-      try {
-        const results = await fetchHospitalsOrPharmacies(selectedCity, selectedDistrict, locatorSearchType);
-        if (active) setLocatorResults(results);
-      } catch (error) {
-        if (active) {
-          setLocatorError(true);
-          setLocatorResults([]);
-        }
-      } finally {
-        if (active) setIsLocatorLoading(false);
-      }
-    };
-    runSearch();
-    return () => { active = false; };
-  }, [selectedCity, selectedDistrict, locatorSearchType, showAlert]);
-
-  // Actions
-  const saveArr = (key: string, arr: any[]) => {
-    if (!activePetId) return;
-    localStorage.setItem(`onda_${key}_${activePetId}_${todayStr}`, JSON.stringify(arr));
-  };
-  const getCurrentTimeStr = () => {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
 
-  const handleAddMeal = (amount: string) => {
-    const newRecord = { time: getCurrentTimeStr(), amount };
-    const updated = [...meals, newRecord];
-    setMeals(updated); saveArr('meals', updated);
-  };
-  const handleAddWater = (amount: number) => {
-    const newRecord = { time: getCurrentTimeStr(), amount };
-    const updated = [...waters, newRecord];
-    setWaters(updated); saveArr('waters', updated);
-  };
-  const handleAddSnack = (name: string) => {
-    const newRecord = { time: getCurrentTimeStr(), name };
-    const updated = [...snacks, newRecord];
-    setSnacks(updated); saveArr('snacks', updated);
-  };
-  const handleAddStool = (status: string) => {
-    const newRecord = { time: getCurrentTimeStr(), status };
-    const updated = [...stools, newRecord];
-    setStools(updated); saveArr('stools', updated);
-  };
+  // Medication 30-Day Scheduler Modal State
+  const [showMedModal, setShowMedModal] = useState(false);
+  const [medName, setMedName] = useState('');
+  const [medFrequency, setMedFrequency] = useState<'daily' | 'interval'>('daily');
+  const [medIntervalDays, setMedIntervalDays] = useState(2);
+  const [medTime, setMedTime] = useState('오전 10:00');
 
-  const handleSaveHealthCheck = async () => {
-    if (!activePet) return;
-    const totalWater = waters.reduce((acc, curr) => acc + curr.amount, 0);
-    const mealTexts = meals.map(m => `[${m.time}] ${m.amount}`).join(', ');
-    const stoolTexts = stools.map(s => `[${s.time}] ${s.status}`).join(', ');
-    const snackTexts = snacks.map(s => `[${s.time}] ${s.name}`).join(', ');
+  // Time Picker Modal State
+  const [showTimePickerModal, setShowTimePickerModal] = useState(false);
+  const [pickerPeriod, setPickerPeriod] = useState<'오전' | '오후'>('오전');
+  const [pickerHour, setPickerHour] = useState<number>(10);
+  const [pickerMinute, setPickerMinute] = useState<number>(0);
 
-    await addCalendarEvent({
-      petId: activePet.id,
-      date: todayStr,
-      type: 'diary',
-      category: '건강',
-      title: '오늘의 종합 건강 리포트',
-      content: `• 식사 기록: ${meals.length > 0 ? mealTexts : '기록 없음'}\n• 음수량: 총 ${totalWater}ml (${waters.length}회)\n• 간식 기록: ${snacks.length > 0 ? snackTexts : '기록 없음'}\n• 배변 기록: ${stools.length > 0 ? stoolTexts : '기록 없음'}`
-    });
-    showAlert('오늘의 건강 체크 기록이 일기장(기록) 탭에 성공적으로 저장되었습니다!');
-  };
-
-  const handleAddWeight = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activePet || !newWeight) return;
-    const parsedWeight = parseFloat(newWeight);
-    if (isNaN(parsedWeight) || parsedWeight <= 0) {
-      showAlert('올바른 체중을 입력해주세요.');
+  const handleSaveMedScheduler = async () => {
+    if (!medName.trim()) {
+      showAlert('약/영양제 이름을 입력해 주세요.');
       return;
     }
-    const today = new Date();
-    const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
-    const newEntry = { date: dateStr, weight: parsedWeight };
-    const updatedHistory = weightHistory.filter(w => w.date !== dateStr);
-    updatedHistory.unshift(newEntry);
-    const finalHistory = updatedHistory.slice(0, 30);
-    setWeightHistory(finalHistory);
-    localStorage.setItem(`onda_weight_history_${activePet.id}`, JSON.stringify(finalHistory));
-    await updatePet({ ...activePet, weight: parsedWeight });
-    setNewWeight('');
-    showAlert('체중이 기록되었습니다.');
-  };
 
-  const handleUpdateVaccine = (key: 'dhppi' | 'corona' | 'rabies' | 'parasite', val: string) => {
-    if (!activePet) return;
-    const updated = { ...vaccines, [key]: val };
-    setVaccines(updated);
-    localStorage.setItem(`onda_vaccines_${activePet.id}`, JSON.stringify(updated));
-  };
-  const handleCompleteVaccineToday = async (key: 'dhppi' | 'corona' | 'rabies' | 'parasite', label: string) => {
-    if (!activePet) return;
-    handleUpdateVaccine(key, todayStr);
-    await addCalendarEvent({ petId: activePet.id, date: todayStr, type: 'hospital', title: `[접종완료] ${label}`, content: `케어 탭에서 ${label} 접종 완료가 기록되었습니다.` });
-    showAlert(`'${label}' 오늘 접종 완료가 기록되었으며 캘린더에 연동 완료되었습니다!`);
-  };
+    try {
+      const today = new Date();
+      let notifyHour = pickerHour;
+      if (pickerPeriod === '오후' && notifyHour < 12) notifyHour += 12;
+      if (pickerPeriod === '오전' && notifyHour === 12) notifyHour = 0;
 
-  const getDDay = (lastDateStr?: string, type: 'annual' | 'monthly' = 'annual') => {
-    if (!lastDateStr) return '기록 없음';
-    const lastDate = new Date(lastDateStr);
-    const nextDate = new Date(lastDate);
-    if (type === 'annual') nextDate.setFullYear(nextDate.getFullYear() + 1);
-    else nextDate.setMonth(nextDate.getMonth() + 1);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diffTime = nextDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) return `D+${Math.abs(diffDays)} (지남)`;
-    if (diffDays === 0) return `D-Day`;
-    return `D-${diffDays}`;
-  };
+      for (let i = 0; i < 30; i++) {
+        if (medFrequency === 'interval' && i % medIntervalDays !== 0) {
+          continue;
+        }
 
-  if (!activePet) return <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>반려동물을 먼저 등록해주세요.</div>;
+        const dateObj = new Date(today);
+        dateObj.setDate(today.getDate() + i);
+        const dateStr = dateObj.toISOString().split('T')[0];
+
+        await addCalendarEvent({
+          petId: activePetId || (pets[0] && pets[0].id) || 'default',
+          date: dateStr,
+          title: `처방약 복용 (${medName.trim()})`,
+          content: `예정시간: ${medTime}\n복용주기: ${medFrequency === 'daily' ? '매일' : `${medIntervalDays}일 간격`}`,
+          type: 'hospital'
+        });
+
+        await NotificationService.scheduleMedicationReminder(
+          activePet?.name || '아이',
+          medName.trim(),
+          dateObj,
+          notifyHour,
+          pickerMinute,
+          i
+        );
+      }
+
+      setShowMedModal(false);
+      const savedMedName = medName.trim();
+      setMedName('');
+      
+      showConfirm(
+        `'${savedMedName}' 30일 복용 스케줄 및 푸시 알림이 등록되었습니다.\n지금 캘린더에서 확인해보시겠습니까?`,
+        '복용 일정 등록 완료',
+        () => {
+          navigate('/calendar');
+        }
+      );
+    } catch (err) {
+      console.error(err);
+      showAlert('복용 일정 생성 중 오류가 발생했습니다.');
+    }
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Top Navigation Tabs */}
-      <div style={{ display: 'flex', padding: '12px 16px', gap: '8px', overflowX: 'auto', flexShrink: 0, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', borderBottom: '1px solid var(--border-color)' }}>
-        {[
-          { id: 'dashboard', label: '대시보드' },
-          { id: 'daily', label: '데일리루틴' },
-          { id: 'health', label: '건강체크' },
-          { id: 'hospital', label: '병원·약국' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--card-bg)',
-              color: activeTab === tab.id ? 'var(--main-primary)' : 'var(--text-muted)',
-              fontWeight: 800,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              border: activeTab === tab.id ? '1.5px solid var(--main-primary)' : '1.5px solid var(--border-color)',
-              boxShadow: activeTab === tab.id ? 'inset 0 2px 4px rgba(74, 59, 50, 0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* DASHBOARD TAB */}
-        {activeTab === 'dashboard' && (
-          <>
-            <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', padding: '16px', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-              <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-                맞춤형 건강 케어 가이드
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {isTipsLoading ? (
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '8px 0', textAlign: 'center', fontWeight: 600 }}>가이드를 분석 중입니다...</div>
-                ) : careTips.length > 0 ? (
-                  careTips.map((tip, idx) => {
-                    let statusElement = null;
-                    if (tip.status === 'hard') {
-                      statusElement = <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#8B5A2B', marginRight: '8px' }} />;
-                    } else if (tip.status === 'loose') {
-                      statusElement = <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FBBF24', marginRight: '8px' }} />;
-                    } else if (tip.status === 'bloody') {
-                      statusElement = <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', color: '#EF4444', verticalAlign: 'middle' }}><AlertTriangle size={14} /></span>;
-                    } else if (tip.status === 'good') {
-                      statusElement = <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10B981', marginRight: '8px' }} />;
-                    } else if (tip.status === 'water-good') {
-                      statusElement = <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', color: '#0284C7', verticalAlign: 'middle' }}><Droplet size={14} fill="#0284C7" /></span>;
-                    }
-
-                    return (
-                      <details key={idx} style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)', cursor: 'pointer' }}>
-                        <summary style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ display: 'flex', alignItems: 'center' }}>
-                            {statusElement}
-                            {tip.title}
-                          </span>
-                          <span style={{fontSize:'0.8rem', opacity: 0.6}}>▼</span>
-                        </summary>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, paddingLeft: tip.status ? '18px' : '0' }}>{tip.content}</p>
-                      </details>
-                    );
-                  })
-                ) : (
-                  <div style={{ background: 'var(--butter-cream)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid var(--main-primary)' }}>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>데이터를 기반으로 가이드를 준비중입니다.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', padding: '16px', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-              <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-                오늘의 체크리스트
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--screen-bg)', padding: '12px', borderRadius: '12px' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>식사/사료</span>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--main-primary)', fontWeight: 800 }}>{meals.length > 0 ? `${meals.length}회 완료` : '미완료'}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--screen-bg)', padding: '12px', borderRadius: '12px' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>음수량</span>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--main-primary)', fontWeight: 800 }}>{waters.length > 0 ? `${waters.reduce((a,c)=>a+c.amount,0)}ml` : '미완료'}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--screen-bg)', padding: '12px', borderRadius: '12px' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>간식</span>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--main-primary)', fontWeight: 800 }}>{snacks.length > 0 ? `${snacks.length}회 완료` : '미완료'}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--screen-bg)', padding: '12px', borderRadius: '12px' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>배변</span>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--main-primary)', fontWeight: 800 }}>{stools.length > 0 ? `${stools.length}회 완료` : '미완료'}</span>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* DAILY ROUTINE TAB */}
-        {activeTab === 'daily' && (
-          <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', padding: '16px', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-              데일리 루틴 기록
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '16px' }}>
-              <div onClick={() => setActiveCategory('meal')} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                <div style={{ backgroundColor: 'var(--butter-cream)', padding: '6px 8px', borderRadius: '10px' }}><Utensils size={20} color="#B45309" strokeWidth={2.5} /></div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700 }}>식사/사료</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--main-primary)' }}>{meals.length > 0 ? `총 ${meals.length}회` : <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>미기록</span>}</span>
-              </div>
-              <div onClick={() => setActiveCategory('water')} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                <div style={{ backgroundColor: 'var(--butter-cream)', padding: '6px 8px', borderRadius: '10px' }}><Droplet size={20} color="#0284C7" strokeWidth={2.5} /></div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700 }}>음수량</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--main-primary)' }}>{waters.length > 0 ? `총 ${waters.reduce((a,c)=>a+c.amount,0)}ml` : <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>미기록</span>}</span>
-              </div>
-              <div onClick={() => setActiveCategory('snack')} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                <div style={{ backgroundColor: 'var(--butter-cream)', padding: '6px 8px', borderRadius: '10px' }}><Cookie size={20} color="#92400E" strokeWidth={2.5} /></div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700 }}>간식</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--main-primary)' }}>{snacks.length > 0 ? `총 ${snacks.length}회` : <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>미기록</span>}</span>
-              </div>
-              <div onClick={() => setActiveCategory('stool')} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                <div style={{ backgroundColor: 'var(--butter-cream)', padding: '6px 8px', borderRadius: '10px' }}><Activity size={20} color="#9D174D" strokeWidth={2.5} /></div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700 }}>배변 상태</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--main-primary)' }}>{stools.length > 0 ? `총 ${stools.length}회` : <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>미기록</span>}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={handleSaveHealthCheck} style={{ backgroundColor: 'var(--main-primary)', color: 'white', padding: '10px 16px', borderRadius: '12px', fontWeight: 800, border: 'none', cursor: 'pointer' }}>
-                기록 일기장에 저장
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* HEALTH CHECK TAB */}
-        {activeTab === 'health' && (
-          <>
-            <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', padding: '20px', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-              <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-                체중 변화 기록
-              </h2>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '12px 16px', background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700 }}>현재 체중</span>
-                <span style={{ fontSize: '1.2rem', color: 'var(--main-primary)', fontWeight: 800 }}>{activePet.weight ? `${activePet.weight} kg` : '기록 없음'}</span>
-              </div>
-              <form onSubmit={handleAddWeight} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                <input type="number" step="0.01" value={newWeight} onChange={(e) => setNewWeight(e.target.value)} placeholder="예) 5.4" className="form-input" style={{ flex: 1, height: '40px', fontSize: '0.9rem', margin: 0 }} />
-                <button type="submit" className="btn-submit" style={{ width: 'auto', minWidth: '80px', marginTop: 0, padding: '10px 16px', fontSize: '0.85rem' }}>기록하기</button>
-              </form>
-              {weightHistory.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 800, display: 'block', marginBottom: '12px' }}>체중 변화 차트</label>
-                  <div style={{ height: '140px', width: '100%', background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', padding: '12px 12px 0 0' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={[...weightHistory].reverse()} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} minTickGap={10} />
-                        <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelStyle={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }} itemStyle={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--main-primary)' }} />
-                        <Line type="monotone" dataKey="weight" stroke="var(--main-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--main-primary)', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', padding: '20px', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-              <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-                예방의학 D-Day 스케줄
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {[
-                  { id: 'dhppi', label: '종합백신 (DHPPi)', type: 'annual' },
-                  { id: 'corona', label: '코로나 장염 백신', type: 'annual' },
-                  { id: 'rabies', label: '광견병 예방 백신', type: 'annual' },
-                  { id: 'parasite', label: '내/외부 기생충 케어', type: 'monthly' }
-                ].map(vac => {
-                  const lastDate = vaccines[vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite'];
-                  const ddayStatus = getDDay(lastDate, vac.type as 'annual' | 'monthly');
-                  const isOverdue = ddayStatus.includes('지남') || ddayStatus === 'D-Day' || !lastDate;
-                  const statusColor = isOverdue ? 'var(--text-main)' : 'var(--main-primary)';
-                  const statusBg = isOverdue ? 'var(--butter-yellow)' : 'var(--butter-cream)';
-                  
-                  const maxDays = vac.type === 'annual' ? 365 : 30;
-                  let daysLeft = 0;
-                  if (!isOverdue && lastDate) {
-                    const match = ddayStatus.match(/\d+/);
-                    if (match) daysLeft = parseInt(match[0], 10);
-                  }
-                  const progressPct = isOverdue ? 100 : Math.max(0, 100 - (daysLeft / maxDays) * 100);
-                  const barColor = isOverdue ? 'var(--butter-yellow)' : 'var(--main-primary)';
-
-                  return (
-                    <div key={vac.id} style={{ borderBottom: '1px solid var(--screen-bg)', paddingBottom: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{vac.label}</span>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: statusColor, backgroundColor: statusBg, padding: '2px 8px', borderRadius: '12px' }}>
-                          {ddayStatus}
-                        </span>
-                      </div>
-                      <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--screen-bg)', borderRadius: '3px', marginBottom: '12px', overflow: 'hidden' }}>
-                        <div style={{ width: `${progressPct}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s ease' }} />
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <input type="date" value={lastDate || ''} onChange={(e) => handleUpdateVaccine(vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite', e.target.value)} className="form-input" style={{ height: '34px', fontSize: '0.8rem', padding: '0 8px', flex: 1, margin: 0 }} />
-                        <button type="button" onClick={() => handleCompleteVaccineToday(vac.id as 'dhppi' | 'corona' | 'rabies' | 'parasite', vac.label)} style={{ backgroundColor: 'var(--main-primary)', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                          오늘 접종 완료
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* HOSPITAL LOCATOR TAB */}
-        {activeTab === 'hospital' && (
-          <div className="panel" style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', padding: '20px', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-            <h2 style={{ color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 800, borderBottom: '2px solid var(--main-primary)', paddingBottom: '12px', marginBottom: '16px', marginTop: 0 }}>
-              주변 동물병원 & 약국 검색
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} className="form-input" style={{ flex: 1, height: '40px', fontSize: '0.85rem', margin: 0, padding: '0 8px' }}>
-                  {Object.keys(REGION_MAP).map(city => <option key={city} value={city}>{city}</option>)}
-                </select>
-                <select value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)} className="form-input" style={{ flex: 1, height: '40px', fontSize: '0.85rem', margin: 0, padding: '0 8px' }}>
-                  {(REGION_MAP[selectedCity] || []).map(dist => <option key={dist} value={dist}>{dist}</option>)}
-                </select>
-              </div>
-              <div style={{ display: 'flex', background: 'var(--screen-bg)', padding: '4px', borderRadius: '12px' }}>
-                {['hospital', 'pharmacy', 'grooming'].map(type => (
-                  <button key={type} type="button" onClick={() => setLocatorSearchType(type as any)} style={{ flex: 1, padding: '8px 0', borderRadius: '8px', border: 'none', fontSize: '0.8rem', fontWeight: locatorSearchType === type ? 800 : 600, cursor: 'pointer', backgroundColor: locatorSearchType === type ? 'var(--card-bg)' : 'transparent', color: locatorSearchType === type ? 'var(--text-main)' : 'var(--text-muted)', boxShadow: locatorSearchType === type ? '0 2px 6px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
-                    {type === 'hospital' ? '동물병원' : type === 'pharmacy' ? '동물약국' : '동물미용'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {isLocatorLoading ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>조회 중입니다...</div>
-            ) : locatorError ? (
-              <div style={{ textAlign: 'center', padding: '32px 16px', background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                <h4 style={{ color: 'var(--text-main)', fontSize: '0.95rem', margin: '0 0 6px 0', fontWeight: 800 }}>서버 점검 중</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 16px 0', lineHeight: 1.4 }}>데이터를 불러올 수 없습니다.</p>
-                <button onClick={() => { setLocatorError(false); const prev = locatorSearchType; setLocatorSearchType('grooming'); setTimeout(() => setLocatorSearchType(prev), 10); }} style={{ backgroundColor: 'var(--main-primary)', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>다시 시도 <RefreshCw size={14} /></button>
-              </div>
-            ) : locatorResults.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>검색 결과가 없습니다.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
-                {locatorResults.map((item, idx) => (
-                  <div key={idx} style={{ padding: '12px', background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px solid var(--border-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>{item.name}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>{item.address}</span>
-                    </div>
-                    {item.tel && item.tel !== '전화번호 없음' && (
-                      <a href={`tel:${item.tel}`} style={{ backgroundColor: 'var(--card-bg)', border: '1.5px solid var(--border-color)', color: 'var(--text-main)', textDecoration: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> 전화</a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Sheet for Daily Routine */}
-      <BottomSheet 
-        isOpen={activeCategory !== null} 
-        onClose={() => setActiveCategory(null)}
-        title={
-          activeCategory === 'stool' ? '배변 상태 기록' :
-          activeCategory === 'meal' ? '식사 및 사료 기록' :
-          activeCategory === 'water' ? '음수량 체크 & 기록' :
-          activeCategory === 'snack' ? '간식 복용 체크' : ''
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
-          {activeCategory === 'stool' && (
-            <>
-              {stools.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)' }}>오늘의 배변 기록</h4>
-                  {stools.map((s, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.time}</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--main-primary)', fontWeight: 800 }}>{s.status}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {['정상', '무른변', '변비'].map(status => (
-                  <button key={status} type="button" onClick={() => handleAddStool(status)} style={{ flex: 1, padding: '12px 8px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--butter-cream)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>+ {status}</button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {activeCategory === 'water' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', padding: '10px 0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '2rem', fontWeight: 800, color: '#0284C7' }}>{waters.reduce((a,c) => a + c.amount, 0)} ml</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#075985', backgroundColor: '#E0F2FE', padding: '4px 10px', borderRadius: '12px' }}>총 {waters.length}회 섭취</span>
-              </div>
-              {waters.length > 0 && (
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto', padding: '4px' }}>
-                  {waters.map((w, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{w.time}</span>
-                      <span style={{ fontSize: '0.85rem', color: '#0284C7', fontWeight: 800 }}>+{w.amount}ml</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', width: '100%' }}>
-                {[50, 100, 150, 200].map(val => (
-                  <button key={val} type="button" onClick={() => handleAddWater(val)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', backgroundColor: '#E0F2FE', color: '#0369A1', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>+{val}ml</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeCategory === 'snack' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {snacks.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)' }}>오늘 급여한 간식</h4>
-                  {snacks.map((s, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.time}</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--main-primary)', fontWeight: 800 }}>{s.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                {['육포', '개껌', '동결건조', '츄르'].map(snack => (
-                  <button key={snack} type="button" onClick={() => handleAddSnack(snack)} style={{ padding: '12px 8px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--butter-cream)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>+ {snack}</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeCategory === 'meal' && (
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-             {meals.length > 0 && (
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                 <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)' }}>오늘의 식사 기록</h4>
-                 {meals.map((m, idx) => (
-                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                     <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{m.time}</span>
-                     <span style={{ fontSize: '0.85rem', color: 'var(--main-primary)', fontWeight: 800 }}>{m.amount}</span>
-                   </div>
-                 ))}
-               </div>
-             )}
-             <div style={{ display: 'flex', gap: '8px' }}>
-               {['완식', '보통', '남김'].map(amount => (
-                 <button key={amount} type="button" onClick={() => handleAddMeal(amount)} style={{ flex: 1, padding: '12px 8px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--butter-cream)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>+ {amount}</button>
-               ))}
-             </div>
-           </div>
-          )}
+    <div className="onda-page-container">
+      
+      {/* 1. Header Title */}
+      <div style={{ textAlign: 'left' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <Heart size={22} color="var(--main-primary)" />
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
+            {activeSubTab === 'report' ? '건강 리포트' : `${activePet?.name || '우리 아이'} 데일리 케어`}
+          </h1>
         </div>
-      </BottomSheet>
+        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          {activeSubTab === 'report' 
+            ? '반려동물 예방의학 현황 및 건강 지표 그래프 리포트' 
+            : '반려동물 케어 루틴 체크리스트 & 복용 일정 관리'}
+        </p>
+      </div>
+
+      {/* 2. Top Sub-Nav Chips Matching Reference Mockup */}
+      <div className="horizontal-scroll-chips" style={{ marginBottom: '8px' }}>
+        <button
+          type="button"
+          className={`onda-chip-tab ${activeSubTab === 'report' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('report')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Heart size={14} />
+          <span>건강 리포트</span>
+        </button>
+        <button
+          type="button"
+          className={`onda-chip-tab ${activeSubTab === 'routine' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('routine')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Activity size={14} />
+          <span>건강 상태 & 루틴</span>
+        </button>
+        <button
+          type="button"
+          className={`onda-chip-tab ${activeSubTab === 'weight' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('weight')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <TrendingUp size={14} />
+          <span>체중 변화</span>
+        </button>
+        <button
+          type="button"
+          className={`onda-chip-tab ${activeSubTab === 'vaccine' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('vaccine')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Syringe size={14} />
+          <span>예방접종 관리</span>
+        </button>
+      </div>
+
+      {/* Sub Tab View 0: 건강 리포트 (체중 변화 + 예방접종 카드 + 신규 데이터 등록 버튼) */}
+      {activeSubTab === 'report' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Card 1: 체중 변화 */}
+          <div className="onda-card" style={{ textAlign: 'left' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                  체중 변화
+                </h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 700 }}>
+                  현재: {activePet?.weight || 5.2}kg (양호)
+                </span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>최근 6개월 ›</span>
+            </div>
+
+            {/* Simple Sparkline / Bar Chart Visualization in Coral and Mint */}
+            <div style={{ height: '140px', backgroundColor: '#FCFAF7', borderRadius: '16px', border: '1px solid var(--onda-border-light)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '16px 12px 10px 12px', boxSizing: 'border-box' }}>
+              {[
+                { month: '10/12', val: parseFloat(((activePet?.weight || 5.2) * 0.96).toFixed(1)) },
+                { month: '10/15', val: parseFloat(((activePet?.weight || 5.2) * 0.98).toFixed(1)) },
+                { month: '11/01', val: parseFloat(((activePet?.weight || 5.2) * 0.99).toFixed(1)) },
+                { month: '11/15', val: parseFloat(((activePet?.weight || 5.2) * 1.0).toFixed(1)) },
+                { month: '12/01', val: parseFloat(((activePet?.weight || 5.2) * 1.01).toFixed(1)) },
+                { month: '12/15', val: parseFloat(((activePet?.weight || 5.2)).toFixed(1)) }
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: idx === 5 ? 'var(--main-primary)' : 'var(--accent)' }}>{item.val}kg</span>
+                  <div style={{
+                    width: '18px',
+                    height: `${(item.val / ((activePet?.weight || 5.2) * 1.1)) * 80}px`,
+                    backgroundColor: idx === 5 ? 'var(--main-primary)' : 'var(--accent)',
+                    borderRadius: '6px'
+                  }} />
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>{item.month}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 2: 예방접종 현황 */}
+          <div className="onda-card" style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
+              예방접종 현황
+            </h3>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {/* 광견병 백신 (완료) */}
+              <div style={{ flex: 1, padding: '14px', borderRadius: '16px', backgroundColor: '#FCFAF7', border: '1px solid var(--onda-border-light)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>광견병 백신</span>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }} title="완료">
+                    <CheckCircle2 size={12} color="#FFF" strokeWidth={3} />
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--accent)', fontWeight: 700 }}>완료 (2026.04.15)</span>
+              </div>
+              {/* DHPPL 종합백신 (예정) */}
+              <div style={{ flex: 1, padding: '14px', borderRadius: '16px', backgroundColor: '#FCFAF7', border: '1px solid var(--onda-border-light)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>DHPPL 종합백신</span>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'var(--main-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }} title="예정">
+                    <span style={{ fontSize: '9px', fontWeight: 'bold' }}>!</span>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--main-primary)', fontWeight: 700 }}>예정 (D-15일)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 등록 버튼 */}
+          <button
+            onClick={() => {
+              // Open new record or schedule modal
+              setShowMedModal(true);
+            }}
+            className="onda-btn-primary"
+            style={{ marginTop: '10px' }}
+          >
+            신규 일정 및 건강 기록 추가
+          </button>
+        </div>
+      )}
+
+      {/* Sub Tab View 1: Weight Chart */}
+      {activeSubTab === 'weight' && (
+        <div className="onda-card" style={{ textAlign: 'left' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                {activePet?.name || '아이'}의 체중 변화
+              </h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--main-primary)', fontWeight: 700 }}>
+                현재: {activePet?.weight || 5.2}kg (양호)
+              </span>
+            </div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>최근 6개월 ›</span>
+          </div>
+
+          {/* Simple Sparkline / Bar Chart Visualization */}
+          <div style={{ height: '140px', backgroundColor: '#FCFAF7', borderRadius: '16px', border: '1px solid var(--onda-border-light)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '16px 12px 10px 12px', boxSizing: 'border-box' }}>
+            {[
+              { month: '10/12', val: parseFloat(((activePet?.weight || 5.2) * 0.96).toFixed(1)) },
+              { month: '10/15', val: parseFloat(((activePet?.weight || 5.2) * 0.98).toFixed(1)) },
+              { month: '11/01', val: parseFloat(((activePet?.weight || 5.2) * 0.99).toFixed(1)) },
+              { month: '11/15', val: parseFloat(((activePet?.weight || 5.2) * 1.0).toFixed(1)) },
+              { month: '12/01', val: parseFloat(((activePet?.weight || 5.2) * 1.01).toFixed(1)) },
+              { month: '12/15', val: parseFloat(((activePet?.weight || 5.2)).toFixed(1)) }
+            ].map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--main-primary)' }}>{item.val}kg</span>
+                <div style={{
+                  width: '18px',
+                  height: `${(item.val / ((activePet?.weight || 5.2) * 1.1)) * 80}px`,
+                  backgroundColor: idx === 5 ? 'var(--main-primary)' : 'var(--main-primary-light)',
+                  borderRadius: '6px'
+                }} />
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>{item.month}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sub Tab View 2: Vaccine Cards */}
+      {activeSubTab === 'vaccine' && (
+        <div className="onda-card" style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
+            예방접종 일정 현황
+          </h3>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ flex: 1, padding: '14px', borderRadius: '16px', backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#166534' }}>광견병 백신</span>
+                <CheckCircle2 size={16} color="#166534" />
+              </div>
+              <span style={{ fontSize: '0.72rem', color: '#15803D', fontWeight: 700 }}>완료 (2026.04.15)</span>
+            </div>
+            <div style={{ flex: 1, padding: '14px', borderRadius: '16px', backgroundColor: '#FEF3C7', border: '1.5px solid #FDE68A' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#92400E' }}>DHPPL 종합백신</span>
+                <AlertCircle size={16} color="#92400E" />
+              </div>
+              <span style={{ fontSize: '0.72rem', color: '#B45309', fontWeight: 700 }}>예정 (D-15일)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub Tab View 3 / Main: Routine Timeline & Quick Health Check */}
+      {(activeSubTab === 'routine' || activeSubTab === undefined) && (
+        <>
+          {/* Daily Routine Timeline Feed */}
+          <DailyRoutineTimeline 
+            activePet={activePet}
+            routineChecked={routineChecked}
+            onToggleRoutine={toggleRoutine}
+            onOpenMedScheduler={() => setShowMedModal(true)}
+          />
+
+          {/* Quick 3-State Health Check Section */}
+          <QuickHealthCheck 
+            healthStatus={healthStatus}
+            setHealthStatus={setHealthStatus}
+            healthMemo={healthMemo}
+            setHealthMemo={setHealthMemo}
+            onSaveHealthLog={handleSaveHealthLog}
+          />
+        </>
+      )}
+
+      {/* Medication 30-Day Scheduler Modal */}
+      <MedicationScheduler 
+        showMedModal={showMedModal}
+        onClose={() => setShowMedModal(false)}
+        medName={medName}
+        setMedName={setMedName}
+        medFrequency={medFrequency}
+        setMedFrequency={setMedFrequency}
+        medIntervalDays={medIntervalDays}
+        setMedIntervalDays={setMedIntervalDays}
+        medTime={medTime}
+        onOpenTimePicker={() => setShowTimePickerModal(true)}
+        onSaveScheduler={handleSaveMedScheduler}
+      />
+
+      {/* Scroll Time Picker Modal */}
+      {showTimePickerModal && (
+        <ScrollTimePickerModal
+          title="복용 시간 설정"
+          initialPeriod={pickerPeriod}
+          initialHour={pickerHour}
+          initialMinute={pickerMinute}
+          onConfirm={(formattedTime, period, hour, minute) => {
+            setPickerPeriod(period);
+            setPickerHour(hour);
+            setPickerMinute(minute);
+            setMedTime(formattedTime);
+            setShowTimePickerModal(false);
+          }}
+          onCancel={() => setShowTimePickerModal(false)}
+          primaryColor="var(--main-primary)"
+          textColor="var(--text-main)"
+          mutedColor="var(--text-muted)"
+        />
+      )}
+
     </div>
   );
 };

@@ -358,7 +358,17 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div style={{ paddingBottom: '0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="onda-page-container">
+
+      {/* H1 Header '설정' to match the design guide */}
+      <div style={{ textAlign: 'left', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 4px 0', color: 'var(--text-main)' }}>
+          설정
+        </h1>
+        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          앱 테마, 알람 및 데이터 백업 관리
+        </p>
+      </div>
 
       {/* 1. Premium AD Promotional Board Banner */}
       <div 
@@ -459,7 +469,12 @@ const Settings: React.FC = () => {
                 <Palette size={20} />
               </div>
               <div style={{ textAlign: 'left' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>어플리케이션 테마 설정</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)' }}>어플리케이션 테마 설정</h3>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)' }}>
+                    ({activeThemeId === 'light' ? '코지 내추럴' : activeThemeId === 'dark' ? '다크 포레스트' : activeThemeId === 'yellow' ? '달콤 바나나' : activeThemeId === 'pink' ? '러블리 피치' : activeThemeId === 'purple' ? '은은한 라벤더' : '커스텀 테마'})
+                  </span>
+                </div>
                 <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>나만의 고유 테마 제작 및 기본 화면 스타일 지정</p>
               </div>
             </div>
@@ -499,7 +514,7 @@ const Settings: React.FC = () => {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: activeThemeId === id ? 'var(--main-primary)' : 'var(--text-main)' }}>
-                            {id === 'light' ? '밝은 테마' : '어두운 테마'}
+                            {id === 'light' ? '코지 내추럴 (기본)' : id === 'dark' ? '다크 포레스트' : id === 'yellow' ? '달콤 바나나' : id === 'pink' ? '러블리 피치' : id === 'purple' ? '은은한 라벤더' : id}
                           </span>
                           {activeThemeId === id && (
                             <span style={{ fontSize: '0.65rem', color: 'var(--main-primary)', fontWeight: 'bold' }}>사용중</span>
@@ -985,7 +1000,7 @@ const Settings: React.FC = () => {
                   alignItems: 'center' 
                 }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#B91C1C', fontWeight: 800 }}>⚠️ 데이터 완전 초기화 (Danger Zone)</h4>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#B91C1C', fontWeight: 800 }}>데이터 완전 초기화 (Danger Zone)</h4>
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#991B1B' }}>기기의 모든 데이터와 설정을 영구 소멸합니다. 복구할 수 없습니다.</p>
                   </div>
                   <button onClick={handleDeleteAll} style={{ fontSize: '0.75rem', padding: '8px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)' }}>삭제하기</button>

@@ -15,6 +15,7 @@ export interface CustomTheme {
   name: string;
   colors: {
     primary: string;
+    primaryLight?: string;
     background: string;
     paper: string;
     text: string;
@@ -23,22 +24,50 @@ export interface CustomTheme {
   };
 }
 
-export const THEME_PRESETS: Record<string, { primary: string; background: string; paper: string; text: string; muted: string; icon: string }> = {
+export const THEME_PRESETS: Record<string, { primary: string; primaryLight?: string; background: string; paper: string; text: string; muted: string; icon: string }> = {
   light: {
-    primary: '#4A3B32',
-    background: '#FAFAFA',
+    primary: '#FF8C75',
+    primaryLight: '#FFF0ED',
+    background: '#FFF8F0',
     paper: '#FFFFFF',
-    text: '#2B2825',
-    muted: '#78716C',
-    icon: '#4A3B32'
+    text: '#4A4A4A',
+    muted: '#8E867E',
+    icon: '#FF8C75'
+  },
+  yellow: {
+    primary: '#F59E0B',
+    primaryLight: '#FEF3C7',
+    background: '#FFFDF5',
+    paper: '#FFFFFF',
+    text: '#374151',
+    muted: '#9CA3AF',
+    icon: '#F59E0B'
+  },
+  pink: {
+    primary: '#EC4899',
+    primaryLight: '#FCE7F3',
+    background: '#FFF5F9',
+    paper: '#FFFFFF',
+    text: '#374151',
+    muted: '#9CA3AF',
+    icon: '#EC4899'
+  },
+  purple: {
+    primary: '#8B5CF6',
+    primaryLight: '#EDE9FE',
+    background: '#F9F5FF',
+    paper: '#FFFFFF',
+    text: '#374151',
+    muted: '#9CA3AF',
+    icon: '#8B5CF6'
   },
   dark: {
-    primary: '#4A3B32',
-    background: '#1F1A17',
-    paper: '#2B2825',
-    text: '#FAFAFA',
-    muted: '#A8A29E',
-    icon: '#FAFAFA'
+    primary: '#6F8772',
+    background: '#181A18',
+    paper: '#232623',
+    text: '#F2F4F2',
+    muted: '#9EA69F',
+    icon: '#6F8772'
   }
 };
 
@@ -138,6 +167,7 @@ interface PetState {
 const mockPet: Pet = {
   id: 'mock-pet',
   name: '초코',
+  species: 'dog',
   breed: '토이 푸들',
   birth: '2023-05-10',
   weight: 4.5,
@@ -146,7 +176,8 @@ const mockPet: Pet = {
   medications: '심장사상충 예방약 1개월 단위 반복 세팅',
   notes: '산책 설정: 오후 07:00 지정 / 30분 정기 목표 설정',
   walkTime: '오후 07:00 지정',
-  walkGoal: '30분 정기 목표 설정'
+  walkGoal: '30분 정기 목표 설정',
+  regularDiseases: '[]'
 };
 
 const mockEvents: CalendarEvent[] = [

@@ -3,6 +3,7 @@ import Dexie, { type Table } from 'dexie';
 export interface Pet {
   id: string;
   name: string;
+  species?: string;
   breed: string;
   birth: string;
   weight: number;
@@ -19,9 +20,10 @@ export interface Pet {
   walkDuration?: string;
   medicationRepeat?: boolean;
   walkRepeat?: boolean;
+  regularDiseases?: string;
 }
 
-export type EventType = 'diary' | 'hospital' | 'schedule' | 'poop' | 'walk';
+export type EventType = 'diary' | 'hospital' | 'schedule' | 'poop' | 'walk' | 'recovery';
 
 export interface CalendarEvent {
   id: string;
